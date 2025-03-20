@@ -1931,8 +1931,8 @@ static void* rtksvrthread(void* arg)
 					ntrip = (ntrip_t*)svr->stream[2].port;
 					state1 = ntrip->tcp->svr.state;
 					if (flag < 10) {
-						sprintf(buff, "pid,%d\n", getpid());
-						strwrite(&svr->stream[2], (unsigned char*)buff, strlen(buff));
+						// sprintf(buff, "pid,%d\n", getpid());
+						// strwrite(&svr->stream[2], (unsigned char*)buff, strlen(buff));
 						state2 = ntrip->tcp->svr.state;
 						if (state1 == 2 && state2 == 2) {
 							printf("%s\n", buff);
@@ -2890,21 +2890,14 @@ int main(int argc, char** argv)
 		}
 	}
 	fclose(fpcof);
-#ifdef WIN32
+
 	if (access("./configFile", 0) != 0)
-		mkdir("./configFile");
+        createdir("./configFile");
 	if (access("./configFile/tcp_log", 0) != 0)
-		mkdir("./configFile/tcp_log");
+        createdir("./configFile/tcp_log");
 	if (access("./rtkLog", 0) != 0)
-		mkdir("./rtkLog");
-#else
-	if (access("./configFile", 0) != 0)
-		mkdir("./configFile", S_IRWXU);
-	if (access("./configFile/tcp_log", 0) != 0)
-		mkdir("./configFile/tcp_log", S_IRWXU);
-	if (access("./rtkLog", 0) != 0)
-		mkdir("./rtkLog", S_IRWXU);
-#endif	
+        createdir("./rtkLog");
+
 	//printf("---strlen(mntpntr)=%d---\n",strlen(mntpntr));
 	//strcpy(mntpntr, "test");
 	if (strlen(mntpntr) > 0) {

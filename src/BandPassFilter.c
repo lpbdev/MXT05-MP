@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <string.h>
+#ifdef _MSC_VER
 #include <memory.h>
+#endif
 #include "BandPassFilter.h"
 
 int BpfCoef[24] = {-5,9,8,-7,-5,-2,-10,20,31,-42,-50,53,53,-50,-42,31,20,-10,-2,-5,-7,8,9,-5};

@@ -39,6 +39,9 @@
     <ClInclude Include="..\..\src\multipath.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\include\dirent_bak.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ephemeris.c">

@@ -328,7 +328,9 @@ extern int rtkLsq(rtk_t* rtk, const obsd_t* obs, int n, int nu, const int* svh, 
 	unsigned char *nvSatMask;
 
 	H = mat(3, ns * nf); v = mat(ns * nf, 1); var = mat(ns * nf, 1);
-	stdv = zeros(SELETE_SAT_NUM * NFREQ, 1); nvSatMask = zerosChar(SELETE_SAT_NUM * NFREQ, 1);
+	stdv = zeros(SELETE_SAT_NUM * NFREQ, 1); 
+    nvSatMask = (uint8_t *)(calloc(sizeof(uint8_t), SELETE_SAT_NUM));
+    // nvSatMask = zerosChar(SELETE_SAT_NUM * NFREQ, 1);
 
 	if ((!H) || (!v) || (!var))
 	{

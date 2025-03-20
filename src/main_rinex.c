@@ -1,7 +1,10 @@
 
 #include "rtk.h"
-#include"../src/include/dirent.h"
-#include<direct.h >
+#ifdef _MSC_VER
+#include"../src/include/dirent_bak.h"
+#else
+#include <dirent.h>
+#endif
 #define MINSNR 20
 
 obs_t obss = { 0 };          /* observation data */
@@ -883,7 +886,7 @@ int main(int argc, char** argv)
 	g_rtk.iniCnt = g_rtk.maxSmoothPoint;
 
 	if (access("./configFile", 0) != 0)
-		mkdir("./configFile");
+		createdir("./configFile");
 	decodetcppath("test.log", NULL, port, user, passwd, mntpnt, srctbl);
 	strcpy(configFileFath, "./configFile/config.log");
 	//fpversion = fopen(configFileFath, "r");
@@ -989,7 +992,7 @@ int main(int argc, char** argv)
 	//g_rtk.rb[0] = -2286279.7002; g_rtk.rb[1] = 5003468.2113; g_rtk.rb[2] = 3217155.2669;
 	//g_rtk_epoch.rb[0] = -2286279.7002; g_rtk_epoch.rb[1] = 5003468.2113; g_rtk_epoch.rb[2] = 3217155.2669;
 	if (access(outDir, 0) != 0)
-		mkdir(outDir);
+		createdir(outDir);
 
 	sprintf(outfile[0], "%s%c%s_%s_%s.pos", outDir, sep, optsys,"rtk",lsqOrkalman);
 	sprintf(outfile[1], "%s%c%s_%s_%s.pos", outDir, sep, optsys,"filter", lsqOrkalman);
@@ -1057,7 +1060,7 @@ int main(int argc, char** argv)
 	}
 	closedir(dir);
 	if (access(outDir, 0) != 0)
-		mkdir(outDir);
+		createdir(outDir);
 
 	for (j = 0; j < indexFile; j++) {
 		fp[j] = fopen(infile[j], "r");

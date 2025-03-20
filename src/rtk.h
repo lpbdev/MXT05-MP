@@ -17,7 +17,10 @@
 #define MEMWATCH
 #define DMW_STDIO
 
+#ifdef _MSC_VER
 #include"memwatch.h"
+#endif  
+
 #else 
 #include <dirent.h>
 #include <time.h>
@@ -58,7 +61,7 @@
 #define BDS3_NL_PSR_K2	1
 
 //extern FILE* fpversion;
-#define SVN_VERSION 222222
+#define SVN_VERSION 222223
 
 #define MAXEPH		10240
 #define MAXGEPH     5120
@@ -499,7 +502,8 @@ static const char frqcodes[] = "1256789"; /* frequency codes */
 #define lock(f)     EnterCriticalSection(f)
 #define unlock(f)   LeaveCriticalSection(f)
 #define FILEPATHSEP '\\'
-#define strcasecmp  _stricmp
+//#define strcasecmp  _stricmp
+#include <io.h>
 #define access      _access
 #else
 #define thread_t    pthread_t
@@ -1177,6 +1181,7 @@ extern double* eye(int n);
 extern int testsnr(int base, int freq, double el, double snr,
 	const snrmask_t* mask);
 extern unsigned char satno(unsigned char sys, unsigned char prn);
+extern int satid2no(const char *id);
 
 extern double get_sid_T(unsigned char sat, gtime_t teph, const nav_t* nav);
 extern int test_update_data();
@@ -1264,6 +1269,7 @@ extern void tidedisp(gtime_t tutc, const double* rr, int opt, const erp_t* erp,
 	const double* odisp, double* dr);
 extern double str2num(const char* s, int i, int n);
 extern int readsap(const char* file, gtime_t time, nav_t* nav);
+extern void createdir(const char* path);
 extern unsigned int tickget(void);
 extern void sleepms(int ms);
 extern int reppath(const char* path, char* rpath, gtime_t time, const char* rov,
@@ -1275,6 +1281,9 @@ extern int strwrite(stream_t* stream, uint8_t* buff, int n);
 //-----------------------------sabs-----------------------------
 extern void trace(int level, const char* format, ...);
 //--------------------------------myfun------------------------------
+extern int findGephIndex2(geph_t* geph, unsigned char sat);
+extern int findGephIndex(geph_t* geph, unsigned char sat);
+extern int findEphIndex(eph_t* eph, unsigned char sat);
 extern void findMaxRes(rtk_t* rtk, unsigned char* sat, int ns);
 extern void detectionRes(rtk_t* rtk, obsd_t* obs, int n);
 extern void gloFlag(rtk_t* rtk, const obsd_t* obs, unsigned char nu, unsigned char nr);

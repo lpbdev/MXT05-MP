@@ -327,6 +327,8 @@ extern double* zeros(int r, int c)
 	p = (double*)(calloc(sizeof(double), r * c));
 	return p;
 }
+#if 0
+// error: assignment to 'double *' from incompatible pointer type 'char *' [-Wincompatible-pointer-types]
 extern double* zerosChar(int r, int c)
 {
 	double* p;
@@ -334,6 +336,7 @@ extern double* zerosChar(int r, int c)
 	p = (char*)(calloc(sizeof(char), r * c));
 	return p;
 }
+#endif
 /* copy matrix -----------------------------------------------------------------
 * copy matrix
 * args   : double *A        O   destination matrix A (n x m)

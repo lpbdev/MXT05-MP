@@ -1,4 +1,9 @@
 #include"rtk.h"
+
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #define ROUND(x)    (int)floor((x)+0.5)
 #define NINCOBS     262144              /* inclimental number of obs data */
 //#define FILEPATHSEP '\\'
@@ -1232,7 +1237,7 @@ static int readrnxnavb(FILE* fp, const char* opt, double ver, unsigned char sys,
 	return -1;
 }
 
-static int findGephIndex2(geph_t* geph, unsigned char sat) {
+extern int findGephIndex2(geph_t* geph, unsigned char sat) {
 	int i;
 
 	for (i = 0; i < MAXGEPH; i++) {
@@ -1630,7 +1635,7 @@ extern void createdir(const char *path)
 	//*p = '\0';
 
 #ifdef WIN32
-	mkdir(buff);
+    mkdir(buff, NULL);
 #else
 	mkdir(buff, 0777);
 #endif
