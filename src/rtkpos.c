@@ -117,6 +117,7 @@ static void detslp_ll(rtk_t* rtk, const obsd_t* obs, int i, int rcv)
 		/* detect slip by parity unknown flag transition in LLI */
 		if (((LLI & 2) && !(obs[i].LLI[f] & 2)) || (!(LLI & 2) && (obs[i].LLI[f] & 2))) {
 			trace(0x08, "slip detected half-cyc (sat=%2d rcv=%d F=%d LLI=%x->%x)\n", sat, rcv, f + 1, LLI, obs[i].LLI[f]);
+            logmsg(0x08, "slip detected half-cyc (sat=%2d rcv=%d F=%d LLI=%x->%x)\n", sat, rcv, f + 1, LLI, obs[i].LLI[f]);
 			//printf("slip detected half-cyc (sat=%2d rcv=%d F=%d LLI=%x->%x)\n", sat, rcv, f + 1, LLI, obs[i].LLI[f]);
 			slip |= 1;
 		}
@@ -3011,6 +3012,7 @@ int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 		printf("fe\n");
 	}
 	trace(0xff, "nu=%d nr=%d\n", nu, nr);
+    logmsg(0xff, "nu=%d nr=%d\n", nu, nr);
 	if (nu < 4) {
 		resetRtk(rtk, SOLQ_NONE);
 		free(rs); free(dts); free(var);
@@ -3018,6 +3020,7 @@ int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 		return 1;
 	}
 	trace(0xff, "rover time=%ld\n", obs[0].time.time);
+    logmsg(0xff, "rover time=%ld\n", obs[0].time.time);
 	if (nr > 0)
 		trace(0xff, "base  time=%ld\n", obs[nu].time.time);
 	time = rtk->sol.time;

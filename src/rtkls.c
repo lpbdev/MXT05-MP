@@ -389,10 +389,13 @@ extern int rtkLsq(rtk_t* rtk, const obsd_t* obs, int n, int nu, const int* svh, 
 				lsqraim[0] = respMaxSat;
 				lsqraim[2] = stdvMax;
 				trace(0x04, "rtk lsq resc reject sys=%d prn=%d stdvMax=%lf\n", sys, prn, stdvMax);
+                logmsg(0x04, "rtk lsq resc reject sys=%d prn=%d stdvMax=%lf\n", sys, prn, stdvMax);
+
 				free(H); free(v); free(var); free(stdv); free(nvSatMask);
 				return -2;
 			}
 			trace(0x02, "rtk lsq pos:%14.4lf %14.4lf %14.4lf\n", x[0], x[1], x[2]);
+            logmsg(0x02, "rtk lsq pos:%14.4lf %14.4lf %14.4lf\n", x[0], x[1], x[2]);
 			rtk->sol.ns[1] = nsobs + nbase;
 			for (j = 0; j < 3; j++) rtk->sol.rr[j] = j < 3 ? x[j] : 0.0;
 			for (j = 0; j < 3; j++) rtk->sol.qr[j] = (float)Q[j + j * 3];

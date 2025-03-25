@@ -32,6 +32,9 @@
 //#define DEBUG_FILE_NL
 #define BSLTHRESHOLD	5E3
 
+
+#include "logmod.h"
+
 #define WL_CAR_K0	1
 #define WL_CAR_K1	-1
 #define WL_CAR_K2	0

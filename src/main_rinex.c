@@ -80,6 +80,7 @@ static void iniGloLam() {
 	}
 }
 
+#if 0
 int fread_debug(rtk_t* rtk, nav_t* nav, FILE* fp, obsd_t* obs, int* nobs) {
 	gtime_t time1 = { 0 }, time2 = { 0 };
 	char buf[4096] = { 0 }, buf2[4096] = { 0 };
@@ -211,6 +212,7 @@ int fread_debug(rtk_t* rtk, nav_t* nav, FILE* fp, obsd_t* obs, int* nobs) {
 	if (fp)	fclose(fp);
 	return 1;
 }
+#endif
 
 
 /* show message and check break ----------------------------------------------*/
@@ -985,6 +987,10 @@ int main(int argc, char** argv)
     if (g_rtk.mpflag == 1)
         mkfpssat(&g_rtk);
 
+    char logfile[1024];
+    sprintf(logfile, "%s/rtk.log", g_rtk.path);
+    logopen(logfile,1024); // 1M log.
+
 	obss.n = 0; obss.nmax = 1024;
 	obss.data = (obsd_t*)malloc(sizeof(obsd_t) * obss.nmax);
 
@@ -1367,6 +1373,9 @@ int main(int argc, char** argv)
 	if (percent == 90)
 		printf("%d%% ", 100);
 	printf("\n");
+
+    logclose();
+
 	free(g_nav.eph); free(g_nav.geph); free(obss.data);
 	free(g_rtk.x); free(g_rtk.P); free(g_rtk.xp); free(g_rtk.Pp);
 	free(g_rtk.I); free(g_rtk.H); free(g_rtk.F); free(g_rtk.K);

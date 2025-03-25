@@ -42,6 +42,9 @@
     <ClInclude Include="..\..\src\include\dirent_bak.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\logmod.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ephemeris.c">
@@ -99,6 +102,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main_rinex.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\logmod.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

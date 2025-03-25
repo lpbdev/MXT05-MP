@@ -24,6 +24,7 @@
     <ClInclude Include="..\..\src\cJSON.h" />
     <ClInclude Include="..\..\src\fft.h" />
     <ClInclude Include="..\..\src\include\dirent_bak.h" />
+    <ClInclude Include="..\..\src\logmod.h" />
     <ClInclude Include="..\..\src\memwatch.h" />
     <ClInclude Include="..\..\src\multipath.h" />
     <ClInclude Include="..\..\src\rtk.h" />
@@ -36,6 +37,7 @@
     <ClCompile Include="..\..\src\fft.c" />
     <ClCompile Include="..\..\src\fft_process.c" />
     <ClCompile Include="..\..\src\lambda.c" />
+    <ClCompile Include="..\..\src\logmod.c" />
     <ClCompile Include="..\..\src\main_rinex.c" />
     <ClCompile Include="..\..\src\memwatch.c" />
     <ClCompile Include="..\..\src\multipath.c" />
@@ -146,7 +148,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>

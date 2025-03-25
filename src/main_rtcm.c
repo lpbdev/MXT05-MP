@@ -1095,6 +1095,7 @@ static void* rtksvrthread(void* arg)
     for (cycle = 0; svr->state; cycle++)
     {
         tick = tickget();
+#ifdef _MSC_VER  // Redundant Code
         WIN32_FIND_DATA fileInfo;
         HANDLE hFind;
         DWORD fileSize;
@@ -1103,6 +1104,7 @@ static void* rtksvrthread(void* arg)
         if (hFind != INVALID_HANDLE_VALUE)
             fileSize = fileInfo.nFileSizeLow;
         FindClose(hFind);
+#endif
         FILE* fp_rover = ((file_t*)svr->stream[0].port)->fp;
         FILE* fp_base = ((file_t*)svr->stream[1].port)->fp;
         fobs[0] = fobs[1] = 0;
