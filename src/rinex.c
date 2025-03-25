@@ -1635,7 +1635,7 @@ extern void createdir(const char *path)
 	//*p = '\0';
 
 #ifdef WIN32
-    mkdir(buff, NULL);
+    mkdir(buff);
 #else
 	mkdir(buff, 0777);
 #endif

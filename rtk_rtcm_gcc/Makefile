@@ -8,7 +8,7 @@ ifeq ($(OS), Windows_NT)
 	LDLIBS  = -lm  -lwinmm -lpthread -lws2_32
 else
 	LDLIBS  = -lm -lpthread
-	OPTS    = -DENACMP 
+	OPTS    = -DENACMP
 endif
 
 CFLAGS  = -Wall -O0 -g -std=c11 -pedantic -I$(SRC) -DLAPACK $(OPTS)
@@ -22,13 +22,13 @@ CFLAGS  = -Wall -O0 -g -std=c11 -pedantic -I$(SRC) -DLAPACK $(OPTS)
 #CFLAGS  = -O3 -std=c11 -pedantic -I$(SRC) $(OPTS) -DMKL -I$(MKLDIR)/include
 #LDLIBS  = -L$(MKLDIR)/lib/32 -lm -lmkl_core -lmkl_intel -lmkl_gnu_thread -liomp5 -lpthread
 
-all	: main_rinex 
-main_rinex : main_rinex.o rtkcmn.o rinex.o  solution.o
-main_rinex : lambda.o myfun.o pntpos.o ephemeris.o 
-main_rinex : rtcm3.o rtkls.o rtkpos.o  tides.o stream.o multipath.o cJSON.o BandPassFilter.o fft.o
+all	: main_rtcm 
+main_rtcm : main_rtcm.o rtkcmn.o rinex.o  solution.o
+main_rtcm : lambda.o myfun.o pntpos.o ephemeris.o 
+main_rtcm : rtcm3.o rtkls.o rtkpos.o  tides.o stream.o multipath.o cJSON.o BandPassFilter.o fft.o
 
-main_rinex.o : $(SRC)/main_rinex.c
-	$(CC) -c $(CFLAGS) $(SRC)/main_rinex.c
+main_rtcm.o : $(SRC)/main_rtcm.c
+	$(CC) -c $(CFLAGS) $(SRC)/main_rtcm.c
 rtkcmn.o   : $(SRC)/rtkcmn.c
 	$(CC) -c $(CFLAGS) $(SRC)/rtkcmn.c
 rinex.o    : $(SRC)/rinex.c
@@ -66,31 +66,32 @@ fft.o     : $(SRC)/fft.c
 BandPassFilter.o     : $(SRC)/BandPassFilter.c
 	$(CC) -c $(CFLAGS) $(SRC)/BandPassFilter.c
 
-main_rinex.o : $(SRC)/rtk.h
-rtkcmn.o   : $(SRC)/rtk.h
-rinex.o    : $(SRC)/rtk.h
-rtkpos.o   : $(SRC)/rtk.h
-solution.o : $(SRC)/rtk.h
-lambda.o   : $(SRC)/rtk.h
-myfun.o    : $(SRC)/rtk.h
-sbas.o     : $(SRC)/rtk.h
-preceph.o  : $(SRC)/rtk.h
-pntpos.o   : $(SRC)/rtk.h
-ephemeris.o: $(SRC)/rtk.h
-options.o  : $(SRC)/rtk.h
-ppp.o      : $(SRC)/rtk.h
-ppp_ar.o   : $(SRC)/rtk.h
-rtcm.o     : $(SRC)/rtk.h
-rtcm2.o    : $(SRC)/rtk.h
-rtcm3.o    : $(SRC)/rtk.h
-rtcm3e.o   : $(SRC)/rtk.h
+main_rtcm.o 	: $(SRC)/rtk.h
+rtkcmn.o    : $(SRC)/rtk.h
+rinex.o     : $(SRC)/rtk.h
+rtkpos.o    : $(SRC)/rtk.h
+solution.o  : $(SRC)/rtk.h
+lambda.o    : $(SRC)/rtk.h
+myfun.o     : $(SRC)/rtk.h
+sbas.o      : $(SRC)/rtk.h
+preceph.o   : $(SRC)/rtk.h
+pntpos.o    : $(SRC)/rtk.h
+ephemeris.o : $(SRC)/rtk.h
+options.o   : $(SRC)/rtk.h
+ppp.o       : $(SRC)/rtk.h
+ppp_ar.o    : $(SRC)/rtk.h
+rtcm.o      : $(SRC)/rtk.h
+rtcm2.o     : $(SRC)/rtk.h
+rtcm3.o     : $(SRC)/rtk.h
+rtcm3e.o    : $(SRC)/rtk.h
 rtkls.o     : $(SRC)/rtk.h
-tides.o: $(SRC)/rtk.h
-stream.o: $(SRC)/rtk.h
-multipath.o :$(SRC)/rtk.h
-cJSON.o :$(SRC)/cJSON.h
-fft.o :$(SRC)/fft.h
+tides.o		: $(SRC)/rtk.h
+stream.o	: $(SRC)/rtk.h
+multipath.o : $(SRC)/rtk.h
+cJSON.o 	: $(SRC)/cJSON.h
+fft.o 		: $(SRC)/fft.h
 BandPassFilter.o :$(SRC)/BandPassFilter.h
+multipath.o :$(SRC)/rtk.h
 
 clean:
 	rm -rf *.o

@@ -979,6 +979,12 @@ int main(int argc, char** argv)
 		//}
 	}
 
+    g_rtk.mpflag = 0;
+    sprintf(g_rtk.path, "%s/dats/", outDir);
+    createdir(g_rtk.path);
+    if (g_rtk.mpflag == 1)
+        mkfpssat(&g_rtk);
+
 	obss.n = 0; obss.nmax = 1024;
 	obss.data = (obsd_t*)malloc(sizeof(obsd_t) * obss.nmax);
 
