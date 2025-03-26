@@ -989,7 +989,7 @@ int main(int argc, char** argv)
 
     char logfile[1024];
     sprintf(logfile, "%s/rtk.log", g_rtk.path);
-    logopen(logfile,1024); // 1M log.
+    logopen(logfile, 1024); // 1M log  for test
 
 	obss.n = 0; obss.nmax = 1024;
 	obss.data = (obsd_t*)malloc(sizeof(obsd_t) * obss.nmax);

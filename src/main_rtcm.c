@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "rtk.h"
 #include "multipath.h"
+#include "logmod.h"
 #include "cJSON.h"
 
 #ifndef WIN32
@@ -1502,7 +1503,7 @@ int main(int argc, char** argv)
     char buffport1[10][124] = { 0 };
     char buffport2[10][124] = { 0 };
   // char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "d:\\1\\test\\";
-   char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\14-19\\rtcm";
+    char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\14-19\\rtcm";
     m = 0; n = 0;
 
 
@@ -1586,12 +1587,7 @@ int main(int argc, char** argv)
         svr.rtk.maxSmoothPoint = 10;
     }
 
-    svr.rtk.mpflag = 1;
 
-    sprintf(svr.rtk.path, "%s/dats", fileDir);
-    createdir(svr.rtk.path);
-    if (svr.rtk.mpflag == 1)
-        mkfpssat(&svr.rtk);
 
     svr.rtk.cntEnuWind = 0;
     svr.rtk.maxMedianFilterPoint = 1 * 3600 / svr.rtk.opt.timeInterval + 1;
@@ -1647,6 +1643,20 @@ int main(int argc, char** argv)
         createdir(outDir);
     sprintf(outfile[0], "%s%c%s", outDir, sep, "rtk.pos");
     sprintf(outfile[1], "%s%c%s", outDir, sep, "filter.pos");
+
+    svr.rtk.mpflag = 1;
+
+    sprintf(svr.rtk.path, "%s/dats", outDir);
+    createdir(svr.rtk.path);
+    if (svr.rtk.mpflag == 1){
+        mkfpssat(&svr.rtk);
+    }
+
+    char logfile[1024];
+    sprintf(logfile, "%s/rtk.log", svr.rtk.path);
+    logopen(logfile, 1024); // 1M log  for test
+
+
     for (i = 0; i < 2; i++) {
         /* write header to output file */
         if (!outhead(outfile[i], infile, i, &svr.rtk.opt, &sopt)) {

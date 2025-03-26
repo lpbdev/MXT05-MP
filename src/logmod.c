@@ -1,21 +1,36 @@
 /* LOG Module */
 #include "logmod.h"
 
+
+typedef enum {
+    LOG_OFF = 0,
+    LOG_NOLIMIT,
+    LOG_FIXSIZE
+}logmod;
+
+const char* strlogmod[] = { "OFF", "UNLIMIT", "FIXSIZE" };
+
 #define LOGLINELEN 128
-static int logmode = 0;
+static logmod log_mode = LOG_OFF;
 static int log_nmax = 0;
 static int log_n = 0;
 static int log_level = 0;
 static FILE* fp_log = NULL;     /* file pointer of log */
 static char logph = '~';// log file place holder, space( ), comma(;), or star (*), tilde(~)
 
+
+
 // set log filesize, unit:KB
 static int logsize(int filesize) {
 
-    if(filesize <= 0) return 0;
+    if (filesize == 0) {
+        log_mode = LOG_NOLIMIT;
+        return 0;
+    }
 
+    log_mode = LOG_FIXSIZE;
     log_nmax = (int)filesize * 1024 / LOGLINELEN;
-    logmode = 1;
+
 
     char emptyline[LOGLINELEN];
     int i = 0;
@@ -31,16 +46,42 @@ static int logsize(int filesize) {
     return 0;
 }
 
-// filesize unit:KB
+static int logstatus(const char* path, int filesize) {
+    printf("\n++++++++++++++++++++++++++++++++++++++\n");
+    printf("LOG MODE            : %s\n", strlogmod[log_mode]);
+
+    if (log_mode != LOG_OFF) {
+        printf("LOG FILE PATH       : %s\n", path);
+    }
+
+    if (log_mode == LOG_FIXSIZE) {
+        printf("LOG FILE MAX SIZE   : %d KB\n", filesize);
+        printf("MAX LEN OF PER LINE : %d   \n", LOGLINELEN);
+        printf("PLACE HOLDER CHAR   : %c   \n", logph);
+    }
+
+    printf("++++++++++++++++++++++++++++++++++++++\n");
+
+    return 0;
+}
+
+
+/*  logopen: start log module
+    log_mode change with `path` and `filesize`
+    filesize unit:KB
+*/
 extern void logopen(const char* path, int filesize)
 {
-    if (!*path || !(fp_log = fopen(path, "w"))) {
+    if (path==NULL ||!*path || !(fp_log = fopen(path, "w"))) {
+        log_mode = LOG_OFF;
+        logstatus(path, filesize);
         fp_log = stderr;
         return;
     }
 
     logsize(filesize);
 
+    logstatus(path, filesize);
     return;
 }
 
@@ -50,7 +91,7 @@ extern void logclose()
         fclose(fp_log);
         fp_log =NULL;
     }
-    logmode = 0;
+    log_mode = LOG_OFF;
     log_nmax = 0;
     log_n = 0;
 }
@@ -91,7 +132,7 @@ extern void logmsg(int level, const char* format, ...)
 
     if (!fp_log) return;
 
-    if (logmode == 0) {
+    if (log_mode == LOG_OFF) {
         fprintf(fp_log, "%d ", level);
         va_start(ap, format); vfprintf(fp_log, format, ap); va_end(ap);
         fflush(fp_log);
