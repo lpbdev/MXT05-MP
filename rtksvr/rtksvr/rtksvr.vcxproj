@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\src\basiccommonops.h" />
     <ClInclude Include="..\..\src\cJSON.h" />
     <ClInclude Include="..\..\src\fft.h" />
+    <ClInclude Include="..\..\src\logmod.h" />
     <ClInclude Include="..\..\src\memwatch.h" />
     <ClInclude Include="..\..\src\multipath.h" />
     <ClInclude Include="..\..\src\rtk.h" />
@@ -35,6 +36,7 @@
     <ClCompile Include="..\..\src\fft.c" />
     <ClCompile Include="..\..\src\fft_process.c" />
     <ClCompile Include="..\..\src\lambda.c" />
+    <ClCompile Include="..\..\src\logmod.c" />
     <ClCompile Include="..\..\src\memwatch.c" />
     <ClCompile Include="..\..\src\multipath.c" />
     <ClCompile Include="..\..\src\myfun.c" />

@@ -14,7 +14,7 @@ const char* strlogmod[] = { "OFF", "UNLIMIT", "FIXSIZE" };
 static logmod log_mode = LOG_OFF;
 static int log_nmax = 0;
 static int log_n = 0;
-static int log_level = 0;
+//static int log_level = 0;
 static FILE* fp_log = NULL;     /* file pointer of log */
 static char logph = '~';// log file place holder, space( ), comma(;), or star (*), tilde(~)
 
@@ -117,6 +117,8 @@ static int writeLog(char* line, int linelen) {
     if (log_n > log_nmax * 3) {
         log_n = log_n - log_nmax;
     }
+
+    return 0;
 }
 
 extern void logmsg(int level, const char* format, ...)

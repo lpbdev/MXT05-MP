@@ -352,7 +352,7 @@ static void test_readres() {
     fclose(fp);
     free(hmp);
 }
-#endif
+
 static int test_mov_corr() {
     double a[10] = { 0,0,0,4,5,6,7,0,0 };
     double b[4] = { 9,8,7,6 };
@@ -384,7 +384,7 @@ static int test_correlation_Pearson() {
     return 0;
 }
 
-
+#endif
 
 extern int satres_init(satres_t* satres, int nmax) {
     satres->n = 0;
@@ -616,13 +616,13 @@ extern int mkfpssat(rtk_t *rtk) {
         char id[4];
         satno2id(i, id);
 
-        sprintf(satdatfile, "%s/sat%03d.dat\0", rtk->path,i);
-        //sprintf(satdatfile, "%s/sat%s.dat\0", rtk->path, id);
+        // sprintf(satdatfile, "%s/sat%03d.dat\0", rtk->path,i);
+        sprintf(satdatfile, "%s/sat%s.dat", rtk->path, id);
 
         if (rtk->mpflag == 1) { //create new MP cache data
             if ((rtk->ssat[i].fp_ssat = fopen(satdatfile, "wb+")) == NULL)
             {
-                printf("Fail to open file!\n");
+                printf("Fail to open file: %s\n",satdatfile);
                 return 1;
             }
             else {
@@ -632,11 +632,12 @@ extern int mkfpssat(rtk_t *rtk) {
         else if (rtk->mpflag == 2) { // load old MP cache data
             if ((rtk->ssat[i].fp_ssat = fopen(satdatfile, "rb+")) == NULL)
             {
-                printf("Fail to open file!\n");
+                printf("Fail to load file: %s\n",satdatfile);
                 return 1;
             }
         }
     }
+    return 0;
 }
 
 #else

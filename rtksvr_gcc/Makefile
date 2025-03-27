@@ -26,6 +26,7 @@ all	: rtksvr
 rtksvr : rtksvr.o rtkcmn.o rinex.o  solution.o
 rtksvr : lambda.o myfun.o pntpos.o ephemeris.o 
 rtksvr : rtcm3.o rtkls.o rtkpos.o  tides.o stream.o multipath.o cJSON.o BandPassFilter.o fft.o
+rtksvr : logmod.o
 
 rtksvr.o : $(SRC)/rtksvr.c
 	$(CC) -c $(CFLAGS) $(SRC)/rtksvr.c
@@ -56,6 +57,9 @@ stream.o     : $(SRC)/stream.c
 
 multipath.o     : $(SRC)/multipath.c
 	$(CC) -c $(CFLAGS) $(SRC)/multipath.c
+
+logmod.o     : $(SRC)/logmod.c
+	$(CC) -c $(CFLAGS) $(SRC)/logmod.c
 
 cJSON.o     : $(SRC)/cJSON.c
 	$(CC) -c $(CFLAGS) $(SRC)/cJSON.c

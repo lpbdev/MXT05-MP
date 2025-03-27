@@ -2,6 +2,8 @@
 #include "rtk.h"
 #include "cJSON.h"
 #include "multipath.h"
+#include "logmod.h"
+
 #ifndef WIN32
 #include <fcntl.h>
 #include <unistd.h>
@@ -2680,10 +2682,15 @@ int main(int argc, char** argv)
     sprintf(svr.rtk.path, "./projects/%s/", mntpntb);
     createdir(svr.rtk.path);
 
-    if (svr.rtk.mpflag ==1 && g_cfgOpt.enuWindowIndex > 0) {
+    if (svr.rtk.mpflag ==1 && g_cfgOpt.enuWindowIndex[0] > 0) {
         svr.rtk.mpflag = 2; // load old mp data
     }
     if (svr.rtk.mpflag != 0) mkfpssat(&svr.rtk);
+
+    char logfile[1024];
+    sprintf(logfile, "%s/rtk.log", svr.rtk.path);
+    logopen(logfile, 1024); // 1M log  for test
+
 
 	gpdebugBuff = debugBuff;
 	rtksvrinit(&svr);

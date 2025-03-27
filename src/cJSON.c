@@ -31,7 +31,9 @@
 #include <limits.h>
 #include <ctype.h>
 #include "cJSON.h"
+#ifdef _MSC_VER
 #pragma warning( disable : 4996) 
+#endif
 
 static const char *ep;
 

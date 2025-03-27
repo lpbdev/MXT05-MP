@@ -11,9 +11,11 @@
 #ifdef WIN32 
 #include <winsock2.h>
 #include <windows.h>
+#ifdef _MSC_VER
 #pragma    comment(lib,"winmm.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #pragma warning( disable : 4996) 
+#endif
 #define MEMWATCH
 #define DMW_STDIO
 

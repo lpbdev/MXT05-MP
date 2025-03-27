@@ -41,7 +41,9 @@ extern "C"
 #define cJSON_StringIsConst 10240
 
 #ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning( disable : 4996) 
+#endif
 #endif
 
 /* The cJSON structure: */
