@@ -364,7 +364,7 @@ static double sol_std(const sol_t* sol)
 }
 static const char* opt2sep(const solopt_t* opt)
 {
-    if (!*opt->sep) return " ";
+    if (!*opt->sep) return ",";
     else if (!strcmp(opt->sep, "\\t")) return "\t";
     return opt->sep;
 }
@@ -585,6 +585,49 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
             trace(4, "reset thresCnt\n");
         }
     }
+
+    if (sol->window[0].jumpflag[0] == 1||sol->window[0].jumpflag[1] == 1||sol->window[0].jumpflag[2] == 1) {
+        sol->window[2].n = 0; // sol->window[0].n;
+        for (i = 0; i < 3; i++) {
+            sol->window[2].ave[i] = 0.0;   // sol->window[0].ave[i];
+            sol->window[2].var[i] = 0.0;   // sol->window[0].var[i];
+            sol->window[2].std[i] = 0.0;   // sol->window[0].std[i];
+            sol->window[2].sumX2[i] = 0.0; // sol->window[0].sumX2[i];
+        }
+    }
+    // if(sol->window[2].jn[i]!=0){
+    //     if(wind12.n - wind12.jn[i] > wind12.nmax ){
+    //         wind12.ave[i] = wind12.ave[i] +wind12.jump[i];
+    //         wind12.jump[i]=0.0;
+    //         wind12.jn[i]=0;
+    //     }
+    //     wind12.jump[i] += sol->jump[i];
+    // }
+    update_data(&rtk->sol.wdata,enu2);
+    update_wind(&rtk->sol.window[0], &rtk->sol.wdata);
+    update_wind(&rtk->sol.window[1], &rtk->sol.wdata);
+    update_wind(&rtk->sol.window[2], &rtk->sol.wdata);
+    
+    calcjump(sol->window, sol->window+1, sol->jump, sol->tmpjump,3);
+
+    logmsg(2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n",s,
+        sol->window[0].ave[0], sol->window[0].ave[1], sol->window[0].ave[2],
+        sol->window[0].std[0], sol->window[0].std[1], sol->window[0].std[2]);
+
+    logmsg(2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
+        sol->window[1].ave[0], sol->window[1].ave[1], sol->window[1].ave[2],
+        sol->window[1].std[0], sol->window[1].std[1], sol->window[1].std[2]);
+
+    logmsg(2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
+        sol->window[2].ave[0], sol->window[2].ave[1], sol->window[2].ave[2],
+        sol->window[2].std[0], sol->window[2].std[1], sol->window[2].std[2]);
+    
+
+    logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,\n", s,
+        // sol->jump[0]+sol->window[2].ave[0],sol->jump[1]+sol->window[2].ave[0],sol->jump[2]+sol->window[2].ave[0],
+        sol->window[0].jumpflag[0],sol->window[0].jumpflag[1],sol->window[0].jumpflag[2],
+        sol->jump[0],sol->jump[1],sol->jump[2]);
+
     trace(4, "enu             :%10.4f %10.4f %10.4f\n", enu2[0], enu2[1], enu2[2]);
     trace(4, "aveEnu          :%10.4f %10.4f %10.4f\n", rtk->aveEnu[0], rtk->aveEnu[1], rtk->aveEnu[2]);
     trace(4, "stdEnu          :%10.4f %10.4f %10.4f\n", rtk->stdEnu[0], rtk->stdEnu[1], rtk->stdEnu[2]);
@@ -793,7 +836,8 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     //-----------------------------------smooth--------------------------------
     //if (trace_flag[1] == 1) {
     for (i = 0; i < 3; i++) {
-        enu2[i] = rtk->aveEnu[i];
+        // enu2[i] = rtk->aveEnu[i];
+        enu2[i]= sol->window[2].ave[i];
     }
     //}
     for (i = 0; i < 3; i++) sol->enu[i] = enu2[i];

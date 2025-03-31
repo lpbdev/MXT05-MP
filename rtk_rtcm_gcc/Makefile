@@ -26,7 +26,7 @@ all	: main_rtcm
 main_rtcm : main_rtcm.o rtkcmn.o rinex.o  solution.o
 main_rtcm : lambda.o myfun.o pntpos.o ephemeris.o 
 main_rtcm : rtcm3.o rtkls.o rtkpos.o  tides.o stream.o multipath.o cJSON.o BandPassFilter.o fft.o
-main_rtcm : logmod.o
+main_rtcm : logmod.o pos_filter.o
 
 main_rtcm.o : $(SRC)/main_rtcm.c
 	$(CC) -c $(CFLAGS) $(SRC)/main_rtcm.c
@@ -69,6 +69,8 @@ BandPassFilter.o     : $(SRC)/BandPassFilter.c
 
 logmod.o     : $(SRC)/logmod.c
 	$(CC) -c $(CFLAGS) $(SRC)/logmod.c
+pos_filter.o     : $(SRC)/pos_filter.c
+	$(CC) -c $(CFLAGS) $(SRC)/pos_filter.c
 
 
 main_rtcm.o 	: $(SRC)/rtk.h
@@ -96,7 +98,8 @@ multipath.o : $(SRC)/rtk.h
 cJSON.o 	: $(SRC)/cJSON.h
 fft.o 		: $(SRC)/fft.h
 BandPassFilter.o :$(SRC)/BandPassFilter.h
-multipath.o :$(SRC)/rtk.h
+logmod.o :$(SRC)/logmod.h
+pos_filter.o :$(SRC)/pos_filter.h
 
 
 clean:

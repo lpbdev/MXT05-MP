@@ -26,7 +26,7 @@ all	: rtksvr
 rtksvr : rtksvr.o rtkcmn.o rinex.o  solution.o
 rtksvr : lambda.o myfun.o pntpos.o ephemeris.o 
 rtksvr : rtcm3.o rtkls.o rtkpos.o  tides.o stream.o multipath.o cJSON.o BandPassFilter.o fft.o
-rtksvr : logmod.o
+rtksvr : logmod.o pos_filter.o
 
 rtksvr.o : $(SRC)/rtksvr.c
 	$(CC) -c $(CFLAGS) $(SRC)/rtksvr.c
@@ -60,6 +60,9 @@ multipath.o     : $(SRC)/multipath.c
 
 logmod.o     : $(SRC)/logmod.c
 	$(CC) -c $(CFLAGS) $(SRC)/logmod.c
+
+pos_filter.o     : $(SRC)/pos_filter.c
+	$(CC) -c $(CFLAGS) $(SRC)/pos_filter.c
 
 cJSON.o     : $(SRC)/cJSON.c
 	$(CC) -c $(CFLAGS) $(SRC)/cJSON.c
@@ -95,6 +98,7 @@ multipath.o : $(SRC)/rtk.h
 cJSON.o 	: $(SRC)/cJSON.h
 fft.o 		: $(SRC)/fft.h
 BandPassFilter.o :$(SRC)/BandPassFilter.h
+pos_filter.o :$(SRC)/pos_filter.h
 
 clean:
 	rm -rf *.o

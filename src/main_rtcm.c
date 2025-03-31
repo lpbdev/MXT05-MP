@@ -401,7 +401,7 @@ static void initCfgOpt(cfgopt_t* opt)
     opt->stationPCV[2] = 0.0;
     opt->senceopt = 0;
     opt->initEnuTime = 0.01;
-    opt->smoothWindowsTime = 12;
+    opt->smoothWindowsTime = 1;
     opt->detectSensitivity = 10;
     opt->typeSol = 0;
     opt->timeIntervalSolution = 0;
@@ -1544,8 +1544,8 @@ int main(int argc, char** argv)
     svr.rtk.sol.bslConstrain = 1;
     if (svr.rtk.opt.dynamics == 2) sopt.outvel = 1;
     if (svr.rtk.opt.smoothWindowsTime == 0) svr.rtk.opt.smoothWindowsTime = 24;
-    svr.rtk.opt.smoothWindowsTime = 11;
-    svr.rtk.opt.initEnuTime = 11;
+    svr.rtk.opt.smoothWindowsTime = 1;
+    svr.rtk.opt.initEnuTime = 1;
     SELETE_SAT_NUM = 25;
     NX = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
     NY = NX;
@@ -1576,7 +1576,7 @@ int main(int argc, char** argv)
     trace_flag[9] = 0; //9：模糊度 电离层
     trace_flag[10] = 1;//9：调试信息
 
-    svr.rtk.opt.timeInterval = 5.0;
+    svr.rtk.opt.timeInterval = 15.0;
     if (ROUND(svr.rtk.opt.timeInterval) != 0.0) {
         svr.rtk.maxSmoothPoint = svr.rtk.opt.smoothWindowsTime * 3600.0 / ROUND(svr.rtk.opt.timeInterval);
     }
@@ -1654,8 +1654,31 @@ int main(int argc, char** argv)
 
     char logfile[1024];
     sprintf(logfile, "%s/rtk.log", svr.rtk.path);
-    logopen(logfile, 1024); // 1M log  for test
+    logopen(logfile, 0); // 1M log  for test
+    
+   
+    /* open pos filter */
+    svr.rtk.sol.window[0].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[1].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[1].dely = (int)3 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[2].nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
 
+    svr.rtk.sol.window[0].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
+    svr.rtk.sol.window[0].thres[1]= posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[0].thres[2]= posmaxstd(0.005, 0.05);
+
+    svr.rtk.sol.window[1].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
+    svr.rtk.sol.window[1].thres[1]= posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[1].thres[2]= posmaxstd(0.005, 0.05);
+
+    printf("%f %f %f\n",svr.rtk.sol.window[1].thres[0],svr.rtk.sol.window[1].thres[1],svr.rtk.sol.window[1].thres[2]);
+
+    svr.rtk.sol.wdata.nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval + 1;
+    svr.rtk.sol.wdata.mode = FIL;
+
+    char wpospath[256];
+    sprintf(wpospath, "%s/wpos.dat", svr.rtk.path);
+    init_data(&svr.rtk.sol.wdata, wpospath);
 
     for (i = 0; i < 2; i++) {
         /* write header to output file */
@@ -1788,6 +1811,8 @@ int main(int argc, char** argv)
     pthread_join(svr.thread, NULL);
 #endif
     rtksvrfree(&svr);
+    free_data(&svr.rtk.sol.wdata);
+    
     for (i = 0; i < 3; i++)
         strclose(&svr.stream[i]);
     for (i = 0; i < 3; i++) {

@@ -2687,10 +2687,23 @@ int main(int argc, char** argv)
     }
     if (svr.rtk.mpflag != 0) mkfpssat(&svr.rtk);
 
+    /* open cycle log module */
     char logfile[1024];
     sprintf(logfile, "%s/rtk.log", svr.rtk.path);
     logopen(logfile, 1024); // 1M log  for test
 
+    /* open pos filter */
+    svr.rtk.sol.window[0].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[1].nmax = (int)5 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[1].dely = (int)2 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[2].nmax = (int)12 * 60 * 60 / svr.rtk.opt.timeInterval;
+
+    svr.rtk.sol.wdata.nmax = (int)12 * 60 * 60 / svr.rtk.opt.timeInterval + 1;
+    svr.rtk.sol.wdata.mode = FIL;
+    
+    char wpospath[256];
+    sprintf(wpospath, "%s/wpos.dat", svr.rtk.path);
+    init_data(&svr.rtk.sol.wdata, wpospath);
 
 	gpdebugBuff = debugBuff;
 	rtksvrinit(&svr);
@@ -3053,6 +3066,8 @@ int main(int argc, char** argv)
 	pthread_join(svr.thread, NULL);
 #endif
 	rtksvrfree(&svr);
+    free_data(&svr.rtk.sol.wdata);
+    
 	for (i = 0; i < 3; i++)
 		strclose(&svr.stream[i]);
 	for (i = 0; i < 3; i++) {

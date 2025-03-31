@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include "pos_filter.h"
 //
 //#define WIN32
 #ifdef WIN32 
@@ -907,6 +908,11 @@ typedef struct {
 	double aveFixSat;
 	unsigned int aveFixSatCnt;
 	int nAveFixCnt[3];
+
+    wind_t window[3];
+    double jump[3];
+    double tmpjump[3];
+    data_t wdata;
 }sol_t;
 
 typedef struct {

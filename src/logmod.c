@@ -134,7 +134,7 @@ extern void logmsg(int level, const char* format, ...)
 
     if (!fp_log) return;
 
-    if (log_mode == LOG_OFF) {
+    if (log_mode == LOG_NOLIMIT) {
         fprintf(fp_log, "%d ", level);
         va_start(ap, format); vfprintf(fp_log, format, ap); va_end(ap);
         fflush(fp_log);
