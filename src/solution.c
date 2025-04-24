@@ -364,6 +364,7 @@ static double sol_std(const sol_t* sol)
 }
 static const char* opt2sep(const solopt_t* opt)
 {
+    return ",";
     if (!*opt->sep) return ",";
     else if (!strcmp(opt->sep, "\\t")) return "\t";
     return opt->sep;
@@ -836,8 +837,8 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     //-----------------------------------smooth--------------------------------
     //if (trace_flag[1] == 1) {
     for (i = 0; i < 3; i++) {
-        // enu2[i] = rtk->aveEnu[i];
-        enu2[i]= sol->window[2].ave[i];
+        enu2[i] = rtk->aveEnu[i];
+        // enu2[i]= sol->window[2].ave[i];
     }
     //}
     for (i = 0; i < 3; i++) sol->enu[i] = enu2[i];

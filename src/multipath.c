@@ -599,6 +599,8 @@ extern int calOffset(unsigned char sat, gtime_t ctime, int intv) {
 extern int mkfpssat(rtk_t *rtk) {
     int i = 0,j=0;
     int nmax = 0.0;
+
+    if(rtk->mpflag==0) return 0;
     for (i = 0; i < MAXSAT; i++) {
         nmax = (int)periodDay(i) * 86400 / rtk->opt.timeInterval;
 #if 0

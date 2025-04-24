@@ -5,6 +5,12 @@
 #else
 #include <dirent.h>
 #endif
+
+#include "multipath.h"
+#include "logmod.h"
+#include "cJSON.h"
+
+
 #define MINSNR 20
 
 obs_t obss = { 0 };          /* observation data */
@@ -638,7 +644,7 @@ int main(int argc, char** argv)
 	//char infileDir[MAXSTRPATH] = "F:\\data\\BDS\\LouDing";
 	//char infileDir[MAXSTRPATH] = "F:\\data\\BDS\\ShuiKu";
 	//char infileDir[MAXSTRPATH] = "F:\\data\\BDS\\ShuYin";
-	char infileDir[MAXSTRPATH] = "D:\\rtktest\\03-01";
+	char infileDir[MAXSTRPATH] = "";
 	//char infileDir[MAXSTRPATH] = "F:\\data\\20240705\\SingleBDS_MRD\\21100100001208_21100100001195\\rinex";//单北斗静态前后端解算超MRD需求
 	//char infileDir[MAXSTRPATH] = "F:\\data\\20240705\\2cm_1cm\\21100100001208_2k1100100001603";//单北斗静态前后端解算超MRD需求
 	//char infileDir[MAXSTRPATH] = "F:\\data\\20240708\\SingleBDS_2cm\\rinex";//单北斗静态前后端解算超MRD需求
@@ -647,7 +653,7 @@ int main(int argc, char** argv)
 		strcpy(fileDir, argv[1]);
 	else
 		strcpy(fileDir, infileDir);
-	printf("fileDir %s\n", fileDir);
+
 	char* p = buf;
 	double pos[3], dr[3], r[3];
 	char addr[256] = "", port[256] = "", user[256] = { 0 }, passwd[256] = { 0 };
@@ -656,7 +662,41 @@ int main(int argc, char** argv)
 	unsigned int enuAveCnt[3] = { 0 };
 	int startFlag = 0, endFlag = 0;
 
-
+        
+    g_rtk.opt.timeInterval = 1.0;
+    g_rtk.opt.smoothWindowsTime = 1;
+    g_rtk.mpflag = 0;
+#if 1
+    double es[] = { 2000,1,1,0,0,0 }, ee[] = { 2000,12,31,23,59,59 };
+    for (i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "-dir") && i + 1 < argc) {
+            strcpy(fileDir, argv[++i]);
+        } else if (!strcmp(argv[i], "-refb") && i + 1 < argc) {
+            for (j = 0; j < 3; j++){
+                g_rtk.opt.rb[j] = atof(argv[++i]);
+            }
+        } else if (!strcmp(argv[i], "-refr") && i + 1 < argc) {
+            for (j = 0; j < 3; j++){
+                g_rtk.opt.ru[j] = atof(argv[++i]);
+            }
+        } else if (!strcmp(argv[i], "-ts") && i + 2 < argc) {
+            sscanf(argv[++i], "%lf/%lf/%lf", es, es + 1, es + 2);
+            sscanf(argv[++i], "%lf:%lf:%lf", es + 3, es + 4, es + 5);
+            ts = epoch2time(es);
+        } else if (!strcmp(argv[i], "-te") && i + 2 < argc) {
+            sscanf(argv[++i], "%lf/%lf/%lf", ee, ee + 1, ee + 2);
+            sscanf(argv[++i], "%lf:%lf:%lf", ee + 3, ee + 4, ee + 5);
+            te = epoch2time(ee);
+        } else if (!strcmp(argv[i], "-ti") && i + 1 < argc) {
+            g_rtk.opt.timeInterval = atof(argv[++i]);
+        } else if (!strcmp(argv[i], "-st") && i + 1 < argc) {
+            g_rtk.opt.smoothWindowsTime = atof(argv[++i]);
+        }else if (!strcmp(argv[i], "-mp") ) {
+            g_rtk.mpflag = 1;
+        }
+    }
+#endif
+    printf("fileDir %s, mpflag, %d\n", fileDir,g_rtk.mpflag);
 	fptest = fopen("test.log", "w");
 	g_nav.n = MAXEPH;
 	g_nav.ng = MAXGEPH;
@@ -788,8 +828,8 @@ int main(int argc, char** argv)
 	g_rtk.opt.std = 0.01;
 	g_rtk.sol.bslConstrain = 1;
 	g_rtk.opt.timeInterval = 15.0;
-	g_rtk.opt.initEnuTime = 11;
-	g_rtk.opt.smoothWindowsTime = 11;
+	g_rtk.opt.initEnuTime = 1;
+	g_rtk.opt.smoothWindowsTime = 12;
 	g_rtk.opt.mode = 2;
 	if (g_rtk.opt.dynamics == 2) sopt.outvel = 1;
 	g_rtk.opt.detectSensitivity = 10;
@@ -805,7 +845,8 @@ int main(int argc, char** argv)
 	g_rtk.opt.iggiiik0 = 1.5;
 	g_rtk.opt.iggiiik1 = 3.0;
 
-	sprintf(outDir, "%s%c%s_%d", fileDir, sep, "result", SVN_VERSION);
+	// sprintf(outDir, "%s%c%s_%d", fileDir, sep, "result", SVN_VERSION);
+    sprintf(outDir, "%s%c%s_%d_%d", fileDir, sep, "result", SVN_VERSION,g_rtk.mpflag);
 
 	iniGloLam();
 	/*g_rtk_epoch.opt.senceopt = 0;
@@ -981,15 +1022,29 @@ int main(int argc, char** argv)
 		//}
 	}
 
-    g_rtk.mpflag = 0;
     sprintf(g_rtk.path, "%s/dats/", outDir);
     createdir(g_rtk.path);
-    if (g_rtk.mpflag == 1)
+    if (g_rtk.mpflag == 1){
         mkfpssat(&g_rtk);
-
+    }
     char logfile[1024];
     sprintf(logfile, "%s/rtk.log", g_rtk.path);
     logopen(logfile, 1024); // 1M log  for test
+
+       
+    /* open pos filter */
+    g_rtk.sol.window[0].nmax = (int)2 * 60 / g_rtk.opt.timeInterval;
+    g_rtk.sol.window[1].nmax = (int)2 * 60 / g_rtk.opt.timeInterval;
+    g_rtk.sol.window[1].dely = (int)3 * 60 / g_rtk.opt.timeInterval;
+    g_rtk.sol.window[2].nmax = (int)g_rtk.opt.smoothWindowsTime * 60 * 60 / g_rtk.opt.timeInterval;
+
+    g_rtk.sol.window[0].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
+    g_rtk.sol.window[0].thres[1]= posmaxstd(0.002, 0.02);
+    g_rtk.sol.window[0].thres[2]= posmaxstd(0.005, 0.05);
+
+    g_rtk.sol.window[1].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
+    g_rtk.sol.window[1].thres[1]= posmaxstd(0.002, 0.02);
+    g_rtk.sol.window[1].thres[2]= posmaxstd(0.005, 0.05);
 
 	obss.n = 0; obss.nmax = 1024;
 	obss.data = (obsd_t*)malloc(sizeof(obsd_t) * obss.nmax);
@@ -1026,7 +1081,7 @@ int main(int argc, char** argv)
 			return -1;
 		}
 		//-------------------------------------------------------------------------------------------------------------
-		if (strncmp(file->d_name, "rover", 4) == 0 || strncmp(file->d_name, "novatel", 4) == 0 || strncmp(file->d_name, "ROVER", 4) == 0) {
+		if (strncmp(file->d_name, "rove", 4) == 0 || strncmp(file->d_name, "novatel", 4) == 0 || strncmp(file->d_name, "ROVER", 4) == 0) {
 			strcpy(infile[0], filepath);
 			indexFile++;
 		}

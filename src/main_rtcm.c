@@ -400,8 +400,8 @@ static void initCfgOpt(cfgopt_t* opt)
     opt->stationPCV[1] = 0.0;
     opt->stationPCV[2] = 0.0;
     opt->senceopt = 0;
-    opt->initEnuTime = 0.01;
-    opt->smoothWindowsTime = 1;
+    opt->initEnuTime = 1;
+    opt->smoothWindowsTime = 12;
     opt->detectSensitivity = 10;
     opt->typeSol = 0;
     opt->timeIntervalSolution = 0;
@@ -1503,10 +1503,46 @@ int main(int argc, char** argv)
     char buffport1[10][124] = { 0 };
     char buffport2[10][124] = { 0 };
   // char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "d:\\1\\test\\";
-    char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\14-19\\rtcm";
+    // char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\03272";
+    char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\kunchi";
+    
     m = 0; n = 0;
 
-
+    
+    svr.rtk.opt.timeInterval = 1.0;
+    svr.rtk.opt.smoothWindowsTime = 1;
+    svr.rtk.mpflag = 0;
+#if 1
+    int j=0; gtime_t ts, te; 
+    double es[] = { 2000,1,1,0,0,0 }, ee[] = { 2000,12,31,23,59,59 };
+    for (i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "-dir") && i + 1 < argc) {
+            strcpy(fileDir, argv[++i]);
+        } else if (!strcmp(argv[i], "-refb") && i + 1 < argc) {
+            for (j = 0; j < 3; j++){
+                svr.rtk.opt.rb[j] = atof(argv[++i]);
+            }
+        } else if (!strcmp(argv[i], "-refr") && i + 1 < argc) {
+            for (j = 0; j < 3; j++){
+                svr.rtk.opt.ru[j] = atof(argv[++i]);
+            }
+        } else if (!strcmp(argv[i], "-ts") && i + 2 < argc) {
+            sscanf(argv[++i], "%lf/%lf/%lf", es, es + 1, es + 2);
+            sscanf(argv[++i], "%lf:%lf:%lf", es + 3, es + 4, es + 5);
+            ts = epoch2time(es);
+        } else if (!strcmp(argv[i], "-te") && i + 2 < argc) {
+            sscanf(argv[++i], "%lf/%lf/%lf", ee, ee + 1, ee + 2);
+            sscanf(argv[++i], "%lf:%lf:%lf", ee + 3, ee + 4, ee + 5);
+            te = epoch2time(ee);
+        } else if (!strcmp(argv[i], "-ti") && i + 1 < argc) {
+            svr.rtk.opt.timeInterval = atof(argv[++i]);
+        } else if (!strcmp(argv[i], "-st") && i + 1 < argc) {
+            svr.rtk.opt.smoothWindowsTime = atof(argv[++i]);
+        }else if (!strcmp(argv[i], "-mp") ) {
+            svr.rtk.mpflag =1;
+        }
+    }
+#endif
 
     gpdebugBuff = debugBuff;
     rtksvrinit(&svr);
@@ -1544,7 +1580,6 @@ int main(int argc, char** argv)
     svr.rtk.sol.bslConstrain = 1;
     if (svr.rtk.opt.dynamics == 2) sopt.outvel = 1;
     if (svr.rtk.opt.smoothWindowsTime == 0) svr.rtk.opt.smoothWindowsTime = 24;
-    svr.rtk.opt.smoothWindowsTime = 1;
     svr.rtk.opt.initEnuTime = 1;
     SELETE_SAT_NUM = 25;
     NX = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
@@ -1576,7 +1611,6 @@ int main(int argc, char** argv)
     trace_flag[9] = 0; //9：模糊度 电离层
     trace_flag[10] = 1;//9：调试信息
 
-    svr.rtk.opt.timeInterval = 15.0;
     if (ROUND(svr.rtk.opt.timeInterval) != 0.0) {
         svr.rtk.maxSmoothPoint = svr.rtk.opt.smoothWindowsTime * 3600.0 / ROUND(svr.rtk.opt.timeInterval);
     }
@@ -1643,8 +1677,6 @@ int main(int argc, char** argv)
         createdir(outDir);
     sprintf(outfile[0], "%s%c%s", outDir, sep, "rtk.pos");
     sprintf(outfile[1], "%s%c%s", outDir, sep, "filter.pos");
-
-    svr.rtk.mpflag = 1;
 
     sprintf(svr.rtk.path, "%s/dats", outDir);
     createdir(svr.rtk.path);

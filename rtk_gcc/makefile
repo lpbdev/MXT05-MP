@@ -26,7 +26,7 @@ all	: main_rinex
 main_rinex : main_rinex.o rtkcmn.o rinex.o  solution.o
 main_rinex : lambda.o myfun.o pntpos.o ephemeris.o 
 main_rinex : rtcm3.o rtkls.o rtkpos.o  tides.o stream.o multipath.o cJSON.o BandPassFilter.o fft.o
-main_rinex : logmod.o
+main_rinex : logmod.o pos_filter.o
 
 main_rinex.o : $(SRC)/main_rinex.c
 	$(CC) -c $(CFLAGS) $(SRC)/main_rinex.c
@@ -67,6 +67,8 @@ fft.o     : $(SRC)/fft.c
 	
 logmod.o     : $(SRC)/logmod.c
 	$(CC) -c $(CFLAGS) $(SRC)/logmod.c
+pos_filter.o     : $(SRC)/pos_filter.c
+	$(CC) -c $(CFLAGS) $(SRC)/pos_filter.c
 
 BandPassFilter.o     : $(SRC)/BandPassFilter.c
 	$(CC) -c $(CFLAGS) $(SRC)/BandPassFilter.c
@@ -92,11 +94,13 @@ rtcm3e.o   : $(SRC)/rtk.h
 rtkls.o     : $(SRC)/rtk.h
 tides.o: $(SRC)/rtk.h
 stream.o: $(SRC)/rtk.h
-multipath.o :$(SRC)/rtk.h
+multipath.o :$(SRC)/multipath.h
 cJSON.o :$(SRC)/cJSON.h
 fft.o :$(SRC)/fft.h
 BandPassFilter.o :$(SRC)/BandPassFilter.h
 logmod.o :$(SRC)/logmod.h
+pos_filter.o :$(SRC)/pos_filter.h
+
 
 clean:
 	rm -rf *.o

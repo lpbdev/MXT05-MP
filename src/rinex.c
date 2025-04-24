@@ -2,6 +2,7 @@
 
 #ifdef WIN32
 #include <windows.h>
+#include <direct.h>
 #endif
 
 #define ROUND(x)    (int)floor((x)+0.5)
@@ -1635,7 +1636,7 @@ extern void createdir(const char *path)
 	//*p = '\0';
 
 #ifdef WIN32
-    mkdir(buff);
+    _mkdir(buff);
 #else
 	mkdir(buff, 0777);
 #endif

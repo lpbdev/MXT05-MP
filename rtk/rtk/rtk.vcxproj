@@ -27,6 +27,7 @@
     <ClInclude Include="..\..\src\logmod.h" />
     <ClInclude Include="..\..\src\memwatch.h" />
     <ClInclude Include="..\..\src\multipath.h" />
+    <ClInclude Include="..\..\src\pos_filter.h" />
     <ClInclude Include="..\..\src\rtk.h" />
     <ClInclude Include="..\..\src\types.h" />
   </ItemGroup>
@@ -43,6 +44,7 @@
     <ClCompile Include="..\..\src\multipath.c" />
     <ClCompile Include="..\..\src\myfun.c" />
     <ClCompile Include="..\..\src\pntpos.c" />
+    <ClCompile Include="..\..\src\pos_filter.c" />
     <ClCompile Include="..\..\src\rinex.c" />
     <ClCompile Include="..\..\src\rtcm3.c" />
     <ClCompile Include="..\..\src\rtkcmn.c" />

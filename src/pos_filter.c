@@ -6,7 +6,7 @@
 #include "pos_filter.h"
 #pragma warning( disable : 4996) 
 
-
+#ifdef POS_FILTER
 static int getDat(FILE* fp, int offset, double *value, int n) {
     if (fp == NULL) {
         printf("fp NULL in %s\n", __func__);
@@ -536,3 +536,14 @@ int main(){
 #endif
 
 
+#else
+
+extern int init_data(data_t* poss, char* posdatpath) { return 0; }
+extern int free_data(data_t* poss) { return 0; }
+extern int update_data(data_t* poss, double* newdata) { return 0; }
+extern int update_wind(wind_t* wind, data_t* data) { return 0; }
+extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE* fp) { return 0; }
+extern double posmaxstd(double std, double maxjump) { return 0.0; }
+extern int calcjump(wind_t* wa, wind_t* wb, double* jump, double* tmpjump, int nj) { return 0; }
+
+#endif
