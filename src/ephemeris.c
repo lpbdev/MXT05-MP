@@ -611,6 +611,26 @@ extern void assignSatBias(rtk_t* rtk, gtime_t teph, gtime_t tepb, obsd_tmp_t* ob
 	//printf("-------------\n");
 }
 
+extern int isGEO(unsigned char sat) {
+    char id[4];
+    satno2id(sat, id);
+
+    if (!strncmp(id, "C01", 3) || !strncmp(id, "C02", 3) ||
+        !strncmp(id, "C03", 3) || !strncmp(id, "C04", 3) ||
+        !strncmp(id, "C05", 3) || !strncmp(id, "C59", 3) || !strncmp(id, "C60", 3))
+        return 1;
+    return 0;
+}
+extern int isIGSO(unsigned char sat){
+    char id[4];
+    satno2id(sat, id);
+
+    if (!strncmp(id, "C06", 3) || !strncmp(id, "C07", 3) || !strncmp(id, "C08", 3) ||
+        !strncmp(id, "C09", 3) || !strncmp(id, "C10", 3) || !strncmp(id, "C13", 3) || !strncmp(id, "C16", 3) ||
+        !strncmp(id, "C38", 3) || !strncmp(id, "C39", 3) || !strncmp(id, "C40", 3))
+        return 1;
+    return 0;
+}
 
 extern int isMEO(unsigned char sat) {
     // double delays[60] = { 0.0 };

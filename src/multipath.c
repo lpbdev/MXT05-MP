@@ -596,7 +596,7 @@ extern int calOffset(unsigned char sat, gtime_t ctime, int intv) {
 
     char id[4];
     satno2id(sat,id);
-    trace(2, "$SAT, %s, %ld, %d, ", id, ctime.time, offset);
+    trace(2, "$SAT, %s, %ld, %d\n", id, ctime.time, offset);
     return offset;
 }
 

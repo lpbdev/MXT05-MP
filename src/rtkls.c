@@ -242,7 +242,9 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
                 if (rtk->mpflag == 1 && f==0) {
 
                     gtime_t ctime = obs[0].time;
-                    ctime.time = ctime.time - ((int)(get_sid_T(sat[j], obs[0].time, &g_nav) / rtk->opt.timeInterval)) * rtk->opt.timeInterval;
+                    double epochlen  = get_sid_T(sat[j], obs[0].time, &g_nav);
+                    trace(2, "$EPH, %s,%s, %.2f,%d\n", tstr,id, epochlen,(int)(epochlen / rtk->opt.timeInterval));
+                    ctime.time = ctime.time - ((int)(epochlen / rtk->opt.timeInterval)) * rtk->opt.timeInterval;
                     int offset2 = calOffset(obs[j].sat, ctime, (int)rtk->opt.timeInterval);
 
                     corr_j = getDat(rtk->ssat[obs[j].sat].fp_ssat, offset2);
@@ -255,6 +257,7 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
                         satres_add(rtk->ssat[sat[j] - 1].satres, &data);
 #endif  
                         int offset = calOffset(sat[j], obs[0].time, rtk->opt.timeInterval);
+
                         writeDat(rtk->ssat[obs[j].sat].fp_ssat, offset, data.res);
                    
 

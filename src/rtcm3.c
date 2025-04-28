@@ -1235,13 +1235,13 @@ static void saveMsmObs(rtcm_t* rtcm, int sys, msm_h_t* h, const double* r,
 				if (r[i] != 0.0 && pr[j] > -1E12) {
 					rtcm->obs.data[index].P[ind[k]] = r[i] + pr[j];
 				}
-				if (ROUND(rtcm->obs.data[index].P[ind[k]]) == 25300153) {
-					double ri = r[i];
-					double prj = pr[j];
-					double p = rtcm->obs.data[index].P[ind[k]];
-					printf("test\n");
-				}
-				double cpj = cp[j];
+				// if (ROUND(rtcm->obs.data[index].P[ind[k]]) == 25300153) {
+				// 	double ri = r[i];
+				// 	double prj = pr[j];
+				// 	double p = rtcm->obs.data[index].P[ind[k]];
+				// 	printf("test\n");
+				// }
+				// double cpj = cp[j];
 				/* carrier-phase (cycle) */
 				if (r[i] != 0.0 && cp[j] > -1E12 && wl > 0.0) {
 					rtcm->obs.data[index].L[ind[k]] = (r[i] + cp[j]) / wl;

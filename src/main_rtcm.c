@@ -25,7 +25,7 @@
 #ifdef _MSC_VER
 #include"../src/include/dirent_bak.h"
 #else
-#include <dirent.h>
+//#include <dirent.h>
 #endif
 
 rtksvr_t svr;
@@ -1150,6 +1150,7 @@ static void* rtksvrthread(void* arg)
             }
             g_baseObsSyncIndex++;
         }
+
         for (i = 0; i < fobs[0]; i++) {
             //if (svr->obs[0][i].data[0].time.time % 15 != 0)continue;
             trace(0x10, "k=%d rover time=%d\n", i, svr->obs[0][i].data[0].time.time);
@@ -1341,6 +1342,11 @@ static void* rtksvrthread(void* arg)
 #endif
             gpdebugBuff = debugBuff;
 
+            if (obs[0].time.time % (int)svr->rtk.opt.timeInterval != 0) {
+                continue;
+            }
+            printf("TIME: %ld, %.0f;\n", obs[0].time.time, svr->rtk.opt.timeInterval);
+
             trace(0xff, "------------rtk dynamics-------------\n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
             time = svr->rtk.sol.time;
@@ -1479,6 +1485,7 @@ int main(int argc, char** argv)
     char svrBuff[1024];
     FILE* fpVersion = NULL;
     initCfgOpt(&g_cfgOpt);
+    setCfgOpt(g_cfgOpt, &(svr.rtk.opt));
 
     sprintf(svrBuff, "./rtkversion.log");
     fpVersion = fopen(svrBuff, "w");
@@ -1497,15 +1504,10 @@ int main(int argc, char** argv)
     char** paths = paths1;
     char addr[256] = "", port[256] = "", user[256] = { 0 }, passwd[256] = { 0 };
     double enuAve[3] = { 0.0 };
-    char buf[1024] = { 0 }, buff[1024];
     unsigned int enuAveCnt[3] = { 0 };
     int m, n, startFlag = 0, endFlag = 0, num = 0;
     char* revbuf[64] = { 0 };
     double rb[3] = { 0 };
-    char buffport1[10][124] = { 0 };
-    char buffport2[10][124] = { 0 };
-  // char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "d:\\1\\test\\";
-    // char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\03272";
     char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\kunchi";
     
     m = 0; n = 0;
@@ -1518,8 +1520,12 @@ int main(int argc, char** argv)
     int j=0; gtime_t ts, te; 
     double es[] = { 2000,1,1,0,0,0 }, ee[] = { 2000,12,31,23,59,59 };
     for (i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "-dir") && i + 1 < argc) {
+        if (!strcmp(argv[i], "-out") && i + 1 < argc) {
             strcpy(fileDir, argv[++i]);
+        } else if (!strcmp(argv[i], "-fr") && i + 1 < argc) {
+            strcpy(strpath[0], argv[++i]);
+        } else if (!strcmp(argv[i], "-fb") && i + 1 < argc) {
+            strcpy(strpath[1], argv[++i]);
         } else if (!strcmp(argv[i], "-refb") && i + 1 < argc) {
             for (j = 0; j < 3; j++){
                 svr.rtk.opt.rb[j] = atof(argv[++i]);
@@ -1569,7 +1575,6 @@ int main(int argc, char** argv)
     svr.state = 1;
     svr.tick = tickget();
 
-    setCfgOpt(g_cfgOpt, &(svr.rtk.opt));
     svr.rtk.opt.dynamics = 0;
     svr.rtk.opt.maxgdop = 30.0;
     svr.rtk.opt.mode = 2;
@@ -1645,19 +1650,14 @@ int main(int argc, char** argv)
     sopt.times = 3;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间  
     sopt.outvel = 0;
     sopt.outhead = 0;
-    //fptcp = fopen("./tcp.log", "w");
-    //if (fptcp == NULL) {
-    //	printf("tcp.log\n");
-    //	return 0;
-    //}
-    //svr.rtk.rb[0] = svr.rtk.opt.rb[0] = -2611692.7396;
-    //svr.rtk.rb[1] = svr.rtk.opt.rb[1] = 4751725.6154;
-    //svr.rtk.rb[2] = svr.rtk.opt.rb[2] = 3347492.8126;
+
     strinitcom();//初始化网络
     memset(configFileFath, 0, MAXSTRPATH);
 
     char outDir[1024], outFileName[1024], outfile[2][1024], * ext;
     char sep = (char)FILEPATHSEP;
+
+#if 0
     struct dirent* file;
     DIR* dir;
     if (!(dir = opendir(fileDir))) {
@@ -1673,6 +1673,8 @@ int main(int argc, char** argv)
         else
             sprintf(strpath[1], "%s%c%s", fileDir, sep, file->d_name);
     }
+#endif
+
     sprintf(outDir, "%s%c%s_%d_%d", fileDir, sep, "result", SVN_VERSION,svr.rtk.mpflag);
     if (access(outDir, 0) != 0)
         createdir(outDir);

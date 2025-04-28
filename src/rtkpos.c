@@ -628,11 +628,11 @@ extern double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt
     if (snr > 45)
         var *= 1.0;
     else if (snr > 40)
-        var *= 2.0;
+        var *= 1.0;
     else if (snr > 35)
-        var *= 5.0;
+        var *= 2.0;
     else if (snr > 30)
-        var *= 10.0;
+        var *= 5.0;
     else if (obs->SNR[f] / 4.0 > 10)
         var *= 2.0;
 	else
