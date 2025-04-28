@@ -611,7 +611,7 @@ static void ddcov(const int* nb, int n, const double* Ri, const double* Rj,
 }
 
 /* single-differenced measurement error variance -----------------------------*/
-static double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt)
+extern double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt)
 {
 	double a, b, c = 0 * bl / 1E4;
 	double sinel, var;
@@ -623,17 +623,31 @@ static double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt
 	//if (obs->LockTime[f] < 3000)
 	//	var = var + (3000 - obs->LockTime[f])/16000.0;
 
-	if (obs->SNR[f] / 4.0 > 30)
-		var *= 1.0;
-	else if (obs->SNR[f] / 4.0 > 22)
-		var *= 1.5;
-	else if (obs->SNR[f] / 4.0 > 10)
-		var *= 2.0;
+    double snr = obs->SNR[f] / 4.0 ;
+
+    if (snr > 45)
+        var *= 1.0;
+    else if (snr > 40)
+        var *= 2.0;
+    else if (snr > 35)
+        var *= 5.0;
+    else if (snr > 30)
+        var *= 10.0;
+    else if (obs->SNR[f] / 4.0 > 10)
+        var *= 2.0;
 	else
 		var *= 5.0;
-	//if (obs->LockTime[f] < 1000) {
-	//	var *= 2.0;
-	//}
+	if (obs->LockTime[f] < 1000) {
+		var *= 2.0;
+	}
+
+    if(isIGSO(obs->sat)==1){
+        var *= 1.0;
+    }else if(isMEO(obs->sat)==1){
+        var *= 2.0;
+    }else if(isGEO(obs->sat)==1){
+        var *= 5.0;
+    }
 	//return 2.0 * (a * a + b * b / sinel / sinel + c * c);
 	return var;
 }
@@ -3025,13 +3039,7 @@ int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 		trace(0xff, "base  time=%ld\n", obs[nu].time.time);
 	time = rtk->sol.time;
 
-	char s[64] = { 0 };
-	time2str(obs[0].time, s, 0);
-	memcpy(rtk->s, s, sizeof(s));
 
-	if (strstr(rtk->s, "2023/02/11 14:00:00")) {
-		i = 0;
-	}
 	//printf("%s\n", rtk->s);
 	detectSlip(rtk, obs, nu, nr);
 	if (time.time != 0) {

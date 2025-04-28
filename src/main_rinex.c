@@ -827,7 +827,6 @@ int main(int argc, char** argv)
 	g_rtk.opt.maxtdiff = 5;
 	g_rtk.opt.std = 0.01;
 	g_rtk.sol.bslConstrain = 1;
-	g_rtk.opt.timeInterval = 15.0;
 	g_rtk.opt.initEnuTime = 1;
 	g_rtk.opt.smoothWindowsTime = 12;
 	g_rtk.opt.mode = 2;
@@ -1065,7 +1064,7 @@ int main(int argc, char** argv)
 	sprintf(outfile[1], "%s%c%s_%s_%s.pos", outDir, sep, optsys,"filter", lsqOrkalman);
 
 	if (!(dir = opendir(fileDir))) {
-		printf("ERROR: open obsdir failed, please check it!\n");
+		printf("ERROR: open obsdir failed: %s\n",fileDir);
 		system("pause");
 		return -1;
 	}
@@ -1101,7 +1100,7 @@ int main(int argc, char** argv)
 
 	//--------------------------------------
 	if (!(dir = opendir(fileDir))) {
-		printf("ERROR: open obsdir failed, please check it!\n");
+		printf("ERROR: open obsdir failed:%s\n",fileDir);
 		return -1;
 	}
 	while ((file = readdir(dir)) != NULL) {

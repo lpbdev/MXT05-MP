@@ -1158,13 +1158,15 @@ static void* rtksvrthread(void* arg)
                 for (f = 0; f < NFREQ; f++)	svr->rtk.ssat[j].SNR[f] = 0;
             }
             for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++) {
+
                 sys = satsys(svr->obs[0][i].data[j].sat, &prn);
+                if (sys != SYS_BDS) continue;
                 if (!(svr->rtk.opt.sys & 1) && sys == SYS_GPS)continue;
                 if (!(svr->rtk.opt.sys & 2) && sys == SYS_QZS)continue;
                 if (!(svr->rtk.opt.sys & 4) && sys == SYS_BDS)continue;
                 if (!(svr->rtk.opt.sys & 8) && sys == SYS_GAL)continue;
                 if (!(svr->rtk.opt.sys & 16) && sys == SYS_GLO)continue;
-               // if (sys == SYS_BDS && prn <= 5) continue;
+                // if (sys == SYS_BDS && (prn <= 5 || prn==59 || prn==60)) continue;
                 if (sys == SYS_GAL) continue;
                 if (sys == SYS_GPS && svr->rtk.opt.gpsMask >= 0) {
                     if (!((svr->rtk.opt.gpsMask >> (prn - 1)) & 1)) continue;
@@ -1182,7 +1184,7 @@ static void* rtksvrthread(void* arg)
                     if (!((svr->rtk.opt.glonassMask >> (prn - 1)) & 1)) continue;
                 }
 
-
+                // svr->rtk.opt.freq=1;
                 obs[n] = svr->obs[0][i].data[j];
                 /*Set frequency*/
                 if (!(svr->rtk.opt.freq & 1))
@@ -1659,8 +1661,7 @@ int main(int argc, char** argv)
     struct dirent* file;
     DIR* dir;
     if (!(dir = opendir(fileDir))) {
-        printf("ERROR: open obsdir failed, please check it!\n");
-        system("pause");
+        printf("ERROR: open obsdir failed: %s\n",fileDir);
         return -1;
     }
     while ((file = readdir(dir)) != NULL) {
@@ -1672,7 +1673,7 @@ int main(int argc, char** argv)
         else
             sprintf(strpath[1], "%s%c%s", fileDir, sep, file->d_name);
     }
-    sprintf(outDir, "%s%c%s_%d", fileDir, sep, "result", SVN_VERSION);
+    sprintf(outDir, "%s%c%s_%d_%d", fileDir, sep, "result", SVN_VERSION,svr.rtk.mpflag);
     if (access(outDir, 0) != 0)
         createdir(outDir);
     sprintf(outfile[0], "%s%c%s", outDir, sep, "rtk.pos");

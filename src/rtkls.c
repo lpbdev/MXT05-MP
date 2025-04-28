@@ -14,31 +14,32 @@ static double varerr_gamit(unsigned char sat, unsigned char sys, double el, doub
 	return 2.0 * (a * a + b * b / sinel / sinel + c * c);
 }
 
-static double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt)
-{
-	double a, b, c = 0 * bl / 1E4;
-	double sinel, var;
-	a = 0.003;
-	b = 0.003;
-	sinel = sin(el);
-	var = 2.0 * (a * a + b * b / sinel / sinel + c * c);
-	//if (obs->LockTime[f] < 3000)
-	//	var = var + (3000 - obs->LockTime[f])/16000.0;
-
-	if (obs->SNR[f] / 4.0 > 30)
-		var *= 1.0;
-	else if (obs->SNR[f] / 4.0 > 22)
-		var *= 1.5;
-	else if (obs->SNR[f] / 4.0 > 10)
-		var *= 2.0;
-	else
-		var *= 5.0;
-	if (obs->LockTime[f] < 1000) {
-		var *= 2.0;
-	}
-	//return 2.0 * (a * a + b * b / sinel / sinel + c * c);
-	return var;
-}
+// static double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt)
+// {
+// 	double a, b, c = 0 * bl / 1E4;
+// 	double sinel, var;
+// 	a = 0.003;
+// 	b = 0.003;
+// 	sinel = sin(el);
+// 	var = 2.0 * (a * a + b * b / sinel / sinel + c * c);
+    
+// 	//if (obs->LockTime[f] < 3000)
+// 	//	var = var + (3000 - obs->LockTime[f])/16000.0;
+// 	if (obs->SNR[f] / 4.0 > 40)
+// 		var *= 1.0;
+// 	else if (obs->SNR[f] / 4.0 > 30)
+// 		var *= 5;
+// 	else if (obs->SNR[f] / 4.0 > 10)
+// 		var *= 2.0;
+// 	else
+// 		var *= 5.0;
+        
+// 	if (obs->LockTime[f] < 1000) {
+// 		var *= 2.0;
+// 	}
+// 	//return 2.0 * (a * a + b * b / sinel / sinel + c * c);
+// 	return 1;
+// }
 
 static double baseline(const double* ru, const double* rb, double* dr)
 {
@@ -153,7 +154,8 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
 			}
 
 			for (j = 0; j < ns; j++) {
-				//vsat[j+f*ns] = 0;azel[j * 2] = azel[j * 2 + 1] = resp[j+ f * ns] = 0.0;				
+				//vsat[j+f*ns] = 0;azel[j * 2] = azel[j * 2 + 1] = resp[j+ f * ns] = 0.0;	
+            			
 				if (i == j) continue;
 				if (svh[j])	continue;
 				if (exc[sat[j] - 1] == 1)continue;
@@ -233,6 +235,10 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
 				v[nv] = Lb1 - Lb2 - (L1 - L2) - amb - 0 * (rtk->ssat[sat[j] - 1].ddion - rtk->ssat[sat[j] - 1].ddtrp);
 
                 double corr_j = 0.0;
+                char tstr[64];
+                time2str(obs[0].time, tstr,1);
+                char id[4];
+                satno2id(obs[j].sat, id);
                 if (rtk->mpflag == 1 && f==0) {
 
                     gtime_t ctime = obs[0].time;
@@ -241,19 +247,26 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
 
                     corr_j = getDat(rtk->ssat[obs[j].sat].fp_ssat, offset2);
 
-                    if (post == 0) {
+                    if (post == 0 && fabs(v[nv])<0.02) {
                         resdata_t data;
                         data.sod = obs[0].time.time + obs[0].time.frac;
                         data.res = v[nv];
-#if 0
+#if 0   
                         satres_add(rtk->ssat[sat[j] - 1].satres, &data);
-#endif
+#endif  
                         int offset = calOffset(sat[j], obs[0].time, rtk->opt.timeInterval);
                         writeDat(rtk->ssat[obs[j].sat].fp_ssat, offset, data.res);
+                   
+
+                        trace(2, "RES0, %s, %s, %d, %.4f,%d\n",tstr, id,f,v[nv],obs[j].sat);
                     }
                 }
 
                 v[nv] += -corr_j;
+                if(post==0){
+                    trace(2, "RES1, %s, %s, %d, %.4f, %d\n",tstr, id,f, v[nv],obs[j].sat);
+                }
+
 				//if (post == 0)
 				//	printf("*****f=%d v=%10.2f sat1=%3d sat2=%3d N1=%10.2f N2=%10.2f N1-N2=%10.2f\n",
 				//		f,v[nv],sat[j], sat[i], rtk->ssat[sat[j] - 1].fix_amb[f], rtk->ssat[sat[i] - 1].fix_amb[f], rtk->ssat[sat[j] - 1].fix_amb[f] - rtk->ssat[sat[i] - 1].fix_amb[f]);

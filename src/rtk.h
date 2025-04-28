@@ -67,7 +67,7 @@
 #define BDS3_NL_PSR_K2	1
 
 //extern FILE* fpversion;
-#define SVN_VERSION 222224
+#define SVN_VERSION 250422
 
 #define MAXEPH		10240
 #define MAXGEPH     5120
@@ -1200,6 +1200,8 @@ extern int initDat(FILE* fp, int npoint);
 extern int calOffset(unsigned char sat, gtime_t ctime, int intv);
 
 extern int invalidBDS(unsigned char sat);
+extern int isGEO(unsigned char sat);
+extern int isIGSO(unsigned char sat);
 extern int isMEO(unsigned char sat);
 extern int periodDay(unsigned char sat);
 
@@ -1342,6 +1344,7 @@ extern int relposNL(rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr,
 	double* var, int* svh);
 extern int test_sysWL(int sys, unsigned char prn, int m);
 extern int test_sysNL(int sys, unsigned char prn, int m);
+extern double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt);
 #endif 
 
 
