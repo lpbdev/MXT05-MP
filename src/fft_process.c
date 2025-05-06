@@ -20,15 +20,15 @@
 //    BPF BandPassFilter;
 //    FLOAT data_out_I = 0, data_out_Q = 0;
 //
-//    char DataFileName[256] = 
+//    char DataFileName[256] =
 //    {
 //        "sin.dat"
 //    };
-//    char ResultFileName[256] = 
+//    char ResultFileName[256] =
 //    {
 //        "result.dat"
 //    };
-//    char BpfFileName[256] = 
+//    char BpfFileName[256] =
 //    {
 //        "Bpf.dat"
 //    };

@@ -5,18 +5,18 @@
 
 #define Saturate11bit(Sample)\
 {\
-	if (Sample > ((1<<10)-1))\
-	Sample = ((1<<10)-1);\
-	else if (Sample < -(1<<10))\
-	Sample = -(1<<10);\
+    if (Sample > ((1<<10)-1))\
+    Sample = ((1<<10)-1);\
+    else if (Sample < -(1<<10))\
+    Sample = -(1<<10);\
 }
 
 #define Saturate12bit(Sample)\
 {\
-	if (Sample > 2047)\
-	Sample = 2047;\
-	else if (Sample < -2048)\
-	Sample = -2048;\
+    if (Sample > 2047)\
+    Sample = 2047;\
+    else if (Sample < -2048)\
+    Sample = -2048;\
 }
 
 

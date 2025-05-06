@@ -206,7 +206,7 @@ extern int readres(char* filepath) {
             }
             //if (res[3] != 0.0) {
 
-            RESS.res[ind].data.sod = secs;// 
+            RESS.res[ind].data.sod = secs;//
             RESS.res[ind].sat = sat;
             RESS.res[ind].data.res = PL[1];
             RESS.res[ind].data.azel[0] = azel[0];
@@ -655,4 +655,4 @@ extern int initDat(FILE* fp, int npoint) {}
 extern double getDat(FILE* fp, int offset) {}
 extern int writeDat(FILE* fp, int offset, double value) {}
 extern int mkfpssat(rtk_t* rtk) {}
-#endif 
+#endif

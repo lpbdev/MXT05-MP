@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include "pos_filter.h"
-#pragma warning( disable : 4996) 
+#pragma warning( disable : 4996)
 
 #ifdef POS_FILTER
 static int getDat(FILE* fp, int offset, double *value, int n) {
@@ -136,7 +136,7 @@ extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE *fp ) {
         getDat(fp, indnew * NSIZE, newdata, NSIZE);
     //}
 
-    
+
     if(wind->n<wind->nmax){
         for (i = 0; i < NSIZE; i++) {
             olddata[i]=0;
@@ -154,7 +154,7 @@ extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE *fp ) {
     updatewind(wind, olddata, newdata, NSIZE);
 
     //if (wind->n == 70 && n1 == 24 && n2 == 24)
-    //    
+    //
 
     // trace(2, "indnew,%d,%d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%.4f, %.4f, %.4f \n",
     //     indnew, indold,
@@ -173,14 +173,14 @@ extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE *fp ) {
 extern double posmaxstd(double std, double maxjump){
     return sqrt(std*std+maxjump*maxjump/4.0)*0.75;
 }
- 
+
 extern int update_wind(wind_t* wind, data_t* data) {
     int i = 0, n1 = 0, n2 = 0;
     double olddata[NSIZE] = { 0 }, newdata[NSIZE]={0};
 
-    int indold = 0; 
+    int indold = 0;
     int indnew = 0;
-    
+
     indold = data->n - wind->nmax -wind->dely-1 ;
     if (indold < 0 ) indold += data->nmax;
     indold = indold % data->nmax;
@@ -225,9 +225,9 @@ extern int update_wind(wind_t* wind, data_t* data) {
 }
 
 static int getindex(wind_t* wind, data_t* data, int offset){
-    int indend = 0; 
+    int indend = 0;
     int indnew =0;
-    
+
     indend = data->n >= wind->nmax ? data->n - wind->nmax -offset : data->n + data->nmax - wind->nmax-offset;
 
     if (indend < 0 ) indend += data->nmax;
@@ -235,7 +235,7 @@ static int getindex(wind_t* wind, data_t* data, int offset){
 
     indnew = indend + wind->nmax ;
     indnew = indnew % data->nmax;
-    
+
     if(wind->n >=0)
         printf("data->n , %d,wind->n, %d, indend, %d, indnew, %d\n", data->n,  wind->n, indend,indnew);
     return 0;
@@ -267,7 +267,7 @@ extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int n
                 tmpjump[i]= wa->ave[i]-wb->ave[i];
             }
         }
-        
+
         if(wa->jumpflag[i]==1 && wa->std[i]<wb->std[i]){
             jump[i] +=tmpjump[i];
             tmpjump[i]=0.0;
@@ -285,8 +285,8 @@ extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int n
         //         }
         //         wind12.jn[index]=jn;
         //         wind12.jump[index] += jumpdist;
-                
-        //         printf("%s jumpdist=%f \n", hms, jumpdist);     
+
+        //         printf("%s jumpdist=%f \n", hms, jumpdist);
         //         jn=0;
         //         jumpdist=0.0;
         //     }
@@ -299,7 +299,7 @@ extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int n
 }
 #if 0
 extern int readpos(char* pospath, int intv, int index) {
-    
+
     char cmd[64];
     char *p = cmd;
 
@@ -366,7 +366,7 @@ extern int readpos(char* pospath, int intv, int index) {
     wind12.nmax = (int)12*3600/intv;
     wind12.dely = 0;
 
-    
+
     wind_t wind12d = {0};
     wind12d.nmax = (int)12*3600/intv;
     wind12d.dely = dely;
@@ -376,7 +376,7 @@ extern int readpos(char* pospath, int intv, int index) {
 
     double offset;
     double offset2=0;
-    
+
     double realpos=0.0;
     double jumpdist = 0;
     int jn=0;
@@ -410,7 +410,7 @@ extern int readpos(char* pospath, int intv, int index) {
                 }
             }
             update_data(&poss, pos);
-            
+
             fprintf(outfp, "%s,", hms);
 
             update_wind(&wind2m, &poss);
@@ -442,18 +442,18 @@ extern int readpos(char* pospath, int intv, int index) {
             // fprintf(outfp, "%14.4f, %14.4f, %14.4f,",
             //         wind12d.ave[index], sqrt(wind12d.var[index]) * 1000, wind12d.ave[2]);
 
-            
+
             offset = 0;
             offset2 = 0;
             if (  (wind2m.std[index] - wind1hd.std[index] >2)  &&fabs(wind2m.ave[index] - wind1hd.ave[index]) > 0.003)    {
                 offset=1;
             }
-            
+
             if (fabs(wind2m.ave[index] - wind5md.ave[index]) > 0.003   &&fabs(wind2m.ave[index] - wind1hd.ave[index]) > 0.003 ) {
                 offset2=1;
             }
 
-            
+
             if(offset ==1 && offset2 ==1){
                 jumpdist = wind2m.ave[index] - wind1hd.ave[index];
                 jn= poss.n;
@@ -466,18 +466,18 @@ extern int readpos(char* pospath, int intv, int index) {
                     }
                     wind12.jn[index]=jn;
                     wind12.jump[index] += jumpdist;
-                    
-                    printf("%s jumpdist=%f \n", hms, jumpdist);     
+
+                    printf("%s jumpdist=%f \n", hms, jumpdist);
                     jn=0;
                     jumpdist=0.0;
                 }
             }
             realpos=wind12.ave[index]+wind12.jump[index] ;
 
-          
+
             // fprintf(outfp, "%14.4f,", offset2);
-            // fprintf(outfp, "%14.4f,", offset);    
-            fprintf(outfp, "%14.4f,", realpos);    
+            // fprintf(outfp, "%14.4f,", offset);
+            fprintf(outfp, "%14.4f,", realpos);
             fprintf(outfp, "\n");
 
 
@@ -504,7 +504,7 @@ extern int test_update_data() {
     wind05.nmax = 7;
     wind05.dely=2;
     wind05.n=0;
-    
+
 
     double newdata[3] = { 0.0 };
     int j=0;

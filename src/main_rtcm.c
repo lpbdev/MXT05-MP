@@ -54,7 +54,7 @@ double logFileSize = 100;
 double writeConfigTime = 1;
 double writeDugTime = 1;
 
-#define OBSBASELEN	30
+#define OBSBASELEN    30
 obsd_t g_baseObsSync[OBSBASELEN][MAXOBS];
 unsigned char g_nbaseObsSync[OBSBASELEN] = { 0 };
 unsigned char g_baseObsSyncIndex = 255;
@@ -165,7 +165,7 @@ int EnQueue(obsqueue_t* Q, qobs_t e)
     //printf("EnQueue rear=%d time=%d n=%d\n", Q->rear,e.data[0].time.time, e.n);
     //printf("-----------------\n");
     //for (i = 0; i < Q->rear; i++) {
-    //	printf("EnQueue time=%d\n", Q->data[i].data[0].time.time);
+    //    printf("EnQueue time=%d\n", Q->data[i].data[0].time.time);
     //}
     //printf("*****************\n");
     return  1;
@@ -235,7 +235,7 @@ static void updatesvr(rtksvr_t* svr, int ret, obs_t* obs, int index, int iobs)
                 svr->rtk.rb[i] = svr->rtcm[1].sta.pos[i];
                 baseRtcmPosition[i] = svr->rtcm[1].sta.pos[i];
             }
-            //		/* antenna delta */
+            //        /* antenna delta */
             ecef2pos(svr->rtk.rb, pos);
             if (svr->rtcm[1].sta.deltype) { /* xyz */
                 del[2] = svr->rtcm[1].sta.hgt;
@@ -312,7 +312,7 @@ extern int init_rtcm(rtcm_t* rtcm)
     rtcm->sta.hgt = 0.0;
     //rtcm->dgps = NULL;
     //for (i = 0; i<MAXSAT; i++) {
-    //	rtcm->ssr[i] = ssr0;
+    //    rtcm->ssr[i] = ssr0;
     //}
     rtcm->msg[0] = rtcm->msgtype[0] = rtcm->opt[0] = '\0';
     rtcm->obsflag = rtcm->ephsat = 0;
@@ -688,11 +688,11 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
 
     //json_data_tmp = cJSON_GetObjectItem(json, "timeInterval");
     //if (json_data_tmp == NULL) {
-    //	printf("timeInterval json_data_tmp is null\n");
-    //	cJSON_Delete(json);
-    //	sprintf(ackBuff, "ack,%s,timeInterval,failed;\n", idStr);
-    //	strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //	return 0;
+    //    printf("timeInterval json_data_tmp is null\n");
+    //    cJSON_Delete(json);
+    //    sprintf(ackBuff, "ack,%s,timeInterval,failed;\n", idStr);
+    //    strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+    //    return 0;
     //}
     //cfgOpt->timeInterval = json_data_tmp->valueint;
 
@@ -857,11 +857,11 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
 
     //json_data_tmp = cJSON_GetObjectItem(json, "smoothWindowTime");
     //if (json_data_tmp == NULL) {
-    //	printf("smoothWindowsTime json_data_tmp is null\n");
-    //	cJSON_Delete(json);
-    //	sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
-    //	strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //	return 0;
+    //    printf("smoothWindowsTime json_data_tmp is null\n");
+    //    cJSON_Delete(json);
+    //    sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
+    //    strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+    //    return 0;
     //}
     //cfgOpt->smoothWindowsTime = json_data_tmp->valueint;
 
@@ -1070,7 +1070,7 @@ static void* rtksvrthread(void* arg)
     solopt_t sopt = solopt_default;
     rtksvr_t* svr = (rtksvr_t*)arg;
     sopt.posf = 2; //0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
-    sopt.times = 0;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间  
+    sopt.times = 0;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
     sopt.outvel = 0;
     svr->tick = tickget();
     svr->cycle = 1000;
@@ -1090,7 +1090,7 @@ static void* rtksvrthread(void* arg)
     fprintf(oFile.fpOut[1], "%% (e/n/u-baseline=WGS84,Q=1:fix,2:float,3:sbas,4:dgps,5:single,6:ppp,ns=# of satellites)\n");
     fprintf(oFile.fpOut[1], "%%  GPST                  e-baseline(m)  n-baseline(m)  u-baseline(m)   Q  ns   sde(m)   sdn(m)   sdu(m)  sden(m)  sdnu(m)  sdue(m) age(s)  ratio\n");*/
 
-#ifndef WIN32	
+#ifndef WIN32
     struct stat fstat = { 0 };
 #endif
     for (cycle = 0; svr->state; cycle++)
@@ -1156,7 +1156,7 @@ static void* rtksvrthread(void* arg)
             trace(0x10, "k=%d rover time=%d\n", i, svr->obs[0][i].data[0].time.time);
             n = 0;
             for (j = 0; j < MAXSAT; j++) {
-                for (f = 0; f < NFREQ; f++)	svr->rtk.ssat[j].SNR[f] = 0;
+                for (f = 0; f < NFREQ; f++)    svr->rtk.ssat[j].SNR[f] = 0;
             }
             for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++) {
 
@@ -1206,7 +1206,7 @@ static void* rtksvrthread(void* arg)
                     obs[n].P[4] = obs[n].L[4] = obs[n].D[4] = 0.0;
                     obs[n].P[5] = obs[n].L[5] = obs[n].D[5] = 0.0;
                 }
-                for (f = 0; f < NFREQ; f++) 	obs[n].LockTime[f] = 3000;
+                for (f = 0; f < NFREQ; f++)     obs[n].LockTime[f] = 3000;
                 for (k = 0; k < NFREQ; k++)
                 {
                     if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4)
@@ -1278,7 +1278,7 @@ static void* rtksvrthread(void* arg)
             gettimeofday(&tvl, NULL);
             start = tvl.tv_sec * 1000.0 + tvl.tv_usec / 1000.0;
             ntime[0] = 0;
-#endif 
+#endif
             //-----------------------------find the closest time--------------------
             dtMin = 9999.9;
             dtMinIndex = -1;
@@ -1314,20 +1314,20 @@ static void* rtksvrthread(void* arg)
             }
             //trace(4, "------------rtk epoch-------------\n");
             //for (k = 0; k < 3; k++) {
-            //	svr->rtkepoch.enuShiftEpoch[k] = 0.0;
+            //    svr->rtkepoch.enuShiftEpoch[k] = 0.0;
             //}
             //if (!rtkepoch(&svr->rtkepoch, obsepoch, nobsepoch)) {
-            //	svr->rtkepoch.sol.stat = SOLQ_NONE;
+            //    svr->rtkepoch.sol.stat = SOLQ_NONE;
             //}
             //else {
-            //	outsol(NULL, &svr->rtkepoch, &svr->rtkepoch.sol, svr->rtkepoch.rb, &sopt);
-            //	//if (svr->rtkepoch.sol.stat == 1 && svr->rtkepoch.sol.ilterCout<=2) {
-            //	if (svr->rtkepoch.sol.stat == 1) {
-            //		for (k = 0; k < 3; k++) {
-            //			svr->rtk.enuShiftEpoch[k] = svr->rtkepoch.sol.enu[k];
-            //		}
-            //	}
-            //	svr->rtk.enuShiftEpochTime = svr->rtkepoch.sol.time;
+            //    outsol(NULL, &svr->rtkepoch, &svr->rtkepoch.sol, svr->rtkepoch.rb, &sopt);
+            //    //if (svr->rtkepoch.sol.stat == 1 && svr->rtkepoch.sol.ilterCout<=2) {
+            //    if (svr->rtkepoch.sol.stat == 1) {
+            //        for (k = 0; k < 3; k++) {
+            //            svr->rtk.enuShiftEpoch[k] = svr->rtkepoch.sol.enu[k];
+            //        }
+            //    }
+            //    svr->rtk.enuShiftEpochTime = svr->rtkepoch.sol.time;
             //}
             nobsPre = 0;
             for (k = 0; k < n; k++) {
@@ -1410,27 +1410,27 @@ static void* rtksvrthread(void* arg)
                 timeset(gpst2utc(timeadd(svr->rtk.sol.time, tt)));
             }
             /* if cpu overload, inclement obs outage counter and break */
-//			if ((int)(tickget() - tick) >= svr->cycle) {
-//				svr->prcout += fobs[0] - i - 1;
+//            if ((int)(tickget() - tick) >= svr->cycle) {
+//                svr->prcout += fobs[0] - i - 1;
 //#if 0 /* omitted v.2.4.1 */
-//				break;
+//                break;
 //#endif
-//			}
+//            }
             //sleepms(1000);
 #ifdef TIME_OUTPUT
             gettimeofday(&tvl, NULL);
             end = tvl.tv_sec * 1000.0 + tvl.tv_usec / 1000.0;
             ntime[9] = end - start;
-#endif 
+#endif
 
             //trace(4, "time=%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",
-            //	ntime[0], ntime[1], ntime[2], ntime[3], ntime[4],
-            //	ntime[5], ntime[6], ntime[7], ntime[8], ntime[9]);
+            //    ntime[0], ntime[1], ntime[2], ntime[3], ntime[4],
+            //    ntime[5], ntime[6], ntime[7], ntime[8], ntime[9]);
 #ifdef WIN32
             //printf("%s\n", debugBuff);
 #endif
             //if (oFile.fpDebug && (svr->rtk.sol.time.time % (int)writeDugTime == 0))
-            //	fprintf(oFile.fpDebug, "%s\n", debugBuff);
+            //    fprintf(oFile.fpDebug, "%s\n", debugBuff);
             //gpdebugBuff = debugBuff;
         }
         /* send null solution if no solution (1hz) */
@@ -1471,7 +1471,7 @@ void split(char* src, const char* separator, char** dest, int* num) {
         pNext = strtok_s(NULL, separator, &p);
 #else
         pNext = strtok_r(NULL, separator, &p);
-#endif 
+#endif
     }
     *num = count;
 }
@@ -1509,15 +1509,15 @@ int main(int argc, char** argv)
     char* revbuf[64] = { 0 };
     double rb[3] = { 0 };
     char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\kunchi";
-    
+
     m = 0; n = 0;
 
-    
+
     svr.rtk.opt.timeInterval = 1.0;
     svr.rtk.opt.smoothWindowsTime = 1;
     svr.rtk.mpflag = 0;
 #if 1
-    int j=0; gtime_t ts, te; 
+    int j=0; gtime_t ts, te;
     double es[] = { 2000,1,1,0,0,0 }, ee[] = { 2000,12,31,23,59,59 };
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "-out") && i + 1 < argc) {
@@ -1607,14 +1607,14 @@ int main(int argc, char** argv)
 
 
     trace_flag[0] = 1; //0:定位结果
-    trace_flag[1] = 1; //1:滤波后结果      
-    trace_flag[2] = 0; //2：单点定位结果  
-    trace_flag[3] = 0; //3：DOP           
-    trace_flag[4] = 0; //4：观测量信息    
+    trace_flag[1] = 1; //1:滤波后结果
+    trace_flag[2] = 0; //2：单点定位结果
+    trace_flag[3] = 0; //3：DOP
+    trace_flag[4] = 0; //4：观测量信息
     trace_flag[5] = 0; //5：卫星位置
-    trace_flag[6] = 0; //6：卫星残差    
-    trace_flag[7] = 0; //7：卫星仰角     
-    trace_flag[8] = 0; //8：多径        
+    trace_flag[6] = 0; //6：卫星残差
+    trace_flag[7] = 0; //7：卫星仰角
+    trace_flag[8] = 0; //8：多径
     trace_flag[9] = 0; //9：模糊度 电离层
     trace_flag[10] = 1;//9：调试信息
 
@@ -1647,7 +1647,7 @@ int main(int argc, char** argv)
     svr.rtk.iniCnt = 0;
 
     sopt.posf = 2; //0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
-    sopt.times = 3;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间  
+    sopt.times = 3;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
     sopt.outvel = 0;
     sopt.outhead = 0;
 
@@ -1690,8 +1690,8 @@ int main(int argc, char** argv)
     char logfile[1024];
     sprintf(logfile, "%s/rtk.log", svr.rtk.path);
     logopen(logfile, 0); // 1M log  for test
-    
-   
+
+
     /* open pos filter */
     svr.rtk.sol.window[0].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[1].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
@@ -1847,7 +1847,7 @@ int main(int argc, char** argv)
 #endif
     rtksvrfree(&svr);
     free_data(&svr.rtk.sol.wdata);
-    
+
     for (i = 0; i < 3; i++)
         strclose(&svr.stream[i]);
     for (i = 0; i < 3; i++) {

@@ -16,7 +16,7 @@ static const float geoid[361][181]; /* embedded geoid heights (m) (lon x lat) */
 #define GEOID_RAF09       5             /* geoid model: IGN RAF09 for France 1.5"x2" */
 #define TIMES_UTC   1                   /* time system: utc */
 #define TIMES_JST   2                   /* time system: jst */
-#define SLIP_WINDOW	1
+#define SLIP_WINDOW    1
 static int model_geoid = GEOID_EMBEDDED; /* geoid model */
 static unsigned int bslErrorCount = 0;
 static double ori_pre[3];
@@ -192,7 +192,7 @@ void quick3WaySort(double* a, int* index, int left, int right)
     quick3WaySort(a, index, left, lt - 1);
     quick3WaySort(a, index, gt + 1, right);
 }
-#endif 
+#endif
 /* bilinear interpolation ----------------------------------------------------*/
 static double interpb(const double* y, double a, double b)
 {
@@ -566,7 +566,7 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     //printf("%14.4lf %14.4lf %14.4lf\n", rtk->sol.fixxyz[0], rtk->sol.fixxyz[1], rtk->sol.fixxyz[2]);
     if (rtk->fixCheckCnt == 0) {
         //for (i = 0; i < 3; i++)
-        //	sol->fixxyz[i] = rtk->sol.rr[i];
+        //    sol->fixxyz[i] = rtk->sol.rr[i];
         if (sol->rr_smooth_cnt > (int)((4 * 3600.0 - 1) / rtk->opt.timeInterval))
             sol->rr_smooth_cnt = (int)((4 * 3600.0 - 1) / rtk->opt.timeInterval);
         for (i = 0; i < 3; i++)
@@ -608,7 +608,7 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     update_wind(&rtk->sol.window[0], &rtk->sol.wdata);
     update_wind(&rtk->sol.window[1], &rtk->sol.wdata);
     update_wind(&rtk->sol.window[2], &rtk->sol.wdata);
-    
+
     calcjump(sol->window, sol->window+1, sol->jump, sol->tmpjump,3);
 
     logmsg(2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n",s,
@@ -622,7 +622,7 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     logmsg(2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
         sol->window[2].ave[0], sol->window[2].ave[1], sol->window[2].ave[2],
         sol->window[2].std[0], sol->window[2].std[1], sol->window[2].std[2]);
-    
+
 
     logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,\n", s,
         // sol->jump[0]+sol->window[2].ave[0],sol->jump[1]+sol->window[2].ave[0],sol->jump[2]+sol->window[2].ave[0],
@@ -808,22 +808,22 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     }
 
     //if ((rtk->sol.time.time + ROUND(rtk->sol.time.frac)) % (int)writeConfigTime == 0) {
-    //	fpversion = fopen(configFileFath, "w");
-    //	if (fpversion != NULL) {
-    //		fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %u %u %u %d\n",
-    //			1234, rtk->aveEnu[0], rtk->aveEnu[1], rtk->aveEnu[2], rtk->enuWindwoIndex[0], rtk->enuWindwoIndex[1], rtk->enuWindwoIndex[2], 5678);
-    //		fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %d\n",
-    //			1234, rtk->rb[0], rtk->rb[1], rtk->rb[2], 5678);
-    //		fprintf(fpversion, "svn version:%d\n", SVN_VERSION);
-    //		fflush(fpversion);
-    //		fclose(fpversion);
-    //	}
-    //	else {
-    //		trace(0x10, "fopen ini file error\n");
-    //	}
+    //    fpversion = fopen(configFileFath, "w");
+    //    if (fpversion != NULL) {
+    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %u %u %u %d\n",
+    //            1234, rtk->aveEnu[0], rtk->aveEnu[1], rtk->aveEnu[2], rtk->enuWindwoIndex[0], rtk->enuWindwoIndex[1], rtk->enuWindwoIndex[2], 5678);
+    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %d\n",
+    //            1234, rtk->rb[0], rtk->rb[1], rtk->rb[2], 5678);
+    //        fprintf(fpversion, "svn version:%d\n", SVN_VERSION);
+    //        fflush(fpversion);
+    //        fclose(fpversion);
+    //    }
+    //    else {
+    //        trace(0x10, "fopen ini file error\n");
+    //    }
     //}
-    if (sol->stat == SOLQ_FIX)	sol->fixCnt++;
-    else	sol->floatCnt++;
+    if (sol->stat == SOLQ_FIX)    sol->fixCnt++;
+    else    sol->floatCnt++;
     //--------------------------------original-----------------------------------
     for (i = 0; i < 3; i++) sol->enu_original[i] = enu2[i];
     ecef2pos(rtk->rb, pos);
@@ -1036,25 +1036,25 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
                 rtk->aveXyz[2] = sumz / rtk->maxSmoothPoint;
 
                 //for (i = 0; i < rtk->maxSmoothPoint; i++) {
-                //	errorX = rtk->enuWindow[0][i] - rtk->aveXyz[0];
-                //	errorY = rtk->enuWindow[1][i] - rtk->aveXyz[1];
-                //	errorZ = rtk->enuWindow[2][i] - rtk->aveXyz[2];
-                //	rtk->xyzError[i] = sqrt(SQR(errorX) + SQR(errorY) + SQR(errorZ));
-                //	rtk->xyzErrorSortIndex[i] = i;
+                //    errorX = rtk->enuWindow[0][i] - rtk->aveXyz[0];
+                //    errorY = rtk->enuWindow[1][i] - rtk->aveXyz[1];
+                //    errorZ = rtk->enuWindow[2][i] - rtk->aveXyz[2];
+                //    rtk->xyzError[i] = sqrt(SQR(errorX) + SQR(errorY) + SQR(errorZ));
+                //    rtk->xyzErrorSortIndex[i] = i;
                 //}
                 //quick3WaySort(rtk->xyzError, rtk->xyzErrorSortIndex, 0, rtk->maxSmoothPoint - 1);
                 //truePoint = ROUND(rtk->maxSmoothPoint * 0.7);
 
                 //sumx = 0.0; sumy = 0.0; sumz = 0.0;
                 //for (i = 0; i < truePoint; i++) {
-                //	index = rtk->xyzErrorSortIndex[i];
-                //	rtk->xyzWindowTure[0][i] = rtk->enuWindow[0][index];
-                //	rtk->xyzWindowTure[1][i] = rtk->enuWindow[1][index];
-                //	rtk->xyzWindowTure[2][i] = rtk->enuWindow[2][index];
+                //    index = rtk->xyzErrorSortIndex[i];
+                //    rtk->xyzWindowTure[0][i] = rtk->enuWindow[0][index];
+                //    rtk->xyzWindowTure[1][i] = rtk->enuWindow[1][index];
+                //    rtk->xyzWindowTure[2][i] = rtk->enuWindow[2][index];
 
-                //	sumx += rtk->xyzWindowTure[0][i];
-                //	sumy += rtk->xyzWindowTure[1][i];
-                //	sumz += rtk->xyzWindowTure[2][i];
+                //    sumx += rtk->xyzWindowTure[0][i];
+                //    sumy += rtk->xyzWindowTure[1][i];
+                //    sumz += rtk->xyzWindowTure[2][i];
                 //}
                 //rtk->aveXyz[0] = sumx / truePoint;
                 //rtk->aveXyz[1] = sumy / truePoint;
@@ -1084,8 +1084,8 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
         enu2[1] = rtk->aveXyz[1];
         enu2[2] = rtk->aveXyz[2];
     */
-    if (sol->stat == SOLQ_FIX)	sol->fixCnt++;
-    else	sol->floatCnt++;
+    if (sol->stat == SOLQ_FIX)    sol->fixCnt++;
+    else    sol->floatCnt++;
 
     for (i = 0; i < 3; i++) {
         sol->ori_ave[i] = (sol->ori_ave[i] * rtk->enuWindwoIndex[i] + enu2[i]) / (rtk->enuWindwoIndex[i] + 1);
@@ -1097,20 +1097,20 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
     }
 
     //if ((rtk->sol.time.time + ROUND(rtk->sol.time.frac)) % (int)writeConfigTime == 0) {
-    //	fpversion = fopen(configFileFath, "w");
-    //	if (fpversion != NULL) {
-    //		fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %u %u %u %d\n",
-    //			1234, sol->ori_ave[0], sol->ori_ave[1], sol->ori_ave[2], rtk->enuWindwoIndex[0], rtk->enuWindwoIndex[1], rtk->enuWindwoIndex[2], 5678);
-    //		fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %d\n",
-    //			1234, rtk->rb[0], rtk->rb[1], rtk->rb[2], 5678);
-    //		fprintf(fpversion, "svn version:%d\n", SVN_VERSION);
-    //		fflush(fpversion);
-    //		fclose(fpversion);
-    //		fpversion = NULL;
-    //	}
-    //	else {
-    //		trace(0xff, "fopen ini file error\n");
-    //	}
+    //    fpversion = fopen(configFileFath, "w");
+    //    if (fpversion != NULL) {
+    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %u %u %u %d\n",
+    //            1234, sol->ori_ave[0], sol->ori_ave[1], sol->ori_ave[2], rtk->enuWindwoIndex[0], rtk->enuWindwoIndex[1], rtk->enuWindwoIndex[2], 5678);
+    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %d\n",
+    //            1234, rtk->rb[0], rtk->rb[1], rtk->rb[2], 5678);
+    //        fprintf(fpversion, "svn version:%d\n", SVN_VERSION);
+    //        fflush(fpversion);
+    //        fclose(fpversion);
+    //        fpversion = NULL;
+    //    }
+    //    else {
+    //        trace(0xff, "fopen ini file error\n");
+    //    }
     //}
 
     rtk->fftFrq[0] = rtk->fftFrq[1] = rtk->fftFrq[2] = 0.0;
@@ -1172,7 +1172,7 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
             // FFT result output
             //for (i = 0; i < FFT_LEN; i++)
             //{
-            //	printf("I-%d %d, Q-%d %d\n", i, FFTOutBuf[i].real, i, FFTOutBuf[i].imag);
+            //    printf("I-%d %d, Q-%d %d\n", i, FFTOutBuf[i].real, i, FFTOutBuf[i].imag);
             //}
             //count++;
             // BandPassFilter & output
@@ -1180,7 +1180,7 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
             data_out_I = (data_in_I >> (BPF_COEF_BITWIDTH - 1)) / 10000.0;
             data_out_Q = (data_in_Q >> (BPF_COEF_BITWIDTH - 1)) / 10000.0;
             //if (k == 2)
-            //	printf("I-%d %f, Q-%d %f\n", count, data_out_I, count, data_out_Q);
+            //    printf("I-%d %f, Q-%d %f\n", count, data_out_I, count, data_out_Q);
             //------------------------------------------------------------------------
         }
     }
@@ -1219,14 +1219,14 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
     }
 #endif
     //trace(4,"%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f\n",
-    //	s, sep, sol->enu_original[0], sep, sol->enu_original[1], sep, sol->enu_original[2], sep, sol->stat, sep, ns, sep,
-    //	SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
-    //	sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio);
+    //    s, sep, sol->enu_original[0], sep, sol->enu_original[1], sep, sol->enu_original[2], sep, sol->stat, sep, ns, sep,
+    //    SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
+    //    sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio);
 
     //p += sprintf(p, "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f%s%.3f%s%.3f\n",
-    //	s, sep, sol->enu_original[0] - enuInit[0], sep, sol->enu_original[1] - enuInit[1], sep, sol->enu_original[2] - enuInit[2], sep, sol->stat, sep, ns, sep,
-    //	SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
-    //	sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio,sep, rtk->fftFrq,sep, rtk->fftPower);
+    //    s, sep, sol->enu_original[0] - enuInit[0], sep, sol->enu_original[1] - enuInit[1], sep, sol->enu_original[2] - enuInit[2], sep, sol->stat, sep, ns, sep,
+    //    SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
+    //    sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio,sep, rtk->fftFrq,sep, rtk->fftPower);
 
     trace(0x02, "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f\n",
         s, sep, enu2[0], sep, enu2[1], sep, enu2[2], sep, sol->stat, sep, ns, sep,
@@ -1272,8 +1272,8 @@ static int outenuSstatic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* 
     rtk->sol.enu[0] = enu2[0];
     rtk->sol.enu[1] = enu2[1];
     rtk->sol.enu[2] = enu2[2];
-    if (sol->stat == SOLQ_FIX)	sol->fixCnt++;
-    else	sol->floatCnt++;
+    if (sol->stat == SOLQ_FIX)    sol->fixCnt++;
+    else    sol->floatCnt++;
 
 
     trace(0x02, "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f\n",
@@ -1569,31 +1569,31 @@ static void outResi_spp(FILE* fp, rtk_t* rtk, gtime_t time)
     //int week;
     //double resp_pos[NFREQ];
 
-    //for (i = 0; i<3; i++) 
-    //	resp_pos[i] = 0.0;
+    //for (i = 0; i<3; i++)
+    //    resp_pos[i] = 0.0;
 
     //time2epoch(time, ep);
     //sow = time2gpst(time, &week);
 
     //p += sprintf(p, "%04d%s%02d%s%02d%s%02d%s%02d%s%02d%s%4d%s%9.2f%s", (int)ep[0], sep, (int)ep[1], sep,
-    //	(int)ep[2], sep, (int)ep[3], sep, (int)ep[4], sep, (int)ep[5], sep, week, sep, sow, sep);
+    //    (int)ep[2], sep, (int)ep[3], sep, (int)ep[4], sep, (int)ep[5], sep, week, sep, sow, sep);
 
     //i0 = 0; i1 = MAXPRNGPS + MAXPRNGLO + MAXPRNGAL + NSATQZS + MAXPRNBDS;
 
     //for (i = i0; i<i1; i++) {
-    //	if (rtk->ssat[i].vs == 1) {
-    //		for (j = 0; j<NFREQ; j++) resp_pos[j] = rtk->ssat[i].resp[j];
-    //	}
-    //	else if (rtk->ssat[i].vs == 0) {
-    //		for (j = 0; j<NFREQ; j++) resp_pos[j] = 9999.9;;
-    //	}	
-    //	p += sprintf(p, "%10.4f%s", resp_pos[0], sep);
+    //    if (rtk->ssat[i].vs == 1) {
+    //        for (j = 0; j<NFREQ; j++) resp_pos[j] = rtk->ssat[i].resp[j];
+    //    }
+    //    else if (rtk->ssat[i].vs == 0) {
+    //        for (j = 0; j<NFREQ; j++) resp_pos[j] = 9999.9;;
+    //    }
+    //    p += sprintf(p, "%10.4f%s", resp_pos[0], sep);
     //}
     //p += sprintf(p, "\n");
     //n = p - (char *)buff;
 
     //if (n>0) {
-    //	fwrite(buff, n, 1, fp);
+    //    fwrite(buff, n, 1, fp);
     //}
 }
 
@@ -1742,16 +1742,16 @@ extern void outResult(rtk_t* rtk, const solopt_t* sopt)
         }
 
         //if(trace_flag[4]==1){
-        //	if(nf==1){
-        //		Record_obs(oFile.P1,0,0, rtk,rtk->sol.time);
-        //		Record_obs(oFile.L1,1,0, rtk,rtk->sol.time);
-        //	}
-        //	else{
-        //		Record_obs(oFile.P1,0,0, rtk,rtk->sol.time);
-        //		Record_obs(oFile.L1,1,0, rtk,rtk->sol.time);
-        //		Record_obs(oFile.P2,0,2, rtk,rtk->sol.time);
-        //		Record_obs(oFile.L2,1,2, rtk,rtk->sol.time);
-        //	}
+        //    if(nf==1){
+        //        Record_obs(oFile.P1,0,0, rtk,rtk->sol.time);
+        //        Record_obs(oFile.L1,1,0, rtk,rtk->sol.time);
+        //    }
+        //    else{
+        //        Record_obs(oFile.P1,0,0, rtk,rtk->sol.time);
+        //        Record_obs(oFile.L1,1,0, rtk,rtk->sol.time);
+        //        Record_obs(oFile.P2,0,2, rtk,rtk->sol.time);
+        //        Record_obs(oFile.L2,1,2, rtk,rtk->sol.time);
+        //    }
         //}
 
         if (trace_flag[6] == 1) {
@@ -1786,7 +1786,7 @@ extern void outResult(rtk_t* rtk, const solopt_t* sopt)
         }
         if (trace_flag[9] == 1) {
             //if(rtk->opt.nf==1){
-            //	Record_Amb(oFile.ambN1,0, rtk,rtk->sol.time);
+            //    Record_Amb(oFile.ambN1,0, rtk,rtk->sol.time);
             //}
             //else{
             //outDdamb(oFile.ambN1, rtk, rtk->sol.time, 0);
@@ -1796,7 +1796,7 @@ extern void outResult(rtk_t* rtk, const solopt_t* sopt)
             if (rtk->opt.ionoopt == IONOOPT_EST)
                 Record_Ion(oFile.ion, rtk, rtk->sol.time);
             //if (rtk->opt.tropopt == TROPOPT_EST)
-            //	Record_Trop(oFile.trop, rtk, rtk->sol.time);
+            //    Record_Trop(oFile.trop, rtk, rtk->sol.time);
 
         }
     }
@@ -1872,7 +1872,7 @@ extern int outsols(unsigned char* buff, rtk_t* rtk, sol_t* sol, const double* rb
             }
         }
     }
-    case SOLF_NMEA:	p += outnmea_gga(p, sol); break;
+    case SOLF_NMEA:    p += outnmea_gga(p, sol); break;
         //case SOLF_ORI: p += outnmea_ori(p, sol, rb); break;
     }
     return p - buff;
