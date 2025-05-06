@@ -1504,8 +1504,8 @@ extern int decode_rtcm3(rtcm_t* rtcm)
 	int ret = 0, type = getbitu(rtcm->buff, 24, 12);
 	gtime_t time;
 	time = timeget();
-	if (type == 1074 && level_trace & 0x01 && oFile.fpDebug != NULL && writeDugTime != 0.0 && ROUND(time.time + time.frac) % (int)writeDugTime == 0)
-		trace(0x04,"decode_rtcm3:rcv=%d len=%3d type=%d\n", rtcm->rcv, rtcm->len, type);
+	//if (type == 1074 && level_trace & 0x01 && oFile.fpDebug != NULL && writeDugTime != 0.0 && ROUND(time.time + time.frac) % (int)writeDugTime == 0)
+	trace(0x04,"decode_rtcm3:rcv=%d len=%3d type=%d\n", rtcm->rcv, rtcm->len, type);
 
 	switch (type) {
 	case 1005: ret = decode_type1005(rtcm); break;

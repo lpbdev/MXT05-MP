@@ -562,28 +562,19 @@ static void udstate(rtk_t* rtk, const obsd_t* obs, const unsigned char* sat,
 {
 	double tt = rtk->tt, bl, dr[3];
 
-	//fprintf(fptest, "**************udpos1****************\n");
-	//for (int i = 0; i < rtk->nx; i++){
-	//	for (int j = 0; j < rtk->nx; j++)	fprintf(fptest, "%14.6lf ", rtk->P[i*rtk->nx + j]);
-	//	fprintf(fptest, "\n");
-	//}
-	//fflush(fptest); 
 	/* temporal update of position/velocity/acceleration */
 	udpos(rtk, tt);
 
 	bl = baseline(rtk->x, rtk->rb, dr);
+#if 0
 	if (rtk->nfloat > 3 && rtk->opt.ionoopt != IONOOPT_EST) {
-		//if (rtk->nfloat > 10) {
 		rtk->sol.stat = 0;
 		rtk->opt.std += 0.01;
 		rtk->nfloat = 0;
 		if (rtk->opt.std >= MAX_ION_STD) rtk->opt.std = 0.01;
-		//rtk->sol.rr_smooth[0] = 0.0;
-		//rtk->sol.rr_smooth[1] = 0.0;
-		//rtk->sol.rr_smooth[2] = 0.0;
-		//rtk->sol.rr_smooth_cnt = 0;
 	}
-	/* temporal update of tropospheric parameters */
+#endif
+    /* temporal update of tropospheric parameters */
 	if (rtk->opt.tropopt == TROPOPT_EST) {
 		udtrop(rtk, tt, bl);
 	}
@@ -1241,28 +1232,8 @@ static void rtkFloatState(rtk_t* rtk, unsigned char vsat[][NFREQ]) {
 		ratio = k / (double)rtk->na;
 		if (k >= 1 && rtk->opt.ionoopt == IONOOPT_EST) {
 			trace(0x10, "rejcnt:%d na:%d ratio=%f\n", k, rtk->na, ratio);
-			//rtk->opt.std += 0.01;
-			//if (rtk->opt.std >= MAX_ION_STD) rtk->opt.std = 0.01;
 		}
-		//if (ratio >= 0.2) {
-		//	for (i = 0; i < k; i++) {
-		//		if (rtk->ssat[floatSat[i] - 1].azel[0][1] * R2D < 20) {
-		//			cnt1++;
-		//		}
-		//		if (rtk->ssat[floatSat[i] - 1].azel[0][1] * R2D < 30) {
-		//			cnt2++;
-		//		}
-		//	}
-		//	if (cnt1 > 0) {
-		//		rtk->opt.elmin = 20.0 * D2R;
-		//	}
-		//}
-		//if (ratio >= 0.5 && rtk->opt.ionoopt == IONOOPT_EST && rtk->nfix > 60) {
-		//	trace(8, "too more sat delete:%f reset\n", ratio);
-		//	rtk->opt.std == 0.01;
-		//	rtk->sol.stat = 0;
-		//	return;
-		//}
+
 		if (ratio > 0.5) {
 			trace(0x02, "delete ratio too large:%f and reset\n", ratio);
 			rtk->opt.std = 0.01;
@@ -2231,15 +2202,15 @@ static int ddres(int post, rtk_t* rtk, const obsd_t* obs, double dt, const doubl
 							//rtk->ssat[sat[j] - 1].resc[f] = x[index1] - x[index2] - ROUND(x[index1] - x[index2]);
 							//rtk->ssat[sat[j] - 1].resc[f] = (x[index1] - x[index2]);
 							rtk->ssat[sat[j] - 1].resc[f] = rtk->ssat[sat[i] - 1].fbias[f] - rtk->ssat[sat[j] - 1].fbias[f] - ROUND(rtk->ssat[sat[i] - 1].fbias[f] - rtk->ssat[sat[j] - 1].fbias[f]);
-							
+
 							//trace(0x04, "outlier rejected half slip(sat=%3d-%3d %s%d v=%.3f snr=%.2f %.2f)\n",
 							//	sat[i], sat[j], f < nf ? "L" : "P", f% nf + 1, fabs(rtk->ssat[sat[j] - 1].resc[f]), obs[iu[i]].SNR[f % nf] / 4.0, obs[iu[j]].SNR[f % nf] / 4.0);
-							
-							if (fabs(rtk->ssat[sat[j] - 1].resc[f]) > 0.35 && fabs(rtk->ssat[sat[j] - 1].resc[f]) < 0.75) {								
+
+							if (fabs(rtk->ssat[sat[j] - 1].resc[f]) > 0.35 && fabs(rtk->ssat[sat[j] - 1].resc[f]) < 0.75) {
 								memset(rtk->Ri, 0, sizeof(double) * NY);
 								memset(rtk->Rj, 0, sizeof(double) * NY);
 								trace(0x04, "outlier rejected half slip(sat=%3d-%3d %s%d v=%.3f snr=%.2f %.2f)\n",
-									sat[i], sat[j], f < nf ? "L" : "P", f% nf + 1, fabs(rtk->ssat[sat[j] - 1].resc[f]), obs[iu[i]].SNR[f % nf] / 4.0, obs[iu[j]].SNR[f % nf] / 4.0);                           
+									sat[i], sat[j], f < nf ? "L" : "P", f% nf + 1, fabs(rtk->ssat[sat[j] - 1].resc[f]), obs[iu[i]].SNR[f % nf] / 4.0, obs[iu[j]].SNR[f % nf] / 4.0);
                                 if (f == 0) {
                                     for (k = na; k < rtk->nx; k++) {
                                         if (rtk->nxRecordSat[k - na] == sat[j]) {
@@ -2521,7 +2492,6 @@ extern int relpos(rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr,
 	for (i = 0; i < NSYS; i++) 	for (f = 0; f < NFREQ * 2; f++) 	rtk->base_prn_fix[i][f] = 0;
 	ns = nu;
 
-
 	/* undifferenced residuals for base station */
 	if (zdres(rtk, 1, obs + nu, nr, rs + nu * 6, dts + nu * 2, svh + nu, rtk->rb, &rtk->opt, 1, y + nu * nf * 2, e + nu * 3, azel + nu * 2, r + nu))
 	{
@@ -2540,21 +2510,6 @@ extern int relpos(rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr,
 	for (i = 0; i < NY; i++)robust[i] = 0;
 	/* temporal update of states */
 	udstate(rtk, obs, sat, iu, ir, ns, r);
-
-
-	//fprintf(fptest, "**************%s****************\n",rtk->s);
-	//fprintf(fptest, "**************P1****************\n");
-	//for (int i = 0; i < rtk->nx; i++){
-	//	for (int j = 0; j < rtk->nx; j++)	fprintf(fptest, "%14.6lf ", rtk->P[i*rtk->nx + j]);
-	//	fprintf(fptest, "\n");
-	//}
-	//fprintf(fptest, "\n");
-	//fprintf(fptest, "**************X1****************\n");
-	//for (int i = 0; i < rtk->nx; i++){
-	//	fprintf(fptest, "%14.6lf ", rtk->x[i]);	
-	//}
-	//fprintf(fptest, "\n");
-	//fflush(fptest);
 
 	rtk->sol.stat = rtk->opt.mode <= PMODE_DGPS ? SOLQ_DGPS : SOLQ_FLOAT;
 	ilterCout = 0;
@@ -2972,7 +2927,7 @@ void static SmoothBasePosion(rtk_t* rtk) {
 
 
 /* precise positioning ---------------------------------------------------------*/
-int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
+extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 	gtime_t time = { 0 }, timeb = { 0 };
 	unsigned char i, j, f, flag, m, nu, nr, ns, ns_tmp, sys, prn, returnValue = 0;
 	unsigned char sat[MAXOBS] = { 0 }, iu[MAXOBS] = { 0 }, ir[MAXOBS] = { 0 }, exc[MAXSAT] = { 0 };
@@ -2981,11 +2936,10 @@ int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 	double* var;
 	int svh[40 * 2], lsqstat = -1;
 
-	rs = zeros(6 * SELETE_SAT_NUM * 2, 1); dts = zeros(2 * SELETE_SAT_NUM * 2, 1);
+	rs  = zeros(6 * SELETE_SAT_NUM * 2, 1);
+    dts = zeros(2 * SELETE_SAT_NUM * 2, 1);
 	var = zeros(SELETE_SAT_NUM * 2, 1);
 
-
-	//rtk->opt.elmin = 30 * D2R;
 	for (i = 0; i < MAXSAT; i++) {
 		rtk->ssat[i].vs = 0;
 		rtk->ssat[i].quickSelSatDel = 0;
@@ -2994,8 +2948,6 @@ int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 		rtk->ssat[i].rs[0] = 0.0;
 		rtk->ssat[i].rs[1] = 0.0;
 		rtk->ssat[i].rs[2] = 0.0;
-		//rtk->ssat[i].resp[0] = 0.0;
-		//rtk->ssat[i].ddtrp = 0;
 		rtk->ssat[i].fixWL = 0;
 		rtk->ssat[i].fixNL = 0;
 		for (f = 0; f < NFREQ; f++) {
@@ -3040,7 +2992,6 @@ int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 	time = rtk->sol.time;
 
 
-	//printf("%s\n", rtk->s);
 	detectSlip(rtk, obs, nu, nr);
 	if (time.time != 0) {
 		rtk->tt = timediff(obs[0].time, time);
@@ -3068,19 +3019,7 @@ int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
 		return 2;
 	}
 	trace(0x04, "%-23s:%14.4f %14.4f %14.4f\n", "rover spp", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
-	//rtk->sol.stat = SOLQ_SINGLE;
-	//return 1;
 
-	//if (rtk->opt.mode == PMODE_SINGLE) {
-	//	rtk->sol.stat = SOLQ_SINGLE;
-	//	return 0;
-	//}
-	//if (nr < 4 && g_preBaseObsRtkNum < 4) {
-	//	resetRtk(rtk, SOLQ_SINGLE);
-	//	trace(0x02, "no base data:%d\n", nr);
-	//	return 0;
-	//}
-	//rtk->rb[0] = -2127884.1836;rtk->rb[1] = 4368613.1713;rtk->rb[2] = 4118283.4333;
 	if (rtk->opt.mode == PMODE_MOVEB || rtk->opt.mode == PMODE_KINEMA || rtk->opt.mode == PMODE_STATIC) { /*  moving baseline */
 	/* estimate position/velocity of base station */
 		if (pntpos(1, obs + nu, nr, &rtk->solb, NULL, rtk->ssat, &rtk->opt, rtk->tt)) { //0:is ok  -1 eoror

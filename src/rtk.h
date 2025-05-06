@@ -67,7 +67,7 @@
 #define BDS3_NL_PSR_K2	1
 
 //extern FILE* fpversion;
-#define SVN_VERSION 250428
+#define SVN_VERSION 250430
 
 #define MAXEPH		10240
 #define MAXGEPH     5120
@@ -1292,7 +1292,19 @@ extern void deg2dms(double deg, double* dms, int ndec);
 extern void strinit(stream_t* stream);
 extern int strwrite(stream_t* stream, uint8_t* buff, int n);
 //-----------------------------sabs-----------------------------
-extern void trace(int level, const char* format, ...);
+extern void traceopen(const char *file);
+extern void traceclose(void);
+extern void tracelevel(int level);
+extern void trace    (int level, const char *format, ...);
+extern void tracet   (int level, const char *format, ...);
+extern void tracemat (int level, const double *A, int n, int m, int p, int q);
+extern void traceobs (int level, const obsd_t *obs, int n);
+extern void tracenav (int level, const nav_t *nav);
+extern void tracegnav(int level, const nav_t *nav);
+extern void tracehnav(int level, const nav_t *nav);
+extern void tracepeph(int level, const nav_t *nav);
+extern void tracepclk(int level, const nav_t *nav);
+extern void traceb   (int level, const unsigned char *p, int n);
 //--------------------------------myfun------------------------------
 extern int findGephIndex2(geph_t* geph, unsigned char sat);
 extern int findGephIndex(geph_t* geph, unsigned char sat);
