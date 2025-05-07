@@ -1037,8 +1037,6 @@ typedef struct {        /* RTK control/result type */
     double satMapEnu[5 + 40 + 40 * NFREQ][3];
     double satMapNfix[5 + 40 + 40 * NFREQ];
     char s[64];
-    double staticFixXyz[3];
-    double staticFixP[9];
     int maxSmoothPoint;
     double sum_enu[3];
     double sum_sqeun[3];

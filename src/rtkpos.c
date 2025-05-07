@@ -163,19 +163,6 @@ static void udpos(rtk_t* rtk, double tt)
     }
 
     if ((norm(rtk->x, 3) <= 0.0)) {
-        if (rtk->opt.mode == PMODE_STATIC) {
-            if (rtk->staticFixXyz[0] != 0.0) {
-                for (i = 0; i < 3; i++) initx(rtk, rtk->staticFixXyz[i], 0.001, i);
-
-                for (i = 0; i < 3; i++) {
-                    for (j = 0; j < 3; j++)
-                        rtk->P[i + j * rtk->nx] = rtk->staticFixP[i + j * 3];
-                }
-
-                return;
-            }
-        }
-
         for (i = 0; i < 3; i++) initx(rtk, rtk->sol.rr[i], VAR_POS, i);
         if (rtk->opt.dynamics == 1) {
             for (i = 3; i < 6; i++) initx(rtk, rtk->sol.rr[i], VAR_VEL, i);//initx(rtk, 1E-3, VAR_VEL, i);

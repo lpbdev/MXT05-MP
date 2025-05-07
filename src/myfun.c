@@ -1277,14 +1277,6 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
     memset(rtk->x, 0, sizeof(double) * NX);
     memset(rtk->P, 0, sizeof(double) * NX * NX);
 
-    if ((rtk->np == 6 && rtk->npPre == 6) || (rtk->np == 9 && rtk->npPre == 9) ||
-        (rtk->opt.mode == PMODE_STATIC && rtk->staticFixXyz[0] != 0.0)) {
-        for (i = 0; i < rtk->np; i++) {
-            rtk->x[i] = rtk->xp[i];
-            for (j = 0; j < rtk->np; j++)
-                rtk->P[i + j * rtk->nx] = rtk->staticFixP[i + j * 3];
-        }
-    }
     assignAmbX(rtk, 0);
     assignAmbP(rtk, 0);
     if (rtk->opt.tropopt == TROPOPT_EST && rtk->ntPre != 0)
