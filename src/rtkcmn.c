@@ -1852,40 +1852,6 @@ extern int getcodepri(unsigned char sys, unsigned char code, const char* opt)
     return (p = strchr(codepris[i][j - 1], obs[1])) ? 14 - (int)(p - codepris[i][j - 1]) : 0;
 }
 
-extern void trace(int level, const char* format, ...)
-{
-    //gpdebugBuff = debugBuff;
-    va_list ap;
-    int freeSpace = 0;
-    int useSpace = gpdebugBuff - debugBuff;
-    int addSpace = 0;
-    freeSpace = DEBUG_BUFF_LEN - useSpace;
-    
-    if (level & level_trace) {
-        /* print error message to stderr */
-        if (freeSpace < 1024) {
-            printf("msg buff too large:%d\n", useSpace);
-            gpdebugBuff = debugBuff;
-            printf("%s:\n", debugBuff);
-            return;
-        }
-        va_start(ap, format);
-        addSpace= vsnprintf((char*)gpdebugBuff, freeSpace, format, ap);
-        if (addSpace < 0) {
-            printf("vsnprintf error\n");
-            gpdebugBuff = debugBuff;
-            return;
-        }
-        gpdebugBuff += addSpace;
-        va_end(ap);
-    //fprintf(oFile.fpDebug, "%s\n", debugBuff);
-    //fflush(oFile.fpDebug);
-    }
-
-}
-
-// TRACE MODULE
-#if 0
 #define MAXTBUFLEN 20480
 static char TRACEBUFF[MAXTBUFLEN];
 static FILE* fp_trace = NULL;     /* file pointer of trace */
@@ -1950,6 +1916,43 @@ extern void tracelevel(int level)
 {
     level_trace = level;
 }
+extern void trace(int level, const char *format, ...)
+{
+    va_list ap;
+    
+    /* print error message to stderr */
+    if (level<=1) {
+        va_start(ap,format); vfprintf(stderr,format,ap); va_end(ap);
+    }
+    if (!fp_trace||level>level_trace) return;
+    fprintf(fp_trace,"%d ",level);
+    va_start(ap,format); vfprintf(fp_trace,format,ap); va_end(ap);
+    fflush(fp_trace);
+}
+/* print matrix ----------------------------------------------------------------
+* print matrix to stdout
+* args   : double *A        I   matrix A (n x m)
+*          int    n,m       I   number of rows and columns of A
+*          int    p,q       I   total columns, columns under decimal point
+*         (FILE  *fp        I   output file pointer)
+* return : none
+* notes  : matirix stored by column-major order (fortran convention)
+*-----------------------------------------------------------------------------*/
+static void matfprint(const double A[], int n, int m, int p, int q, FILE *fp)
+{
+    int i,j;
+    
+    for (i=0;i<n;i++) {
+        for (j=0;j<m;j++) fprintf(fp," %*.*f",p,q,A[i+j*n]);
+        fprintf(fp,"\n");
+    }
+}
+extern void tracemat(int level, const double *A, int n, int m, int p, int q)
+{
+    if (!fp_trace||level>level_trace) return;
+    matfprint(A,n,m,p,q,fp_trace); fflush(fp_trace);
+}
+#if 0
 extern void trace(int level, const char* format, ...)
 {
     va_list ap;

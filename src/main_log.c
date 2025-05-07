@@ -599,7 +599,7 @@
 //                    azel[0] *= R2D;
 //                    azel[1] *= R2D;
 //                }
-//                //sat,ÎÀÐÇÀàÐÍ,ÎÀÐÇºÅ,Ñö½Ç,·½Î»½Ç,ÐÅÔë±È;repeated /r/n
+//                //sat,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Çºï¿½,ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Î»ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½;repeated /r/n
 //                if (sys == SYS_GPS)
 //                {
 //                    *p += sprintf(*p, "0,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
@@ -1187,7 +1187,7 @@
 //    solopt_t sopt = solopt_default;
 //    rtksvr_t* svr = (rtksvr_t*)arg;
 //    sopt.posf = 2; //0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
-//    sopt.times = 3;//0:GPSÊ±¼ä 1£ºUTC  2£ºTIMES_JST  3£º±±¾©Ê±¼ä
+//    sopt.times = 3;//0:
 //    sopt.outvel = 0;
 //    svr->tick = tickget();
 //    svr->cycle = 0;
@@ -1425,7 +1425,7 @@
 //
 //        for (i = 0; i < 2; i++)
 //        {
-//            fobs[i] = decoderaw(svr, i);//½âÂërtcm data and ssr  ·µ»ØÃ¿´Î´ÓÁ÷ÀïÃæ¶ÁÈ¡ÒÔ²ÉÑù¼ä¸ôÎªµ¥Î»µÄ×éÊý
+//            fobs[i] = decoderaw(svr, i);//rtcm data and ssr  
 //        }
 //        //-----------------read config-----------------
 //
@@ -1525,7 +1525,6 @@
 //            if (qobs.n > 0)
 //                EnQueue(&Qrover, qobs);
 //
-//            //ÊÕµ½²âÕ¾Êý¾Ý¼´¼ÆËã²âÕ¾ÐÇ¿ÕÍ¼£¬²¢·¢ËÍÊý¾Ý ±ÜÃâÔÚºóÃæÈ±»ùÕ¾Êý¾Ý£¬²»½ø½âËã£¬ÎÞ·¨¼ÆËãÐÇ¿ÕÍ¼£¨×èÈûºó ÎÞ·¨·¢ËÍ¸ÃÊý£©
 //            for (j = 0; j < MAXSAT; j++) {
 //                svr->rtk.ssat[j].vs = 0;
 //                svr->rtk.ssat[j].azel[0][0] = svr->rtk.ssat[j].azel[0][1] = 0.0;
@@ -2061,17 +2060,17 @@
 //
 //    setCfgOpt(g_cfgOpt, &(svr.rtk.opt));
 //    //setCfgOpt(g_cfgOpt, &(svr.rtkepoch.opt));
-//    trace_flag[0] = 1; //0:¶¨Î»½á¹û
-//    trace_flag[1] = svr.rtk.opt.kMode; //1:ÂË²¨ºó½á¹û
-//    trace_flag[2] = 0; //2£ºµ¥µã¶¨Î»½á¹û
-//    trace_flag[3] = 0; //3£ºDOP
-//    trace_flag[4] = 0; //4£º¹Û²âÁ¿ÐÅÏ¢
-//    trace_flag[5] = 0; //5£ºÎÀÐÇÎ»ÖÃ
-//    trace_flag[6] = 0; //6£ºÎÀÐÇ²Ð²î
-//    trace_flag[7] = 0; //7£ºÎÀÐÇÑö½Ç
-//    trace_flag[8] = 0; //8£º¶à¾¶
-//    trace_flag[9] = 0; //9£ºÄ£ºý¶È µçÀë²ã
-//    trace_flag[10] = 1;//9£ºµ÷ÊÔÐÅÏ¢
+//    trace_flag[0] = 1; //0:
+//    trace_flag[1] = svr.rtk.opt.kMode; //1:
+//    trace_flag[2] = 0; //
+//    trace_flag[3] = 0; //
+//    trace_flag[4] = 0; //
+//    trace_flag[5] = 0; //
+//    trace_flag[6] = 0; //
+//    trace_flag[7] = 0; //
+//    trace_flag[8] = 0; //
+//    trace_flag[9] = 0; //
+//    trace_flag[10] = 1;//9
 //
 //    trace_flag[1] = 1;
 //
@@ -2181,7 +2180,7 @@
 //    svr.rtk.iniCnt = 0;
 //
 //    sopt.posf = 2; //0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
-//    sopt.times = 3;//0:GPSÊ±¼ä 1£ºUTC  2£ºTIMES_JST  3£º±±¾©Ê±¼ä
+//    sopt.times = 3;//0:GPSÊ±ï¿½ï¿½ 1ï¿½ï¿½UTC  2ï¿½ï¿½TIMES_JST  3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
 //    sopt.outvel = 0;
 //    sopt.outhead = 0;
 //    //fptcp = fopen("./tcp.log", "w");
@@ -2190,7 +2189,7 @@
 //    //    return 0;
 //    //}
 //
-//    strinitcom();//³õÊ¼»¯ÍøÂç
+//    strinitcom();//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //    memset(configFileFath, 0, MAXSTRPATH);
 //
 //

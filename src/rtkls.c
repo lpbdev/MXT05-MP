@@ -82,7 +82,6 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
     for (i = 0; i < 3; i++) lsqraim[i] = 0;
     for (i = 0; i < 3; i++) rr1[i] = x[i];
     for (i = 0; i < 3; i++) rr2[i] = rtk->rb[i];
-    //printf("x=%14.4lf y=%14.4lf z=%14.4lf\n", rr2[0], rr2[1], rr2[2]);
 
     ecef2pos(rr1, pos1);
     ecef2pos(rr2, pos2);
@@ -320,6 +319,9 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
             }
         }
     }
+
+    trace(2, "rescode, m, %d, nf, %d, ns,%d,opt->nf, %d, flag,%d\n", m, nf, ns, opt->nf,flag);
+    trace(2, "v=\n");tracemat(2,v,1,ns*nf, 8,4);
     //printf("----------------------------\n");
     return nv;
 }

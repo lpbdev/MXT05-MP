@@ -746,7 +746,7 @@ typedef struct {
 	uint8_t sat;
 	uint8_t vsat[NFREQ];//valid sat flag
 	uint8_t SNR[NFREQ];
-	double azel[2][2];//azimuth, elevation angle (rad) azel[0][x]是移动站，azel[1][x]是基准站
+	double azel[2][2];//azimuth, elevation angle (rad) azel[0][x]
 	double rs[3];  //satellite position
 }ssat_t;
 

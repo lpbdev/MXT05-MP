@@ -39,13 +39,11 @@ unsigned int g_nfloat = 0;
 unsigned int g_nfix = 0;
 unsigned char streamIndex;
 unsigned char rtkReturnValue;
-FILE* fpversion = NULL;
 FILE* fptcp = NULL;
 FILE* fpcof = NULL;
 char configFileFath[MAXSTRPATH] = { 0 };
 char tcpFileFath[MAXSTRPATH] = { 0 };
-char* gpdebugBuff = NULL;
-char debugBuff[DEBUG_BUFF_LEN] = { 0 };
+
 unsigned char rtcmMode = 2;
 int g_week;
 char debugFile[1024] = { 0 };
@@ -116,21 +114,9 @@ typedef struct {            /* file control type */
 } file_t;
 
 
-//int strtype[3] = { STR_TCPCLI,STR_TCPCLI,STR_TCPCLI };   //
-//int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3};
-//char strpath[3][1024] = { "192.168.0.10:6006","192.168.0.10:6009",":192.168.1.232:6003" };
-
-//int strtype[3] = { STR_TCPCLI,STR_TCPCLI,SYS_NONE };   //STR_TCPCLI STR_TCPSVR
-//int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3 };
-//char strpath[3][1024] = { "192.168.23.227:6000","192.168.23.227:6001",""};
-
 int strtype[3] = { STR_FILE,STR_FILE,SYS_NONE };   //STR_TCPCLI STR_TCPSVR
 int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3 };
 char strpath[3][1024] = { "rover.txt","base.txt","" };
-
-//int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3 };
-//int strtype[3] = { STR_NTRIPCLI,STR_NTRIPCLI,STR_NTRIPCLI }; //NTRIP Client
-//char strpath[3][1024] = { "na416:pw416@192.168.24.204:5101/mt-rover-416","na415:pw415@192.168.24.204:5101/mt-base-415-416","na416415:pw416415@192.168.24.204:5101/mt-data-416415" };
 
 extern void rtksvrlock(rtksvr_t* svr) { lock(&svr->lock); }
 extern void rtksvrunlock(rtksvr_t* svr) { unlock(&svr->lock); }
@@ -1080,15 +1066,6 @@ static void* rtksvrthread(void* arg)
     gtime_t obstime = { 0 };
     qobs_t qobs;
 
-    /*oFile.fpOut[0] = fopen("result.pos", "w");
-
-    oFile.fpOut[1] = fopen("filter.pos", "w");
-
-    fprintf(oFile.fpOut[0], "%% (e/n/u-baseline=WGS84,Q=1:fix,2:float,3:sbas,4:dgps,5:single,6:ppp,ns=# of satellites)\n");
-    fprintf(oFile.fpOut[0], "%%  GPST                  e-baseline(m)  n-baseline(m)  u-baseline(m)   Q  ns   sde(m)   sdn(m)   sdu(m)  sden(m)  sdnu(m)  sdue(m) age(s)  ratio\n");
-
-    fprintf(oFile.fpOut[1], "%% (e/n/u-baseline=WGS84,Q=1:fix,2:float,3:sbas,4:dgps,5:single,6:ppp,ns=# of satellites)\n");
-    fprintf(oFile.fpOut[1], "%%  GPST                  e-baseline(m)  n-baseline(m)  u-baseline(m)   Q  ns   sde(m)   sdn(m)   sdu(m)  sden(m)  sdnu(m)  sdue(m) age(s)  ratio\n");*/
 
 #ifndef WIN32
     struct stat fstat = { 0 };
@@ -1150,7 +1127,7 @@ static void* rtksvrthread(void* arg)
             }
             g_baseObsSyncIndex++;
         }
-
+        trace(2,"svr->rtk.opt.cn0Min*4, %d\n",svr->rtk.opt.cn0Min*4);
         for (i = 0; i < fobs[0]; i++) {
             //if (svr->obs[0][i].data[0].time.time % 15 != 0)continue;
             trace(0x10, "k=%d rover time=%d\n", i, svr->obs[0][i].data[0].time.time);
@@ -1297,9 +1274,6 @@ static void* rtksvrthread(void* arg)
             }
             trace(0x10, "dt:%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5], dt[6], dt[7], dt[8], dt[9]);
 
-            if (oFile.fpDebug && ((svr->rtk.sol.time.time + ROUND(svr->rtk.sol.time.frac)) % (int)writeDugTime == 0))
-                fprintf(oFile.fpDebug, "%s\n", debugBuff);
-            gpdebugBuff = debugBuff;
 
             nobsepoch = 0;
             for (k = 0; k < n; k++) {
@@ -1312,23 +1286,7 @@ static void* rtksvrthread(void* arg)
                 obsepoch[nobsepoch].rcv = 2;
                 nobsepoch++;
             }
-            //trace(4, "------------rtk epoch-------------\n");
-            //for (k = 0; k < 3; k++) {
-            //    svr->rtkepoch.enuShiftEpoch[k] = 0.0;
-            //}
-            //if (!rtkepoch(&svr->rtkepoch, obsepoch, nobsepoch)) {
-            //    svr->rtkepoch.sol.stat = SOLQ_NONE;
-            //}
-            //else {
-            //    outsol(NULL, &svr->rtkepoch, &svr->rtkepoch.sol, svr->rtkepoch.rb, &sopt);
-            //    //if (svr->rtkepoch.sol.stat == 1 && svr->rtkepoch.sol.ilterCout<=2) {
-            //    if (svr->rtkepoch.sol.stat == 1) {
-            //        for (k = 0; k < 3; k++) {
-            //            svr->rtk.enuShiftEpoch[k] = svr->rtkepoch.sol.enu[k];
-            //        }
-            //    }
-            //    svr->rtk.enuShiftEpochTime = svr->rtkepoch.sol.time;
-            //}
+                    
             nobsPre = 0;
             for (k = 0; k < n; k++) {
                 if (obs[k].rcv == 1) {
@@ -1337,15 +1295,11 @@ static void* rtksvrthread(void* arg)
                 }
             }
 
-#ifdef WIN32
-            //printf("%s\n", debugBuff);
-#endif
-            gpdebugBuff = debugBuff;
 
             if (obs[0].time.time % (int)svr->rtk.opt.timeInterval != 0) {
                 continue;
             }
-            printf("TIME: %ld, %.0f;\n", obs[0].time.time, svr->rtk.opt.timeInterval);
+            // printf("mak%ld, %.0f;\n", obs[0].time.time, svr->rtk.opt.timeInterval);
 
             trace(0xff, "------------rtk dynamics-------------\n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
@@ -1381,18 +1335,7 @@ static void* rtksvrthread(void* arg)
                 if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0)
                     strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
 
-#ifdef WIN32
-                //printf("%s\n", debugBuff);
-#endif
-                /* OUTPUT LOG Infomation */
-                if (oFile.fpDebug && ((svr->rtk.sol.time.time + ROUND(svr->rtk.sol.time.frac)) % (int)writeDugTime == 0)) {
-                    fprintf(oFile.fpDebug, "%s\n", debugBuff);
-                }
-#ifdef WIN32
-                //printf("%s\n", debugBuff);
-#endif
-                gpdebugBuff = debugBuff;
-                //fprintf(fpversion, "%s\n", buff);
+
                 for (j = 0; j < 3; j++) {
                     svr->rtk.sol.rr_pre[j] = svr->rtk.sol.rr[j];
                     svr->rtk.sol.vel_pre[j] = svr->rtk.sol.vel[j];
@@ -1402,7 +1345,7 @@ static void* rtksvrthread(void* arg)
 
             }
 
-            fprintf(oFile.fpDebug, "%s\n", debugBuff);
+
             rtksvrunlock(svr);
             if (svr->rtk.sol.stat != SOLQ_NONE) {
                 /* adjust current time */
@@ -1423,15 +1366,7 @@ static void* rtksvrthread(void* arg)
             ntime[9] = end - start;
 #endif
 
-            //trace(4, "time=%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",
-            //    ntime[0], ntime[1], ntime[2], ntime[3], ntime[4],
-            //    ntime[5], ntime[6], ntime[7], ntime[8], ntime[9]);
-#ifdef WIN32
-            //printf("%s\n", debugBuff);
-#endif
-            //if (oFile.fpDebug && (svr->rtk.sol.time.time % (int)writeDugTime == 0))
-            //    fprintf(oFile.fpDebug, "%s\n", debugBuff);
-            //gpdebugBuff = debugBuff;
+
         }
         /* send null solution if no solution (1hz) */
         if (svr->rtk.sol.stat == SOLQ_NONE && (int)(tick - tick1hz) >= 1000) {
@@ -1475,30 +1410,19 @@ void split(char* src, const char* separator, char** dest, int* num) {
     }
     *num = count;
 }
-FILE* fptest;
 extern FILE* fp_trace;     /* file pointer of trace */
 int main(int argc, char** argv)
 {
     solopt_t sopt = solopt_default;
     int i, len, rw;
     char* cfgfile;
-    char svrBuff[1024];
-    FILE* fpVersion = NULL;
     initCfgOpt(&g_cfgOpt);
     setCfgOpt(g_cfgOpt, &(svr.rtk.opt));
 
-    sprintf(svrBuff, "./rtkversion.log");
-    fpVersion = fopen(svrBuff, "w");
-    if (fpVersion != NULL) {
-        fprintf(fpVersion, "%d\n", SVN_VERSION);
-        fclose(fpVersion);
-        fpVersion = NULL;
-    }
     printf("version:%d\n", SVN_VERSION);
     InitQueue(&Qrover);
+    int trace_level=0;
 
-    oFile.fpDebug = fopen("debug.log", "w");
-    fptest = fopen("test.log", "w");
     //int* strs = strtype;
     char* paths1[] = { strpath[0],strpath[1],strpath[2] };
     char** paths = paths1;
@@ -1508,7 +1432,7 @@ int main(int argc, char** argv)
     int m, n, startFlag = 0, endFlag = 0, num = 0;
     char* revbuf[64] = { 0 };
     double rb[3] = { 0 };
-    char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\kunchi";
+    char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\kunchi", projname[128];
 
     m = 0; n = 0;
 
@@ -1526,6 +1450,8 @@ int main(int argc, char** argv)
             strcpy(strpath[0], argv[++i]);
         } else if (!strcmp(argv[i], "-fb") && i + 1 < argc) {
             strcpy(strpath[1], argv[++i]);
+        } else if (!strcmp(argv[i], "-name") && i + 1 < argc) {
+            strcpy(projname, argv[++i]);
         } else if (!strcmp(argv[i], "-refb") && i + 1 < argc) {
             for (j = 0; j < 3; j++){
                 svr.rtk.opt.rb[j] = atof(argv[++i]);
@@ -1544,15 +1470,17 @@ int main(int argc, char** argv)
             te = epoch2time(ee);
         } else if (!strcmp(argv[i], "-ti") && i + 1 < argc) {
             svr.rtk.opt.timeInterval = atof(argv[++i]);
+        } else if (!strcmp(argv[i], "-x") && i + 1 < argc) {
+            trace_level = atoi(argv[++i]);
         } else if (!strcmp(argv[i], "-st") && i + 1 < argc) {
             svr.rtk.opt.smoothWindowsTime = atof(argv[++i]);
         }else if (!strcmp(argv[i], "-mp") ) {
             svr.rtk.mpflag =1;
         }
+        
     }
 #endif
 
-    gpdebugBuff = debugBuff;
     rtksvrinit(&svr);
 
     svr.rtk.x = zeros(NX, 1);
@@ -1628,8 +1556,6 @@ int main(int argc, char** argv)
         svr.rtk.maxSmoothPoint = 10;
     }
 
-
-
     svr.rtk.cntEnuWind = 0;
     svr.rtk.maxMedianFilterPoint = 1 * 3600 / svr.rtk.opt.timeInterval + 1;
     svr.rtk.maxMedianFilterPoint = svr.rtk.maxMedianFilterPoint > 3601 ? 3601 : svr.rtk.maxMedianFilterPoint;
@@ -1675,7 +1601,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    sprintf(outDir, "%s%c%s_%d_%d", fileDir, sep, "result", SVN_VERSION,svr.rtk.mpflag);
+    sprintf(outDir, "%s%cresult_%s_%d_%d", fileDir, sep, projname, SVN_VERSION,svr.rtk.mpflag);
     if (access(outDir, 0) != 0)
         createdir(outDir);
     sprintf(outfile[0], "%s%c%s", outDir, sep, "rtk.pos");
@@ -1725,10 +1651,9 @@ int main(int argc, char** argv)
         if (!oFile.fpOut[i]) return -1;
     }
     sprintf(outFileName, "%s%c%s", outDir, sep, "debug.log");
-    oFile.fpDebug = fopen(outFileName, "w");
-    if (fpversion != NULL) {
-        fclose(fpversion);
-        fpversion = NULL;
+    if (trace_level > 0) {
+        traceopen(outFileName);
+        tracelevel(trace_level);
     }
 
     for (i = 0; i < 3; i++)
@@ -1777,13 +1702,6 @@ int main(int argc, char** argv)
             return 0;
         }
     }
-
-    /*   enuAve[0] = svr.rtk.opt.enuWindow[0]= -53.2522;
-       enuAve[1] = svr.rtk.opt.enuWindow[1]= 43.6196;
-       enuAve[2] = svr.rtk.opt.enuWindow[2]= 0.5347;
-       enuAveCnt[0] = svr.rtk.opt.enuWindowIndex[0]=2880;
-       enuAveCnt[1] = svr.rtk.opt.enuWindowIndex[1]=2880;
-       enuAveCnt[2] = svr.rtk.opt.enuWindowIndex[2]=2880;*/
 
     enuAve[0] = svr.rtk.opt.enuWindow[0];
     enuAve[1] = svr.rtk.opt.enuWindow[1];

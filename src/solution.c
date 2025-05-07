@@ -20,7 +20,6 @@ static const float geoid[361][181]; /* embedded geoid heights (m) (lon x lat) */
 static int model_geoid = GEOID_EMBEDDED; /* geoid model */
 static unsigned int bslErrorCount = 0;
 static double ori_pre[3];
-unsigned char outflag = 0;
 static double enuInit[3] = { 0.0 };
 static U8 unusualEnuCnt = 0;
 static S32 count = 0, idx;
@@ -465,7 +464,7 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
         dynWinCnt = 0;
     }
 
-    trace(0x04, "detectSensitivity=%d param=%d\n", detectSensitivity, rtk->opt.param);
+    trace(2, "detectSensitivity=%d param=%d\n", detectSensitivity, rtk->opt.param);
     for (i = 0; i < 3; i++) rr[i] = sol->rr[i] - rb[i];
     //for (i = 0; i < 3; i++) rr[i] = (sol->rr[i] + rtk->xp[i] - 2 * rb[i]) / 2;
     for (i = 0; i < 3; i++) rr_kalman[i] = rtk->xp[i] - rb[i];
@@ -914,6 +913,7 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
     for (i = 0; i < 3; i++) rr[i] = sol->rr[i] - rb[i];
     ns = sol->stat == PMODE_SINGLE ? sol->ns[0] : sol->ns[1];
 
+    trace(2, "outenu2(): \n");
     ecef2pos(sol->rr, pos);
     soltocov(sol, P);   //得到XYZ方向状态协方差
     covenu(pos, P, Q);   //将XYZ方向协方差转到ENU方向方差
@@ -1189,7 +1189,7 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
     for (i = 0; i < 3; i++) sol->enu_original[i] = enu2[i];
     ecef2pos(rtk->rb, pos);
     enu2ecef(pos, enu2, dr);
-    printf("rr:%14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1], sol->rr[2]);
+    // printf("rr:%14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1], sol->rr[2]);
     for (i = 0; i < 3; i++) {
         r[i] = rtk->rb[i];
         r[i] += dr[i];
@@ -1819,7 +1819,7 @@ extern int outsols(unsigned char* buff, rtk_t* rtk, sol_t* sol, const double* rb
     char s1[64], s2[64];
     unsigned char* p = buff;
 
-    //trace(3, "outsols :\n");
+    trace(2, "outsols :, rtk->opt.senceopt,%d\n",rtk->opt.senceopt);
 
     /* suppress output if std is over opt->maxsolstd */
     if (opt->maxsolstd > 0.0 && sol_std(sol) > opt->maxsolstd) {
@@ -1884,20 +1884,17 @@ extern int outsol(FILE* fp, rtk_t* rtk, sol_t* sol, const double* rb,
     int n = 0;
 
     if ((n = outsols(buff, rtk, sol, rb, opt)) > 0) {
-        if (oFile.fpDebug) {
-            trace(4, "timeInterval=%.2f initEnuTime=%.2f\n", rtk->opt.timeInterval, rtk->opt.initEnuTime);
-            if (outflag == 0 && rtk->enuWindwoIndex[0] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
-                rtk->enuWindwoIndex[1] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
-                rtk->enuWindwoIndex[2] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1)) {
-                return n;
-            }
-            else {
-                outflag = 1;
-            }
-            if (fp) {
-                if (rtk->opt.typeSol == 0 && rtk->opt.mode == 2)
-                    fwrite(buff, n, 1, fp);
-            }
+        trace(4, "timeInterval=%.2f initEnuTime=%.2f\n", rtk->opt.timeInterval, rtk->opt.initEnuTime);
+        if (rtk->enuWindwoIndex[0] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
+            rtk->enuWindwoIndex[1] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
+            rtk->enuWindwoIndex[2] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1)) {
+            return n;
+        } else {
+            ;
+        }
+        if (fp) {
+            if (rtk->opt.typeSol == 0 && rtk->opt.mode == 2)
+                fwrite(buff, n, 1, fp);
         }
     }
     return n;

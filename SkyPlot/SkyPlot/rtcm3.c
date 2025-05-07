@@ -1005,11 +1005,7 @@ static void saveMsmObs(rtcm_t* rtcm, int sys, msm_h_t* h, const double* r,
 				/* satellite carrier wave length */
 				wl = satwavelen(sat, freq[k] - 1, &g_nav);
 
-				time2epoch(rtcm->obs.data[index].time, ep);
-				if (sat == 31 && ep[0] == 2021.0 && ep[1] == 10.0 && ep[2] == 25.0 && ep[3] == 11.0 && ep[4] == 5.0 && ep[5] == 42.0) {
-					printf("test\n");
-				}
-				//printf("%.0f %.0f %.0f %.0f %.0f %.0f\n",ep[0],ep[1],ep[2],ep[3],ep[4],ep[5]);
+
 				/* glonass wave length by extended info */
 				if (sys == SYS_GLO && ex && ex[i] <= 13) {
 					fn = ex[i] - 7;

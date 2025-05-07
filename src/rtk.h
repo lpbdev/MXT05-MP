@@ -806,8 +806,7 @@ typedef struct {
     FILE* P2;
     FILE* L1;
     FILE* L2;
-    FILE* fpDebug;
-    FILE* navini;
+    // FILE* navini;
     FILE* fpOut[2];
 } myFile_t;
 typedef struct {        /* navigation data type */
@@ -1122,10 +1121,7 @@ extern double g_galLam[NFREQ];
 extern double g_bdsLam[NFREQ];
 extern double g_gloLam[MAXPRNGLO][NFREQ];
 
-extern char* gpdebugBuff;
-extern char debugBuff[DEBUG_BUFF_LEN];
 
-extern unsigned char level_trace;
 extern void strlock(stream_t* stream);
 extern void strunlock(stream_t* stream);
 extern int stropen(stream_t* stream, int type, int mode, const char* path);
