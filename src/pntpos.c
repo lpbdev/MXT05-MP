@@ -729,7 +729,9 @@ extern int pntpos(int base, obsd_t *obs, int n, sol_t *sol,
     double lsqraim[3] = {0};
     double respMax = 0;
     unsigned char robust[MAXSAT] = {0};
+    
     SysCnt = 0;
+
     if (n <= 0) {
         trace(0x01, "no obs data\n");
         return 1;
@@ -772,6 +774,7 @@ extern int pntpos(int base, obsd_t *obs, int n, sol_t *sol,
         }
     }
     trace(0x04, "n:%d ephcnt:%d\n", n, ephcnt);
+    
     if (2 * ephcnt < 1 * n) {
         trace(0x04, "pntpos eph sat too less\n");
         free(rs);

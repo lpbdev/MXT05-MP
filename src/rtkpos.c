@@ -69,7 +69,7 @@ static void getWavelength(unsigned char sys, unsigned char prn, double* lam)
         for (k = 0; k < NFREQ; k++) lam[k] = g_bdsLam[k];
     }
 }
-static double baseline(const double* ru, const double* rb, double* dr)
+extern double baseline(const double* ru, const double* rb, double* dr)
 {
     int i;
     for (i = 0; i < 3; i++) dr[i] = ru[i] - rb[i];
@@ -3042,7 +3042,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
         for (i = 0; i < 3; i++) rtk->sol.rr[i] = rtk->sol.fixxyz[i];
     }
 
-    rtk->sol.stat = 2;
+    rtk->sol.stat = SOLQ_FLOAT;
     relpos(rtk, obs, nu, nr, sat, iu, ir, rs, dts, var, svh);
     trace(0x04, "rtk lsq ns=%3d nsPre=%3d\n", rtk->sol.nsLsq, rtk->sol.nsLsqPre);
     //if (0) {

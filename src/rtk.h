@@ -1201,6 +1201,7 @@ extern int periodDay(unsigned char sat);
 
 extern void rtksvrstart(rtksvr_t* svr);
 extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n);
+extern double baseline(const double* ru, const double* rb, double* dr);
 extern int rtkepoch(rtk_t* rtk, obsd_t* obs, int n);
 
 extern int pntpos(int base, obsd_t* obs, int n, sol_t* sol,

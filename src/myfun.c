@@ -115,7 +115,6 @@ extern int preBaseObsRTK(rtk_t *rtk, obsd_t *obs, unsigned char *nu1, unsigned c
             trace(0x02, "preBaseObs dt more than maxdiff\n");
         }
     } else {
-        //--------------------?????????,???????????-------------------------
         g_preBaseObsRtkNum = nr;
         for (i = 0; i < 3; i++)
             rtk->prb[i] = rtk->rb[i];
@@ -127,12 +126,7 @@ extern int preBaseObsRTK(rtk_t *rtk, obsd_t *obs, unsigned char *nu1, unsigned c
     (*n1) = n;
     return stat;
 }
-static double baseline(const double *ru, const double *rb, double *dr) {
-    int i;
-    for (i = 0; i < 3; i++)
-        dr[i] = ru[i] - rb[i];
-    return norm(dr, 3);
-}
+
 
 extern void findMaxRes(rtk_t *rtk, unsigned char *sat, int ns) {
     unsigned char j, f, k, reject_sat = 0, nf = rtk->opt.ionoopt == IONOOPT_IFLC ? 1 : rtk->opt.nf;

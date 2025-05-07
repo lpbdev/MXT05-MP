@@ -41,12 +41,6 @@ static double varerr_gamit(unsigned char sat, unsigned char sys, double el, doub
 //     return 1;
 // }
 
-static double baseline(const double* ru, const double* rb, double* dr)
-{
-    int i;
-    for (i = 0; i < 3; i++) dr[i] = ru[i] - rb[i];
-    return norm(dr, 3);
-}
 
 
 /* select common satellites between rover and reference station --------------*/

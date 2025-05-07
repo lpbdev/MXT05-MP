@@ -1051,9 +1051,6 @@ int main(int argc, char** argv)
     sopt.posf = 2; //0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
     sopt.times = 0;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
 
-    //g_rtk.rb[0] = -2286256.2312; g_rtk.rb[1] = 5003469.9486; g_rtk.rb[2] = 3217157.5013;
-    //g_rtk.rb[0] = -1932696.5311; g_rtk.rb[1] = 5112579.3509; g_rtk.rb[2] = 3277660.1313;
-    //g_rtk_epoch.rb[0] = -1932696.5311; g_rtk_epoch.rb[1] = 5112579.3509; g_rtk_epoch.rb[2] = 3277660.1313;
 
     //g_rtk.rb[0] = -2286279.7002; g_rtk.rb[1] = 5003468.2113; g_rtk.rb[2] = 3217155.2669;
     //g_rtk_epoch.rb[0] = -2286279.7002; g_rtk_epoch.rb[1] = 5003468.2113; g_rtk_epoch.rb[2] = 3217155.2669;
