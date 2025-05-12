@@ -25,11 +25,6 @@ rtksvr_t svr;
 nav_t g_nav = { 0 };
 myFile_t oFile = { 0 };
 cfgopt_t g_cfgOpt = { 0 };
-struct timeval tvl;
-double start, end, ntime[10];
-unsigned int g_nfloat = 0;
-unsigned int g_nfix = 0;
-unsigned char streamIndex;
 unsigned char rtkReturnValue;
 unsigned char rebootFlag = 0;
 unsigned char rtcmMode = 0;
@@ -1943,7 +1938,6 @@ static void* rtksvrthread(void* arg)
                     }
                 }
             }
-            streamIndex = 0;
             /* read receiver raw/rtcm data from input stream */
             streamBase = i;
             if ((n = strread(svr->stream + i, p, q - p)) <= 0)

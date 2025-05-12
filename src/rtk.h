@@ -67,7 +67,7 @@
 #define BDS3_NL_PSR_K2    1
 
 //extern FILE* fpversion;
-#define SVN_VERSION 250430
+#define SVN_VERSION 250507
 
 #define MAXEPH        10240
 #define MAXGEPH     5120
@@ -1003,9 +1003,7 @@ typedef struct {        /* RTK control/result type */
     unsigned int nfloat;
     unsigned int nfix;           /* number of continuous fixes of ambiguity */
     double tt, fs;          /* time difference between current and previous (s) */
-    double tt_pre;
     double sumPostCarV;
-    double Pa[9];
     double* x, * P;      /* float states and their covariance */
     double* xp, * Pp;  //31*2k
     double* H;
@@ -1014,14 +1012,12 @@ typedef struct {        /* RTK control/result type */
     double* I;
     double* Ri;
     double* Rj;
-    double* R;//41k
+    double* R; //41k
     double* v;
     ssat_t ssat[MAXSAT]; /* satellite status */
     prcopt_t opt;       /* processing options */
     double* enuWindow[3];
-    //double *eWindow;
-    //double *nWindow;
-    //double* uWindow;
+
     double* enuWindowMedian[3];
     int enuWindowMedianShiftNum[3];
     int cntEnuWind;
@@ -1100,10 +1096,6 @@ typedef struct
 
 extern const solopt_t solopt_default; /* default solution output options */
 extern unsigned char trace_flag[64];
-extern struct timeval tvl;
-extern double start, end, ntime[10];
-extern unsigned int g_nfloat;
-extern unsigned int g_nfix;
 extern myFile_t oFile;
 extern nav_t g_nav;
 extern rtk_t g_rtk;
@@ -1119,6 +1111,7 @@ extern double g_galLam[NFREQ];
 extern double g_bdsLam[NFREQ];
 extern double g_gloLam[MAXPRNGLO][NFREQ];
 
+extern void pos2enu(double *rb, double *rr, double *enu);
 
 extern void strlock(stream_t* stream);
 extern void strunlock(stream_t* stream);

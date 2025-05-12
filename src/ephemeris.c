@@ -364,6 +364,9 @@ static int searchAvalidPsr(obsd_t* obs) {
             break;
         }
     }
+    char id[4];
+    satno2id(obs->sat, id);
+    trace(2,"searchAvalidPsr, %d,%s,\n",index,id);
     return index;
 }
 
@@ -407,15 +410,7 @@ extern void satposs(gtime_t teph, obsd_t* obs, int n,
             *var = SQR(STD_BRDCCLK);
         }
     }
-    if (trace_flag[5] == 1) {
-        for (i = 0; i < n && i < 2 * MAXOBS; i++)
-        {
-            trace(0x10, "%s sat=%2d rs=%13.3f %13.3f %13.3f dts=%12.3f var=%7.3f svh=%02X\n",
-                time_str(time[i], 6), obs[i].sat, rs[i * 6], rs[1 + i * 6], rs[2 + i * 6], dts[i * 2] * 1E9, var[i], svh[i]);
-            printf("%s sat=%2d rs=%13.3f %13.3f %13.3f dts=%12.3f var=%7.3f svh=%02X\n",
-                time_str(time[i], 6), obs[i].sat, rs[i * 6], rs[1 + i * 6], rs[2 + i * 6], dts[i * 2] * 1E9, var[i], svh[i]);
-        }
-    }
+
 }
 
 extern void assignSatBias(rtk_t* rtk, gtime_t teph, gtime_t tepb, obsd_tmp_t* obs_tmp, int ns) {

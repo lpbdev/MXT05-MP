@@ -22,9 +22,6 @@ rtksvr_t svr;
 nav_t g_nav = { 0 };
 myFile_t oFile = { 0 };
 struct timeval tvl;
-double start, end, ntime[10];
-unsigned int g_nfloat = 0;
-unsigned int g_nfix = 0;
 
 FILE* fptcp = NULL;
 char* gpdebugBuff = NULL;

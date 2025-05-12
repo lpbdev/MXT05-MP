@@ -238,10 +238,7 @@ static int rescode(int post, sol_t *sol, const obsd_t *obs, const int *svh, int 
             continue;
         ion *= SQR(lam[0] / lam[index]);
         tropcorr(obs[i].time, pos, azel + 2 * i, opt->tropopt, &trop, &var_trop);
-        // if (sys == 2 && prn == 19) {
-        //    printf("%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", rr[0], rr[1], rr[2], rs[i*6], rs[i * 6+1], rs[i * 6+2]);
-        //    printf("%14.4f %14.4f %14.4f %14.4f %14.4f %14.4f\n", P, r, ion, trop, x[3], dts[2 * i]);
-        // }
+
         v[nv] = P - (r + ion + trop + dtr - CLIGHT * dts[i * 2]);
         /* design matrix */
         for (j = 0; j < NXSPP; j++)
@@ -306,14 +303,7 @@ static int rescode(int post, sol_t *sol, const obsd_t *obs, const int *svh, int 
             dtr = x[6];
             break;
         }
-        // if (sol->rr[0] != 0.0 && tt<2.0&& dtr!=0.0) {
-        //    if (fabs(v[i]) > 500) {
-        //        sys = satsys(nvSatMask[i], &prn);
-        //        exc[nvSatMask[i] - 1] = 1;
-        //        trace(0x04, "spp reject sys=%3d prn=%3d dtr=%.2f v=%.2f\n", sys, prn, dtr,v[i]);
-        //        index = 1;
-        //    }
-        // }
+
     }
     if (index == 1)
         return -1;
@@ -393,48 +383,6 @@ static int estpos(const obsd_t *obs, int n, int *svh, double *rs, double *dts, d
             free(var);
             return -1;
         }
-
-        // matmul("NT", NXSPP, NXSPP, nv, 1.0, H, H, 0.0, Q);  /* Q=H*H' */
-        // if (!(info = matinv(Q, NXSPP))) {
-        //    matmul("NN", NXSPP, nv, NXSPP, 1.0, Q, H, 0.0, A); /* B=Q^-1*H */
-        //    matmul("NT", NXSPP, NXSPP, nv, 1.0, H, A, 0.0, B); /* */
-        //    for (k = 0; k < nv; k++) {
-        //        factor[k] = 0.0; r2 = 0.0;
-        //        for (j = 0; j < NXSPP; j++) {
-        //            factor[k] += B[j + k * NXSPP] * dx[j];
-        //            r2 += B[j + k * NXSPP]* B[j + k * NXSPP];
-        //            //printf("k=%d B[%d]=%.2f * dx[%d]=%.2f\n",k,j + k * NXSPP, B[j + k * NXSPP], j, dx[j]);
-        //        }
-        //        r1 = norm(dx, NXSPP);
-        //        r2 = sqrt(r2);
-        //        factor[k] = factor[k] / (r1 * r2);
-        //    }
-        // }
-        // extern FILE* fptest;
-        // fprintf(fptest, "**************H****************\n");
-        // for (int i = 0; i < nv; i++) {
-        //    for (int j = 0; j < NXSPP; j++)
-        //        fprintf(fptest, "%14.6lf ", H[i * NXSPP + j]);
-        //    fprintf(fptest, "\n");
-        // }
-        // fprintf(fptest, "\n");
-        // fflush(fptest);
-
-        // fprintf(fptest, "**************B****************\n");
-        // for (int i = 0; i < nv; i++) {
-        //    for (int j = 0; j < NXSPP; j++)
-        //        fprintf(fptest, "%14.6lf ", B[i * NXSPP + j]);
-        //    fprintf(fptest, "\n");
-        // }
-        // fprintf(fptest, "\n");
-        // fflush(fptest);
-
-        // fprintf(fptest, "**************dx****************\n");
-        // for (int i = 0; i < NXSPP; i++) {
-        //    fprintf(fptest, "%14.6lf ", dx[i]);
-        // }
-        // fprintf(fptest, "\n");
-        // fflush(fptest);
 
         for (j = 0; j < NXSPP; j++)
             x[j] += dx[j];
@@ -758,6 +706,7 @@ extern int pntpos(int base, obsd_t *obs, int n, sol_t *sol,
     opt_.tropopt = TROPOPT_SAAS; // #define TROPOPT_SBAS 2                  /* troposphere option: SBAS model */
 
     satposs(sol->time, obs, n, opt_.sateph, rs, dts, var_sat, svh);
+    
     // save rs for azel cal
     for (i = 0; i < n; i++) {
         if (base == 0) {
@@ -766,6 +715,7 @@ extern int pntpos(int base, obsd_t *obs, int n, sol_t *sol,
             ssat[obs[i].sat - 1].rs[2] = rs[i * 6 + 2];
         }
     }
+
     for (i = 0; i < n; i++) {
         if (rs[i * 6] == 0) {
             exc[obs[i].sat - 1] = 1;
@@ -773,10 +723,11 @@ extern int pntpos(int base, obsd_t *obs, int n, sol_t *sol,
             ephcnt++;
         }
     }
-    trace(0x04, "n:%d ephcnt:%d\n", n, ephcnt);
-    
+
+    trace(2, "n:%d ephcnt:%d\n", n, ephcnt);
+
     if (2 * ephcnt < 1 * n) {
-        trace(0x04, "pntpos eph sat too less\n");
+        trace(2, "pntpos eph sat too less, ephcnt,%d,n,%d\n",ephcnt,n);
         free(rs);
         free(dts);
         free(var_sat);

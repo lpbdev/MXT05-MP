@@ -593,8 +593,6 @@ extern int calOffset(unsigned char sat, gtime_t ctime, int intv) {
     pday = periodDay(sat);
     int offset = (int)((ctime.time%(86400*pday))/intv);
     //printf("pday=%02d, offset=%d\n", pday, offset);
-
-
     return offset;
 }
 

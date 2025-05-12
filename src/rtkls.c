@@ -4,15 +4,15 @@
 #define SQRT(x)    ((x)<0.0?0.0:sqrt(x))
 static double ori_min[3], ori_max[3];
 
-static double varerr_gamit(unsigned char sat, unsigned char sys, double el, double bl, int f, const prcopt_t* opt)
-{
-    double a, b, c = 0 * bl / 1E4;
-    double sinel;
-    a = 0.003;
-    b = 0.003;
-    sinel = sin(el);
-    return 2.0 * (a * a + b * b / sinel / sinel + c * c);
-}
+// static double varerr_gamit(unsigned char sat, unsigned char sys, double el, double bl, int f, const prcopt_t* opt)
+// {
+//     double a, b, c = 0 * bl / 1E4;
+//     double sinel;
+//     a = 0.003;
+//     b = 0.003;
+//     sinel = sin(el);
+//     return 2.0 * (a * a + b * b / sinel / sinel + c * c);
+// }
 
 // static double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt)
 // {
@@ -296,11 +296,13 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
                 Rj = varrL(&obs[iu[j]], rtk->ssat[sat2 - 1].azel[0][1], bl, f, opt);
 
                 var[nv] = rtk->ssat[sat1 - 1].Ri + rtk->ssat[sat2 - 1].Ri;
+                //var[nv] = Ri + Rj;
+
                 stdv[nv] = fabs(v[nv]) / sqrt(var[nv]);
 
-                if (sys == SYS_BDS && prnj <= 5) {
-                  var[nv] *= 10;
-                }
+                // if (sys == SYS_BDS && prnj <= 5) {
+                //   var[nv] *= 10;
+                // }
 
                 nvSatMask[nv] = sat[j];
                 if (stdv[nv] > lsqraim[2])

@@ -798,10 +798,6 @@ typedef struct {
 
 extern const solopt_t solopt_default; /* default solution output options */
 extern unsigned char trace_flag[64];
-extern struct timeval tvl;
-extern double start, end, ntime[10];
-extern unsigned int g_nfloat;
-extern unsigned int g_nfix;
 
 extern nav_t g_nav;
 extern rtk_t g_rtk;

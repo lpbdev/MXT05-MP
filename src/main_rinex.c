@@ -34,8 +34,6 @@ rtk_t g_rtk = { 0 };
 FILE* fptcp = NULL;
 struct timeval tvl;
 double start, end, ntime[10];
-unsigned int g_nfloat = 0;
-unsigned int g_nfix = 0;
 double writeDugTime=10;
 char* gpdebugBuff = NULL;
 char debugBuff[DEBUG_BUFF_LEN] = { 0 };
@@ -43,7 +41,6 @@ unsigned char streamBase;
 obsd_t g_baseObsSync[10][MAXOBS];
 unsigned char g_nbaseObsSync[10] = { 0 };
 unsigned char g_baseObsSyncIndex = 0;
-unsigned char streamIndex;
 double g_gpsLam[NFREQ] = { CLIGHT / FREQ1, CLIGHT / FREQ2, CLIGHT / FREQ5 };
 double g_galLam[NFREQ] = { CLIGHT / FREQ1, CLIGHT / FREQ7, CLIGHT / FREQ5 };
 double g_bdsLam[NFREQ] = { CLIGHT / FREQ1_CMP, CLIGHT / FREQ2_CMP, CLIGHT / FREQB2a_CMP,CLIGHT / FREQB2b_CMP,CLIGHT / FREQB1C_CMP,CLIGHT / FREQ3_CMP };//FREQB2a_CMP

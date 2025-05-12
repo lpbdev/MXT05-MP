@@ -127,7 +127,7 @@ extern int preBaseObsRTK(rtk_t *rtk, obsd_t *obs, unsigned char *nu1, unsigned c
     return stat;
 }
 
-
+#if 0
 extern void findMaxRes(rtk_t *rtk, unsigned char *sat, int ns) {
     unsigned char j, f, k, reject_sat = 0, nf = rtk->opt.ionoopt == IONOOPT_IFLC ? 1 : rtk->opt.nf;
     double vmax = 0, threshold, dr[3], bl;
@@ -172,6 +172,7 @@ extern void findMaxRes(rtk_t *rtk, unsigned char *sat, int ns) {
         }
     }
 }
+#endif
 ///* detect res ------------------------------------------------*/
 extern void detectionRes(rtk_t *rtk, obsd_t *obs, int n) {
     unsigned char i, j, f, nf = rtk->opt.nf, sat, flag = 0;
@@ -227,7 +228,6 @@ extern int selectSatFlag(rtk_t *rtk, obsd_t *obs, unsigned char nu, unsigned cha
     for (i = 0; i < MAXSAT; i++) {
         if (rtk->ssat[i].vs != 1)
             continue;
-        // if (rtk->ssat[i].rejRes == 1) continue;
         sys = satsys(i + 1, &prn);
         if (rtk->ssat[i].azel[0][1] < rtk->opt.elmin || rtk->ssat[i].azel[1][1] < rtk->opt.elmin) {
             // trace(0x08, "sys=%3d prn=%3d el1=%.2f el2=%lf\n", sys,prn, rtk->ssat[i].azel[0][1] * R2D, rtk->ssat[i].azel[1][1] * R2D);
@@ -532,11 +532,6 @@ extern void quickSelSat(rtk_t *rtk, obsd_t *obs, unsigned char nu, unsigned char
             continue;
         if (rtk->ssat[sat - 1].azel[1][1] < rtk->opt.elmin)
             continue;
-        // if (sat == elGPSsat[0] || sat == elGPSsat[1]) continue;
-        // if (sat == elGLOsat[0] || sat == elGLOsat[1]) continue;
-        // if (sat == elGALsat[0] || sat == elGALsat[1]) continue;
-        // if (sat == elBDSsat[0] || sat == elBDSsat[1]) continue;
-        // if (sat == elQZSsat[0] || sat == elQZSsat[1]) continue;
         sat1[index1] = sat;
         azl[index1++] = rtk->ssat[sat - 1].azel[0][0] * R2D;
     }
@@ -1075,7 +1070,7 @@ extern int checkFixP(rtk_t *rtk, int lcopt) {
         for (i = 0; i < 3; i++) {
             check_p = sqrt(fabs(rtk->Pp[i + i * rtk->nx]));
             if (check_p > 0.2) {
-                trace(8, "fix P too large=%lf\n", check_p);
+                trace(2, "FixP too large=%lf\n", check_p);
                 rtk->sol.stat = SOLQ_FLOAT;
                 rtk->sol.ratio = 0.0;
                 return 1;
@@ -1143,9 +1138,6 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
         rtk->nxRecordFrq[i] = 0;
     }
 
-    if (strstr(rtk->s, "2020/05/22 08:18:22")) {
-        i = 0;
-    }
     for (i = 0; i < nobs; i++) {
         if (obs[i].rcv != 1)
             break;

@@ -33,11 +33,6 @@ nav_t g_nav = { 0 };
 myFile_t oFile = { 0 };
 cfgopt_t g_cfgOpt = { 0 };
 unsigned char trace_flag[64] = { 0 };
-struct timeval tvl;
-double start, end, ntime[10];
-unsigned int g_nfloat = 0;
-unsigned int g_nfix = 0;
-unsigned char streamIndex;
 unsigned char rtkReturnValue;
 FILE* fptcp = NULL;
 FILE* fpcof = NULL;
@@ -1251,11 +1246,7 @@ static void* rtksvrthread(void* arg)
 
                 n++;
             }
-#ifdef TIME_OUTPUT
-            gettimeofday(&tvl, NULL);
-            start = tvl.tv_sec * 1000.0 + tvl.tv_usec / 1000.0;
-            ntime[0] = 0;
-#endif
+
             //-----------------------------find the closest time--------------------
             dtMin = 9999.9;
             dtMinIndex = -1;
@@ -1302,7 +1293,10 @@ static void* rtksvrthread(void* arg)
             // printf("mak%ld, %.0f;\n", obs[0].time.time, svr->rtk.opt.timeInterval);
 
             trace(0xff, "------------rtk dynamics-------------\n");
+            
+            trace(2, "kalman start \n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
+            trace(2, "kalman end \n");
             time = svr->rtk.sol.time;
             if (sopt.times == 3) {
                 time = gpst2utc(time);
@@ -1652,7 +1646,9 @@ int main(int argc, char** argv)
     }
     sprintf(outFileName, "%s%c%s", outDir, sep, "debug.log");
     if (trace_level > 0) {
+        printf("TRACE FILE : %s\n",outFileName);
         traceopen(outFileName);
+        printf("TRACE LEVEL: %d\n",trace_level);
         tracelevel(trace_level);
     }
 

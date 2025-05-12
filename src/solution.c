@@ -476,6 +476,12 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     ecef2enu(pos, rr, enu2); //大地坐标转站心坐标
     ecef2enu(pos, rr, enu); //大地坐标转站心坐标
 
+
+
+    trace(2, "ENU2 :  %14.4lf, %14.4lf,%14.4lf,\n",  enu2[0], enu2[1], enu2[2]);
+
+
+
     trace(4, "rr:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1], sol->rr[2], enu2[0], enu2[1], enu2[2]);
     if (ROUND(rtk->opt.timeInterval) == 1)
         nfix = 5;
@@ -919,6 +925,7 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
     covenu(pos, P, Q);   //将XYZ方向协方差转到ENU方向方差
     ecef2enu(pos, rr, enu2); //大地坐标转站心坐标
 
+
     if (sol->stat != SOLQ_FIX || rtk->sol.ns[1] < rtk->opt.minFixSat) {
         trace(0x4, "warnning:stat=%d nfix=%d ns[0]=%d ns[1]=%d sumPostCarV=%.2f\n", sol->stat, rtk->nfix, rtk->sol.ns[0], rtk->sol.ns[1], rtk->sumPostCarV);
         trace(0x4, "warnning:%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f\n",
@@ -1241,6 +1248,14 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
     return p - (char*)buff;
 }
 
+extern void pos2enu(double *rb, double *rr, double *enu){
+    int i =0;
+    double pos[3], r[3],  P[9], Q[9];
+
+    for (i = 0; i < 3; i++) r[i] = rr[i] - rb[i];
+    ecef2pos(rr, pos);
+    ecef2enu(pos, r, enu); //大地坐标转站心坐标
+}
 static int outenuSstatic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
     const double* rb, const solopt_t* opt)
 {
