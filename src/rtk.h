@@ -1346,6 +1346,3 @@ extern int test_sysWL(int sys, unsigned char prn, int m);
 extern int test_sysNL(int sys, unsigned char prn, int m);
 extern double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt);
 #endif 
-
-
-

@@ -3114,5 +3114,3 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
     free(rs); free(dts); free(var);
     return 0;
 }
-
-

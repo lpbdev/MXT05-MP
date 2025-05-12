@@ -1914,6 +1914,3 @@ extern int outsol(FILE* fp, rtk_t* rtk, sol_t* sol, const double* rb,
     }
     return n;
 }
-
-
-
