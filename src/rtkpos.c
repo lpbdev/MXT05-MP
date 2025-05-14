@@ -601,8 +601,11 @@ extern double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt
     //if (obs->LockTime[f] < 3000)
     //    var = var + (3000 - obs->LockTime[f])/16000.0;
 
-    double snr = obs->SNR[f] / 4.0 ;
+    // double snr = obs->SNR[f] / 4.0 ;
+    // double minSNR=30.0, maxSNR=50.0;
+    // double normSNR = (snr-minSNR)/(maxSNR-minSNR);  
 
+    // var *= (-6.2*normSNR+7.2);
     // if (snr > 45)
     //     var *= 1.0;
     // else if (snr > 40)
@@ -2348,9 +2351,6 @@ static int ddres(int post, rtk_t* rtk, const obsd_t* obs, double dt, const doubl
                         }
                     }
                 }
-                //trace(4, "post=%d robust sat=%d %s%d vmax=%f\n", post, vmax_sat, stype, freq + 1, vmax);
-                //robust[vmaxj] = 1;
-                //rtk->Rj[vmaxj] = 10E8;
                 free(tropu); free(tropr); free(dtdxu); free(dtdxr);
                 return -2;
             }

@@ -317,7 +317,7 @@ extern double* mat(int r, int c)
 {
     double* p;
     if (r <= 0 || c <= 0) return NULL;
-    p = (double*)(malloc(sizeof(double) * r * c));
+    p = (double*)(calloc(sizeof(double),r * c));
     return p;
 }
 extern double* zeros(int r, int c)
@@ -357,7 +357,7 @@ extern int* imat(int n, int m)
 {
     int* p;
     if (n <= 0 || m <= 0) return NULL;
-    p = (int*)malloc(sizeof(int) * n * m);
+    p = (int*)calloc(sizeof(int) , n * m);
     return p;
 }
 /* multiply matrix  -------------------------------------
@@ -1977,5 +1977,3 @@ extern void trace(int level, const char* format, ...)
     sprintf(TRACEBUFF, "%s%d %s", TRACEBUFF, level, buff);
 }
 #endif
-
-

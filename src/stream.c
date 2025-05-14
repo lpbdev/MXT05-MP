@@ -686,7 +686,7 @@ static file_t* openfile(const char* path, int mode, char* msg)
     if (start <= 0.0) start = 0.0;
     if (swapintv <= 0.0) swapintv = 0.0;
 
-    if (!(file = (file_t*)malloc(sizeof(file_t)))) return NULL;
+    if (!(file = (file_t*)calloc(sizeof(file_t),1))) return NULL;
 
     file->fp = file->fp_tag = file->fp_tmp = file->fp_tag_tmp = NULL;
     strcpy(file->path, path);

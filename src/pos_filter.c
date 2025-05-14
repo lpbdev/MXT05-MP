@@ -1,11 +1,11 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include<malloc.h>
 #include <string.h>
 #include <math.h>
 #include "pos_filter.h"
 #pragma warning( disable : 4996)
 
+#define POS_FILTER
 #ifdef POS_FILTER
 static int getDat(FILE* fp, int offset, double *value, int n) {
     if (fp == NULL) {

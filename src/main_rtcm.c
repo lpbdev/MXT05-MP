@@ -304,7 +304,7 @@ extern int init_rtcm(rtcm_t* rtcm)
     rtcm->obs.data = NULL;
 
     /* reallocate memory for observation and ephemris buffer */
-    if (!(rtcm->obs.data = (obsd_t*)malloc(sizeof(obsd_t) * MAXOBS))) {
+    if (!(rtcm->obs.data = (obsd_t*)calloc(sizeof(obsd_t) , MAXOBS))) {
         free_rtcm(rtcm);
         return 0;
     }
@@ -339,19 +339,18 @@ extern int rtksvrinit(rtksvr_t* svr)
     for (i = 0; i < 2; i++) svr->format[i] = 0;
     for (i = 0; i < 2; i++) svr->nb[i] = 0;
 
-    if (!(g_nav.eph = (eph_t*)malloc(sizeof(eph_t) * MAXSAT)) || !(g_nav.geph = (geph_t*)malloc(sizeof(geph_t) * NSATGLO))) {
-        ////trace(1, "rtksvrinit: malloc error\n");
+    if (!(g_nav.eph = (eph_t*)calloc(sizeof(eph_t) , MAXSAT)) || !(g_nav.geph = (geph_t*)calloc(sizeof(geph_t) , NSATGLO))) {
+        ////trace(1, "rtksvrinit: calloc error\n");
         return 0;
     }
-    for (i = 0; i < MAXSAT; i++) g_nav.eph[i] = eph0;
-    for (i = 0; i < NSATGLO; i++) g_nav.geph[i] = geph0;
+
     g_nav.n = MAXSAT;
     g_nav.ng = NSATGLO;
     svr->navsel = 1;
 
     for (i = 0; i < 2; i++) for (j = 0; j < 128; j++) {
-        if (!(svr->obs[i][j].data = (obsd_t*)malloc(sizeof(obsd_t) * MAXOBS))) {
-            printf("rtksvrinit: malloc error\n");
+        if (!(svr->obs[i][j].data = (obsd_t*)calloc(sizeof(obsd_t), MAXOBS))) {
+            printf("rtksvrinit: calloc error\n");
             return 0;
         }
     }
@@ -1510,7 +1509,7 @@ int main(int argc, char** argv)
     if (svr.rtk.opt.dynamics == 2) sopt.outvel = 1;
     if (svr.rtk.opt.smoothWindowsTime == 0) svr.rtk.opt.smoothWindowsTime = 24;
     svr.rtk.opt.initEnuTime = 1;
-    SELETE_SAT_NUM = 25;
+    SELETE_SAT_NUM = 40;
     NX = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
     NY = NX;
 
@@ -1618,13 +1617,13 @@ int main(int argc, char** argv)
     svr.rtk.sol.window[1].dely = (int)3 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[2].nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
 
-    svr.rtk.sol.window[0].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
-    svr.rtk.sol.window[0].thres[1]= posmaxstd(0.002, 0.02);
-    svr.rtk.sol.window[0].thres[2]= posmaxstd(0.005, 0.05);
+    svr.rtk.sol.window[0].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[0].thres[1]= posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[0].thres[2]= posmaxstd(0.002, 0.02);
 
-    svr.rtk.sol.window[1].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
-    svr.rtk.sol.window[1].thres[1]= posmaxstd(0.002, 0.02);
-    svr.rtk.sol.window[1].thres[2]= posmaxstd(0.005, 0.05);
+    svr.rtk.sol.window[1].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[1].thres[1]= posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[1].thres[2]= posmaxstd(0.002, 0.02);
 
     printf("%f %f %f\n",svr.rtk.sol.window[1].thres[0],svr.rtk.sol.window[1].thres[1],svr.rtk.sol.window[1].thres[2]);
 
@@ -1694,7 +1693,7 @@ int main(int argc, char** argv)
     {
         init_rtcm(svr.rtcm + i);
         svr.nb[i] = svr.npb[i] = 0;
-        if (!(svr.buff[i] = (unsigned char*)malloc(BUFFSIZE)) || !(svr.pbuf[i] = (unsigned char*)malloc(BUFFSIZE))) {
+        if (!(svr.buff[i] = (unsigned char*)calloc(sizeof(unsigned char), BUFFSIZE)) || !(svr.pbuf[i] = (unsigned char*)calloc (sizeof(unsigned char),BUFFSIZE))) {
             return 0;
         }
     }
@@ -1739,7 +1738,7 @@ int main(int argc, char** argv)
     }
     svr.rtk.sum_enu[2] = enuAve[2] * enuAveCnt[2];
     svr.rtk.sum_sqeun[2] = enuAve[2] * enuAve[2] * enuAveCnt[2];
-    //----------------------malloc preBaseObs---------
+    
     g_preBaseObsRtkNum = 0;
     /* create rtk server thread */
 #ifdef WIN32
@@ -1771,5 +1770,3 @@ int main(int argc, char** argv)
     printf("rtk thread return\n");
     return 1;
     }
-
-

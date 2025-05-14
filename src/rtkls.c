@@ -292,11 +292,12 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
                 //Ri = varerr_gamit(sat[i], sys, rtk->ssat[sat1 - 1].azel[0][1], bl,f,opt);
                 //Rj = varerr_gamit(sat[j], sys, rtk->ssat[sat2 - 1].azel[0][1], bl,f,opt);
 
-                Ri = varrL(&obs[iu[j]], rtk->ssat[sat1 - 1].azel[0][1], bl, f, opt);
+                Ri = varrL(&obs[iu[i]], rtk->ssat[sat1 - 1].azel[0][1], bl, f, opt);
                 Rj = varrL(&obs[iu[j]], rtk->ssat[sat2 - 1].azel[0][1], bl, f, opt);
 
                 var[nv] = rtk->ssat[sat1 - 1].Ri + rtk->ssat[sat2 - 1].Ri;
                 //var[nv] = Ri + Rj;
+                trace(2, "RiRj: f,%d,%10.6f, %10.6f, %10.6f, %10.6f\n", Ri, Rj, rtk->ssat[sat1 - 1].Ri , rtk->ssat[sat2 - 1].Ri),
 
                 stdv[nv] = fabs(v[nv]) / sqrt(var[nv]);
 
@@ -432,6 +433,3 @@ extern int rtkLsq(rtk_t* rtk, const obsd_t* obs, int n, int nu, const int* svh, 
     free(H); free(v); free(var); free(stdv); free(nvSatMask);
     return -2;
 }
-
-
-

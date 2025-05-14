@@ -524,7 +524,7 @@ static void estvel(const obsd_t *obs, int n, const double *rs, const double *dts
     for (i = 0; i < MAXITR; i++) {
 
         /* doppler residuals */
-        if ((nv = resdop(obs, n, rs, dts, sol->rr, x, azel, vsat, v, H)) < 4) {
+        if ((nv = resdop(obs, n, rs, dts, sol->rr, x, azel, vsat, v, H)) < 4) { 
             break;
         }
         /* least square estimation */
