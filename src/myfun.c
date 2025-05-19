@@ -846,6 +846,11 @@ static int findPreAmbIndex(rtk_t *rtk, unsigned char sati1, unsigned char frqi1,
                 if (sati2 == sati1 && satj2 == satj1 && frqi2 == frqi1 && frqj2 == frqj1) {
                     *row = i;
                     *column = j;
+
+                    trace(2,"findPreAmbIndex,nxRecord, i,%d,j,%d, xIndex, %d,%d\n", i,j,
+                    rtk->ssat[sati1-1].xIndex[frqi1],
+                    rtk->ssat[satj1-1].xIndex[frqj1]
+                    );
                     return 1;
                 }
             }
@@ -866,10 +871,14 @@ static void assignAmbP(rtk_t *rtk, int lcopt) {
                 satj = rtk->nxRecordSat[j - na];
                 frqj = rtk->nxRecordFrq[j - na];
                 if (findPreAmbIndex(rtk, sati, frqi, satj, frqj, &row, &column, lcopt)) {
+
                     rtk->P[i + rtk->nx * j] = rtk->Pp[row + rtk->nxPre * column];
                     rtk->P[j + rtk->nx * i] = rtk->Pp[column + rtk->nxPre * row];
                     rtk->P[i + rtk->nx * i] = rtk->Pp[row + rtk->nxPre * row];
                     rtk->P[j + rtk->nx * j] = rtk->Pp[column + rtk->nxPre * column];
+                    trace(2, "assignAmbP, i, %d, j, %d, ii, %10.4f,   jj, %10.4f,ij, %10.4f,ji, %10.4f\n",
+                        i,j, rtk->P[i + rtk->nx * i] ,rtk->P[j + rtk->nx * j],
+                        rtk->P[i + rtk->nx * j] ,rtk->P[j + rtk->nx * i]                    );
                 }
             }
         }
@@ -1194,10 +1203,13 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
             if (obs[iu[i]].P[f] != 0.0 && obs[iu[i]].L[f] != 0.0 && obs[ir[i]].P[f] != 0.0 && obs[ir[i]].L[f] != 0.0) {
                 rtk->nxRecordSat[nx] = obs[iu[i]].sat;
                 rtk->nxRecordFrq[nx] = f;
+                rtk->ssat[obs[iu[i]].sat-1].xIndex[f]=nx;
+
                 nx++;
             }
         }
     }
+
     for (i = 0; i < ns; i++) {
         sati = obs[iu[i]].sat;
         sys = satsys(sati, &prn);

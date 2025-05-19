@@ -3071,9 +3071,3 @@ int main(int argc, char** argv)
     printf("rtk thread return\n");
     return 1;
     }
-
-
-
-
-
-

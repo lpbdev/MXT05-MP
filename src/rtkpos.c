@@ -284,15 +284,7 @@ static void udpos(rtk_t* rtk, double tt)
         for (i = 0; i < 9; i++) for (j = 0; j < 9; j++)
             rtk->P[i + j * rtk->nx] += Q[i + j * 9];
     }
-    //if (rtk->opt.dynamics == 2) {
-    //    Q[0] = Q[4] = SQR(0.1) * fabs(tt);
-    //    Q[8] = SQR(0.01) * fabs(tt);
-    //    ecef2pos(rtk->x, pos);
-    //    covecef(pos, Q, Qv);
-    //    for (i = 0; i < 3; i++) for (j = 0; j < 3; j++) {
-    //        rtk->P[i + 6 + (j + 6) * rtk->nx] += Qv[i + j * 3];
-    //    }
-    //}
+
     free(ix); free(F); free(P); free(FP); free(x); free(xp);
 }
 
@@ -787,6 +779,7 @@ static int ddmat(rtk_t* rtk, double* D, int* fixSatNum)
         }
     }
     rtk->sol.ns[1] = ns;
+    trace(2,"ddmat, fisSatNum, %d, ns, %d\n",*fixSatNum,ns);
     return nb;
 }
 
@@ -815,6 +808,7 @@ static void restamb(rtk_t* rtk, const double* bias, int nb)
             if (sati == 0 || f != frqi)continue;
             if (sati != rtk->base_prn[m][f])    continue;
             indexb = i;
+            trace(2, "restamb, nxRecord, indexb, %d, xIndex, %d\n", indexb, rtk->ssat[sati-1].xIndex[frqi]);
             break;
         }
         if (indexb == -1) continue;
@@ -836,6 +830,7 @@ static void holdamb(rtk_t* rtk, const double* xa)
     int i, n, m, f, info, indexb, index[MAXSAT], nb = rtk->na, nv = 0, nf = rtk->opt.nf;
     unsigned char sati, frqi, sys;
 
+    trace(2,"holdamb, nb, %d\n",nb);
     memset(rtk->v, 0, sizeof(double) * NY);
     memset(rtk->R, 0, sizeof(double) * NY * NY);
     memset(rtk->H, 0, sizeof(double) * NY * NX);
@@ -860,6 +855,7 @@ static void holdamb(rtk_t* rtk, const double* xa)
             if (sati == 0 || f != frqi)continue;
             if (sati != rtk->base_prn[m][f])    continue;
             indexb = i;
+            // trace(2, "holdamb, i, %d, xIndex, %d\n", i, );
             break;
         }
         if (indexb == -1) continue;
@@ -902,24 +898,19 @@ extern int resamb_LAMBDA(rtk_t* rtk, int lcopt)
     D = rtk->I;
     if (lcopt == 0) {
         if ((nb = ddmat(rtk, D, &fixSat)) <= 0) {
-            trace(0x02, "no valid double-difference\n");
+            trace(2, "no valid double-difference\n");
             //free(D);
             return 0;
         }
     }
     trace(0x10, "lambda fix sat:%d\n", fixSat);
     if (fixSat < 3) {
-        trace(0x02, "lambda fix sat:%d\n", fixSat);
+        trace(2, "lambda fix sat:%d\n", fixSat);
         //free(D);
         return 0;
     }
     rtk->sol.ratio = 0.0;
     //trace(4, "ddmat sat\n");
-    //fprintf(fptest,"ddmat sat\n");
-    //for (i = 0; i < nb; i++){
-    //    fprintf(fptest, "%10d ", ddmatSat[i]);
-    //}
-    //fprintf(fptest, "\n");
 
     ny = na + nb;
     //y = zeros(ny, 1);
@@ -1801,6 +1792,8 @@ static int check_res(rtk_t* rtk, const obsd_t* obs, const double* x, unsigned ch
     double lami[NFREQ], lamj[NFREQ], thres, C1, C2, posu[3], posr[3];
     int nvCar = 0, na = rtk->np + rtk->ni + rtk->nt;
 
+    trace(2,"checkres(), na, %d\n", na);
+
     double* tropu, * tropr;
     double* dtdxu, * dtdxr;
 
@@ -1886,6 +1879,8 @@ static int check_res(rtk_t* rtk, const obsd_t* obs, const double* x, unsigned ch
                     if (frqj != f) continue;
                     if (satj == sat[j]) break;
                 }
+                trace(2, "nxRecord, check_res(), index1,%d, index2, %d, %d,%d\n", index1, index2,
+                    rtk->ssat[sat[i]-1].xIndex[f], rtk->ssat[sat[j]-1].xIndex[f] );
                 rtk->v[nv] -= (lami[f] * x[index1] - lami[f] * x[index2]);
                 rtk->v[nv] -= (lami[f] - lamj[f]) * x[index2];
                 //if (rtk->opt.nf == 1) {
@@ -2032,10 +2027,7 @@ static int ddres(int post, rtk_t* rtk, const obsd_t* obs, double dt, const doubl
                 else {
                     if (!validobsP(iu[j], ir[j], f, nf, y)) continue;
                 }
-                //if (rtk->base_prn_fix[m][f] == sat[j]) {
-                //    i = j;
-                //    break;
-                //}
+
                 if (f > 0) {
                     if (rtk->base_prn[m][0] == sat[j]) {
                         i = j;
@@ -2148,6 +2140,7 @@ static int ddres(int post, rtk_t* rtk, const obsd_t* obs, double dt, const doubl
                                 if (f == 0) {
                                     for (k = na; k < rtk->nx; k++) {
                                         if (rtk->nxRecordSat[k - na] == sat[j]) {
+                                            trace(2,"ddres, k, %d, xIndex, %d\n", rtk->ssat[sat[j]-1].xIndex[f]);
                                             initx(rtk, 0, 0, k);
                                         }
                                     }

@@ -1,4 +1,6 @@
-#pragma warning(disable : 4996)
+#ifdef _MSC_VER
+#pragma warning( disable : 4996)
+#endif
 
 #define NSIZE 3 // for pos data
 
@@ -17,7 +19,7 @@ typedef struct {
 
 typedef struct {
     int nmax;
-    int n;
+    int n[NSIZE];
     int dely;
     double var[NSIZE];
     double std[NSIZE];

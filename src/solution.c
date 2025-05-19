@@ -134,7 +134,7 @@ static void medianFilter(double* enu, rtk_t* rtk)
                 }
             }
             if (rtk->enuWindowMedianShiftNum[i] < 0) rtk->enuWindowMedianShiftNum[i] = 0;
-            trace(4, "%s medianFilter-%d: cnt= %5d;\n", rtk->s, i, rtk->enuWindowMedianShiftNum[i]);
+            //trace(4, "%s medianFilter-%d: cnt= %5d;\n", rtk->s, i, rtk->enuWindowMedianShiftNum[i]);
             /*if (leveldenu[i] > 1 &&
                 (enuwindow[i][3]< rtk->aveEnu[0] && enuwindow[i][maxpoint - 3] > rtk->aveEnu[0])) {
                 trace(4, "medianFilter-E:%.3f -> ", enu[0]);
@@ -591,10 +591,10 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
             trace(4, "reset thresCnt\n");
         }
     }
+    for (i = 0; i < 3; i++) {
+        if (sol->window[0].jumpflag[i] == 1) {
+            sol->window[2].n[i] = 0; // sol->window[0].n;
 
-    if (sol->window[0].jumpflag[0] == 1||sol->window[0].jumpflag[1] == 1||sol->window[0].jumpflag[2] == 1) {
-        sol->window[2].n = 0; // sol->window[0].n;
-        for (i = 0; i < 3; i++) {
             sol->window[2].ave[i] = 0.0;   // sol->window[0].ave[i];
             sol->window[2].var[i] = 0.0;   // sol->window[0].var[i];
             sol->window[2].std[i] = 0.0;   // sol->window[0].std[i];

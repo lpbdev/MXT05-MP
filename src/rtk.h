@@ -67,7 +67,7 @@
 #define BDS3_NL_PSR_K2    1
 
 //extern FILE* fpversion;
-#define SVN_VERSION 250512
+#define SVN_VERSION 250519
 
 #define MAXEPH        10240
 #define MAXGEPH     5120
@@ -931,6 +931,8 @@ typedef struct {
     double resc[NFREQ];
     double resc2[NFREQ];
     double rs[3];  //satellite position
+
+    unsigned int xIndex[NFREQ];
     //double resp[NFREQ];
     unsigned int resCnt;
     unsigned int timeCout;
@@ -980,12 +982,16 @@ typedef struct {        /* RTK control/result type */
     unsigned char nsPre;
     unsigned char nxRecordSat[5 + 40 + 40 * NFREQ];
     unsigned char nxRecordFrq[5 + 40 + 40 * NFREQ];
+    
     unsigned char nxRecordSatPre[5 + 40 + 40 * NFREQ];
     unsigned char nxRecordFrqPre[5 + 40 + 40 * NFREQ];
+
     unsigned char nxFixSat[5 + 40 + 40 * NFREQ];
     unsigned char nxFixFrq[5 + 40 + 40 * NFREQ];
-    unsigned char nxFixSatPre[5 + 40 + 40 * NFREQ];
-    unsigned char nxFixFrqPre[5 + 40 + 40 * NFREQ];
+
+    //unsigned char nxFixSatPre[5 + 40 + 40 * NFREQ];
+    //unsigned char nxFixFrqPre[5 + 40 + 40 * NFREQ];
+    
     unsigned char nxFixNx;
     unsigned char nxFixNxPre;
     unsigned char preStat;
@@ -1030,9 +1036,9 @@ typedef struct {        /* RTK control/result type */
     unsigned int enuWindwoIndex[3];
     double fftFrq[3];
     double fftPower[3];
-    double satMapEnu[5 + 40 + 40 * NFREQ][3];
-    double satMapNfix[5 + 40 + 40 * NFREQ];
-    char s[64];
+    // double satMapEnu[5 + 40 + 40 * NFREQ][3];
+    // double satMapNfix[5 + 40 + 40 * NFREQ];
+    //char s[64];
     int maxSmoothPoint;
     double sum_enu[3];
     double sum_sqeun[3];

@@ -339,6 +339,11 @@ extern int rtksvrinit(rtksvr_t* svr)
     for (i = 0; i < 2; i++) svr->format[i] = 0;
     for (i = 0; i < 2; i++) svr->nb[i] = 0;
 
+    printf("calloc eph_t %d\n",sizeof(eph_t)*MAXSAT);
+    printf("calloc obsd_t %d\n",sizeof(obsd_t)*MAXOBS*2*128);
+    printf("calloc double %d\n",sizeof(double)*MAXSAT*3*MAXSAT*3);
+
+
     if (!(g_nav.eph = (eph_t*)calloc(sizeof(eph_t) , MAXSAT)) || !(g_nav.geph = (geph_t*)calloc(sizeof(geph_t) , NSATGLO))) {
         ////trace(1, "rtksvrinit: calloc error\n");
         return 0;
@@ -1082,7 +1087,8 @@ static void* rtksvrthread(void* arg)
         fobs[0] = fobs[1] = 0;
         while (!feof(fp_rover) || !feof(fp_base)) {
             for (i = 0; i < 2; i++)
-            {
+            {   
+                // printf("stream path: %s\n",svr->stream[1].path);
                 fobs[i] = decoderaw(svr, i);//解码rtcm data and ssr  返回每次从流里面读取以采样间隔为单位的组数
             }
             while (svr->rtcm[0].time.time != svr->rtcm[1].time.time)

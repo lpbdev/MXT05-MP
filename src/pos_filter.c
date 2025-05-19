@@ -3,7 +3,9 @@
 #include <string.h>
 #include <math.h>
 #include "pos_filter.h"
+#ifdef _MSC_VER
 #pragma warning( disable : 4996)
+#endif
 
 #define POS_FILTER
 #ifdef POS_FILTER
@@ -88,20 +90,23 @@ extern int update_data(data_t* poss, double* newdata) {
 static int updatewind(wind_t *wind, double *olddata, double *newdata, int n){
     int n1=0, n2=0, i=0;
 
-    n1 = wind->n >= wind->nmax ? wind->nmax : wind->n + 1;
-    n2 = wind->n >= wind->nmax ? wind->nmax : wind->n;
+
 
     /* update pos statics */
     for (i = 0; i < n; i++) {
+        n1 = wind->n[i] >= wind->nmax ? wind->nmax : wind->n[i] + 1;
+        n2 = wind->n[i] >= wind->nmax ? wind->nmax : wind->n[i];
+
         wind->ave[i] = (wind->ave[i] * n2 - olddata[i] + newdata[i]) / n1;
         wind->sumX2[i] = wind->sumX2[i] - olddata[i] * olddata[i] + newdata[i] * newdata[i];
         wind->var[i] = 1.0 * wind->sumX2[i] / n1 - wind->ave[i] * wind->ave[i];
         wind->std[i] = sqrt(wind->var[i]);
-    }
-    wind->n++;
 
-    if (wind->n > wind->nmax*3) {
-        wind->n = wind->n - wind->nmax;
+        wind->n[i]++;
+
+        if (wind->n[i] > wind->nmax * 3) {
+            wind->n[i] = wind->n[i] - wind->nmax;
+        }
     }
 
     return 0;
@@ -136,12 +141,11 @@ extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE *fp ) {
         getDat(fp, indnew * NSIZE, newdata, NSIZE);
     //}
 
-
-    if(wind->n<wind->nmax){
         for (i = 0; i < NSIZE; i++) {
-            olddata[i]=0;
+            if (wind->n[i] < wind->nmax) {
+                olddata[i] = 0;
+            }
         }
-    }
 
     // for (i = 0; i < NSIZE; i++) {
     //     newdata[i] = newdata[i] - wind->jump[i];
@@ -201,10 +205,9 @@ extern int update_wind(wind_t* wind, data_t* data) {
         getDat(data->fp, indold*NSIZE, olddata, NSIZE);
         getDat(data->fp, indnew*NSIZE, newdata, NSIZE);
     }
-
-    if(wind->n<wind->nmax){
-        for (i = 0; i < NSIZE; i++) {
-            olddata[i]=0;
+    for (i = 0; i < NSIZE; i++) {
+        if (wind->n[i] < wind->nmax) {
+            olddata[i] = 0;
         }
     }
 
@@ -236,10 +239,11 @@ static int getindex(wind_t* wind, data_t* data, int offset){
     indnew = indend + wind->nmax ;
     indnew = indnew % data->nmax;
 
-    if(wind->n >=0)
-        printf("data->n , %d,wind->n, %d, indend, %d, indnew, %d\n", data->n,  wind->n, indend,indnew);
+    // if(wind->n >=0)
+    //     printf("data->n , %d,wind->n, %d, indend, %d, indnew, %d\n", data->n,  wind->n, indend,indnew);
     return 0;
 }
+#if 0
 static int getWindP(wind_t wind, int index, double *pos){
     int n=0;
 
@@ -249,10 +253,12 @@ static int getWindP(wind_t wind, int index, double *pos){
     pos[1] += n/wind.std[index]*wind.ave[index];
     return 0;
 }
+#endif
 
 extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int nj){
     int i=0;
-    if(wa->n<wa->nmax || wb->n < wb->nmax) {
+
+    if(wa->n[0]<wa->nmax || wb->n[0] < wb->nmax) {
         printf("window not full\n");
         return 1;
     }
