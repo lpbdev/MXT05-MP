@@ -21,6 +21,13 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+
+#ifdef _MSC_VER
+#include"../src/include/dirent_bak.h"
+#else
+//#include <dirent.h>
+#endif
+
 rtksvr_t svr;
 nav_t g_nav = { 0 };
 myFile_t oFile = { 0 };
@@ -33,11 +40,7 @@ FILE* fptcp = NULL;
 FILE* fpcof = NULL;
 char configFileFath[MAXSTRPATH] = { 0 };
 char tcpFileFath[MAXSTRPATH] = { 0 };
-char* gpdebugBuff = NULL;
-char debugBuff[DEBUG_BUFF_LEN] = { 0 };
 
-char debugFile[1024] = { 0 };
-char debugFileName[1024] = { 0 };
 char logFileSizeName[1024] = { 0 };
 double logFileSize = 100;
 int logFileNum = 2;
@@ -56,7 +59,6 @@ double g_galLam[NFREQ] = { CLIGHT / FREQ1, CLIGHT / FREQ7, CLIGHT / FREQ5 };
 double g_bdsLam[NFREQ] = { CLIGHT / FREQ1_CMP, CLIGHT / FREQ2_CMP, CLIGHT / FREQB2a_CMP,CLIGHT / FREQB2b_CMP,CLIGHT / FREQB1C_CMP,CLIGHT / FREQ3_CMP };//FREQB2a_CMP
 
 double g_gloLam[MAXPRNGLO][NFREQ] = { 0.0 };
-unsigned char streamBase;
 obsd_t g_preBaseObsRtk[MAXOBS];
 int g_preBaseObsRtkNum;
 unsigned char level_trace = 0xff;
@@ -302,373 +304,8 @@ extern int decoderaw(rtksvr_t* svr, int index)
     return fobs;
 }
 
-static void free_rtcm(rtcm_t* rtcm)
-{
-
-    /* free memory for observation and ephemeris buffer */
-    free(rtcm->obs.data); rtcm->obs.data = NULL; rtcm->obs.n = 0;
-}
-
-extern int init_rtcm(rtcm_t* rtcm)
-{
-    gtime_t time0 = { 0 };
-    obsd_t data0 = { { 0 } };
-    int i;
-
-    rtcm->staid = rtcm->stah = rtcm->seqno = rtcm->outtype = 0;
-    rtcm->time = rtcm->time_s = time0;
-    rtcm->sta.name[0] = rtcm->sta.marker[0] = '\0';
-    rtcm->sta.antdes[0] = rtcm->sta.antsno[0] = '\0';
-    rtcm->sta.rectype[0] = rtcm->sta.recver[0] = rtcm->sta.recsno[0] = '\0';
-    rtcm->sta.antsetup = rtcm->sta.itrf = rtcm->sta.deltype = 0;
-    for (i = 0; i < 3; i++) {
-        rtcm->sta.pos[i] = rtcm->sta.del[i] = 0.0;
-    }
-    rtcm->sta.hgt = 0.0;
-    //rtcm->dgps = NULL;
-    //for (i = 0; i<MAXSAT; i++) {
-    //    rtcm->ssr[i] = ssr0;
-    //}
-    rtcm->msg[0] = rtcm->msgtype[0] = rtcm->opt[0] = '\0';
-    rtcm->obsflag = rtcm->ephsat = 0;
-
-    rtcm->nbyte = rtcm->nbit = rtcm->len = 0;
-    rtcm->word = 0;
-
-    rtcm->obs.data = NULL;
-
-    /* reallocate memory for observation and ephemris buffer */
-    if (!(rtcm->obs.data = (obsd_t*)malloc(sizeof(obsd_t) * MAXOBS))) {
-        free_rtcm(rtcm);
-        return 0;
-    }
-    rtcm->obs.n = 0;
-    for (i = 0; i < MAXOBS; i++) rtcm->obs.data[i] = data0;
-    return 1;
-}
-static void rtksvrfree(rtksvr_t* svr)
-{
-    int i, j;
-    if (g_nav.eph)
-        free(g_nav.eph);
-    if (g_nav.geph)
-        free(g_nav.geph);
-    for (i = 0; i < 2; i++) {
-        free(svr->buff[i]);
-        free(svr->pbuf[i]);
-        free_rtcm(&svr->rtcm[i]);
-    }
-    for (i = 0; i < 2; i++) for (j = 0; j < 128; j++) {
-        free(svr->obs[i][j].data);
-    }
-    free(svr->rtk.x); free(svr->rtk.P); free(svr->rtk.xp); free(svr->rtk.Pp); free(svr->rtk.I); free(svr->rtk.H);
-    free(svr->rtk.F); free(svr->rtk.K); free(svr->rtk.Ri); free(svr->rtk.Rj); free(svr->rtk.R); free(svr->rtk.v);
-    //rtkfree(&svr->rtk);
-}
-extern int rtksvrinit(rtksvr_t* svr)
-{
-    eph_t  eph0 = { 0,-1,-1 };
-    geph_t geph0 = { 0,-1 };
-    int i, j;
-    for (i = 0; i < 2; i++) svr->format[i] = 0;
-    for (i = 0; i < 2; i++) svr->nb[i] = 0;
-
-    if (!(g_nav.eph = (eph_t*)malloc(sizeof(eph_t) * MAXSAT)) || !(g_nav.geph = (geph_t*)malloc(sizeof(geph_t) * NSATGLO))) {
-        ////trace(1, "rtksvrinit: malloc error\n");
-        return 0;
-    }
-    for (i = 0; i < MAXSAT; i++) g_nav.eph[i] = eph0;
-    for (i = 0; i < NSATGLO; i++) g_nav.geph[i] = geph0;
-    g_nav.n = MAXSAT;
-    g_nav.ng = NSATGLO;
-    svr->navsel = 1;
-
-    for (i = 0; i < 2; i++) for (j = 0; j < 128; j++) {
-        if (!(svr->obs[i][j].data = (obsd_t*)malloc(sizeof(obsd_t) * MAXOBS))) {
-            printf("rtksvrinit: malloc error\n");
-            return 0;
-        }
-    }
-    for (i = 0; i < 2; i++) {
-        memset(svr->rtcm + i, 0, sizeof(rtcm_t));
-    }
-    initlock(&svr->lock);
-    return 1;
-}
-//Initialize Configuration Option for User Setting
-static void initCfgOpt(cfgopt_t* opt)
-{
-    opt->kMode = 1;   /* Kinematic Calculation Mode Smoothed Real-Time Kinematic */
-    opt->freq = 15;    /* L1+L2+L5=1+2+4  7:all freq*/
-    opt->iono = 0;    /* disable Ionosphere Correction */
-    opt->trop = 0;    /* enable Troposphere Correction */
-    opt->tides = 0;   /* disable Tides Correction */
-    opt->sys = 31;    /* GPS+QZS+BDS+GAL+GLO 0001 1111*/
-    opt->cn0Min = 25;    /* C/N0 Cut-off */
-    opt->diffAgeMax = 30; /* Max Age of Diff , unit:s */
-    opt->buffSize = 4; /*Buffer Size Default:4kB */
-    opt->elevMin = 15;   /* Elevation Cut-off */
-    opt->gdopThld = 4.0; /* GDOP Threshold */
-    opt->postResThld = 0.02; /* Posterior Residual Threshold*/
-    opt->timeInterval = 1;   /* Time Interval 1s */
-    opt->stationPCV[0] = 0.0;
-    opt->stationPCV[1] = 0.0;
-    opt->stationPCV[2] = 0.0;
-    opt->senceopt = 0;
-    opt->initEnuTime = 12;
-    opt->smoothWindowsTime = 24;
-    opt->detectSensitivity = 10;
-    opt->typeSol = 0;
-    opt->timeIntervalSolution = 0;
-
-    opt->minFixSat = 10;
-    opt->maxDelSat = 5;
-    opt->minSatRes = 0.02;
-    opt->gpsMask = -1;
-    opt->qzssMask = -1;
-    opt->glonassMask = -1;
-    opt->galieoMask = -1;
-    opt->bdsMask = -1;
-    opt->iggiiik0 = 1.5;
-    opt->iggiiik1 = 3.0;
-    opt->param = 0;
-    opt->maxPosSat = 40;
-    opt->useRtcmPosFlag = 0;
-}
-
-static void loadCfgOpt(cfgopt_t* cfgOpt, char** argv, int i)
-{
-    char* cfgfile;
-    cfgfile = argv[i++];
-
-    cfgfile = argv[i++];
-    cfgOpt->timeInterval = atof(cfgfile);
-    printf("timeInterval:%.2f\n", cfgOpt->timeInterval);
-
-    cfgfile = argv[i++];
-    cfgOpt->freq = atoi(cfgfile);
-    printf("freq:%d\n", cfgOpt->freq);
-
-    cfgfile = argv[i++];
-    cfgOpt->iono = atoi(cfgfile);
-    printf("iono:%d\n", cfgOpt->iono);
-    cfgfile = argv[i++];
-    cfgOpt->iono = atoi(cfgfile);
-    printf("trop:%d\n", cfgOpt->trop);
-    cfgfile = argv[i++];
-    cfgOpt->iono = atoi(cfgfile);
-    printf("tides:%d\n", cfgOpt->tides);
-
-    cfgfile = argv[i++];
-    cfgOpt->elevMin = atof(cfgfile);
-    printf("elevMin:%.2f\n", cfgOpt->elevMin);
-
-    cfgfile = argv[i++];
-    cfgOpt->cn0Min = atof(cfgfile);
-    printf("cn0Min:%.2f\n", cfgOpt->cn0Min);
-
-    cfgfile = argv[i++];
-    cfgOpt->gdopThld = atof(cfgfile);
-    printf("gdopThld:%.2f\n", cfgOpt->gdopThld);
-
-    cfgfile = argv[i++];
-    cfgOpt->diffAgeMax = atoi(cfgfile);
-    printf("diffAgeMax:%d\n", cfgOpt->diffAgeMax);
-
-    cfgfile = argv[i++];
-    cfgOpt->sys = atoi(cfgfile);
-    printf("sys:%d\n", cfgOpt->sys);
 
 
-    cfgfile = argv[i++];
-    cfgOpt->postResThld = atof(cfgfile);
-    printf("postResThld:%.2f\n", cfgOpt->postResThld);
-
-    cfgfile = argv[i++];
-    cfgOpt->kMode = atoi(cfgfile);
-    printf("kMode:%d\n", cfgOpt->kMode);
-
-    cfgfile = argv[i++];
-    cfgOpt->buffSize = atoi(cfgfile);
-    printf("buffSize:%d\n", cfgOpt->buffSize);
-
-    cfgfile = argv[i++];
-    cfgOpt->stationPCV[0] = atoi(cfgfile);
-    cfgfile = argv[i++];
-    cfgOpt->stationPCV[1] = atoi(cfgfile);
-    cfgfile = argv[i++];
-    cfgOpt->stationPCV[2] = atoi(cfgfile);
-    printf("stationPCV[0]=%.2f stationPCV[1]=%.2f stationPCV[2]=%.2f\n", cfgOpt->stationPCV[0], cfgOpt->stationPCV[1], cfgOpt->stationPCV[2]);
-
-    cfgfile = argv[i++];
-    cfgOpt->senceopt = atoi(cfgfile);
-    printf("senceopt=%d\n", cfgOpt->senceopt);
-
-    cfgfile = argv[i++];
-    cfgOpt->smoothWindowsTime = atof(cfgfile);
-    printf("smoothWindowsTime=%.2f\n", cfgOpt->smoothWindowsTime);
-
-    cfgfile = argv[i++];
-    cfgOpt->initEnuTime = atof(cfgfile);
-    printf("initEnuTime=%.2f\n", cfgOpt->initEnuTime);
-
-    cfgfile = argv[i++];
-    cfgOpt->detectSensitivity = atoi(cfgfile);
-    printf("detectSensitivity=%d\n", cfgOpt->detectSensitivity);
-
-    cfgfile = argv[i++];
-    cfgOpt->typeSol = atoi(cfgfile);
-    printf("typeSol=%d\n", cfgOpt->typeSol);
-
-    cfgfile = argv[i++];
-    cfgOpt->timeIntervalSolution = atoi(cfgfile);
-    printf("timeIntervalSolution=%d\n", cfgOpt->timeIntervalSolution);
-
-}
-
-//Set Configuration Option for User Setting to Processing Option
-static void setCfgOpt(cfgopt_t cfgOpt, prcopt_t* procOpt)
-{
-    procOpt->kMode = cfgOpt.kMode;
-    procOpt->freq = cfgOpt.freq;
-
-    procOpt->ioncfg = cfgOpt.iono;
-    procOpt->trocfg = cfgOpt.trop;
-
-    if (cfgOpt.iono == 0)
-        procOpt->ionoopt = IONOOPT_BRDC;
-    else if (cfgOpt.iono == 1)
-        procOpt->ionoopt = IONOOPT_EST;
-    else
-        procOpt->ionoopt = IONOOPT_BRDC;
-
-    if (cfgOpt.trop == 0)
-        procOpt->tropopt = TROPOPT_SAAS;
-    else if (cfgOpt.trop == 1)
-        procOpt->tropopt = TROPOPT_EST;
-    else
-        procOpt->ionoopt = TROPOPT_SAAS;
-
-    procOpt->tidecorr = cfgOpt.tides;
-    procOpt->sys = cfgOpt.sys;
-    procOpt->cn0Min = cfgOpt.cn0Min;
-    procOpt->buffSize = cfgOpt.buffSize * 1024;
-    procOpt->elmin = cfgOpt.elevMin * D2R;
-    procOpt->maxtdiff = cfgOpt.diffAgeMax;
-    procOpt->maxgdop = cfgOpt.gdopThld;
-    procOpt->postResThld = cfgOpt.postResThld;
-    procOpt->senceopt = cfgOpt.senceopt;
-    procOpt->timeInterval = cfgOpt.timeInterval;
-    procOpt->smoothWindowsTime = cfgOpt.smoothWindowsTime;
-    procOpt->initEnuTime = cfgOpt.initEnuTime;
-    procOpt->detectSensitivity = cfgOpt.detectSensitivity;
-    procOpt->typeSol = cfgOpt.typeSol;
-    procOpt->timeIntervalSolution = cfgOpt.timeIntervalSolution;
-
-    procOpt->minFixSat = cfgOpt.minFixSat;
-    procOpt->maxDelSat = cfgOpt.maxDelSat;
-    procOpt->minSatRes = cfgOpt.minSatRes;
-    procOpt->gpsMask = cfgOpt.gpsMask;
-    procOpt->qzssMask = cfgOpt.qzssMask;
-    procOpt->glonassMask = cfgOpt.glonassMask;
-    procOpt->galieoMask = cfgOpt.galieoMask;
-    procOpt->bdsMask = cfgOpt.bdsMask;
-    procOpt->iggiiik0 = cfgOpt.iggiiik0;
-    procOpt->iggiiik1 = cfgOpt.iggiiik1;
-    procOpt->param = cfgOpt.param;
-    procOpt->maxPosSat = cfgOpt.maxPosSat;
-    procOpt->rb[0] = cfgOpt.rb[0];
-    procOpt->rb[1] = cfgOpt.rb[1];
-    procOpt->rb[2] = cfgOpt.rb[2];
-    procOpt->enuWindow[0] = cfgOpt.enuWindow[0];
-    procOpt->enuWindow[1] = cfgOpt.enuWindow[1];
-    procOpt->enuWindow[2] = cfgOpt.enuWindow[2];
-    procOpt->enuWindowIndex[0] = cfgOpt.enuWindowIndex[0];
-    procOpt->enuWindowIndex[1] = cfgOpt.enuWindowIndex[1];
-    procOpt->enuWindowIndex[2] = cfgOpt.enuWindowIndex[2];
-#ifdef MULBASE
-    procOpt->masterSlaveBaseFlag = cfgOpt.masterSlaveBaseFlag;
-    procOpt->masterXyz[0] = cfgOpt.masterXyz[0];
-    procOpt->masterXyz[1] = cfgOpt.masterXyz[1];
-    procOpt->masterXyz[2] = cfgOpt.masterXyz[2];
-    procOpt->slaveXyz[0] = cfgOpt.slaveXyz[0];
-    procOpt->slaveXyz[1] = cfgOpt.slaveXyz[1];
-    procOpt->slaveXyz[2] = cfgOpt.slaveXyz[2];
-#endif
-    //time interval
-}
-
-static void generateSatBuf(rtk_t* rtk, char** p)
-{
-    unsigned char i, j;
-    unsigned char sys;
-    unsigned char prn;
-    double azel[2] = { 0.0 };
-    double CN0[NFREQ] = { 0.0 };
-    double r = 0.0;
-    double e[3] = { 0.0 };
-    double pos[3] = { 0.0 };
-    int qzscnt = 0;
-    //*p += sprintf(*p, "sat,");
-
-    for (i = 0; i < MAXSAT; i++)
-    {
-        if (rtk->ssat[i].rs[0] != 0)
-        {
-            sys = satsys(i + 1, &prn);
-            azel[1] = rtk->ssat[i].azel[0][0] * R2D;
-            azel[0] = rtk->ssat[i].azel[0][1] * R2D;
-            for (j = 0; j < NFREQ; j++)
-            {
-                CN0[j] = rtk->ssat[i].SNR[j] / 4.0;
-            }
-
-            if (CN0[0] != 0 || CN0[1] != 0 || CN0[2] != 0 || CN0[3] != 0 || CN0[4] != 0 || CN0[5] != 0)
-            {
-                if (azel[0] == 0 || azel[1] == 0)
-                {
-                    if ((r = geodist(rtk->ssat[i].rs, rtk->sol.rr, e)) <= 0)  continue;
-                    ecef2pos(rtk->sol.rr, pos);
-                    if (satazel(pos, e, azel) < rtk->opt.elmin)  continue;
-                    azel[0] *= R2D;
-                    azel[1] *= R2D;
-                }
-                //sat,卫星类型,卫星号,仰角,方位角,信噪比;repeated /r/n
-                if (sys == SYS_GPS)
-                {
-                    *p += sprintf(*p, "0,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
-                }
-                else if (sys == SYS_QZS)
-                {
-                    qzscnt++;
-                    *p += sprintf(*p, "1,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
-                }
-                else if (sys == SYS_BDS)
-                {
-                    *p += sprintf(*p, "2,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[5], CN0[4], CN0[2], CN0[3]);
-                }
-                else if (sys == SYS_GAL)
-                {
-                    *p += sprintf(*p, "3,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
-                }
-                else if (sys == SYS_GLO)
-                {
-                    *p += sprintf(*p, "4,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
-                }
-            }
-        }
-    }
-    if (qzscnt == 0) {
-        *p += sprintf(*p, "dtr,0:%.3f,1:%.3f,2:%.3f,3:%.3f,4:%.3f",
-            rtk->sol.dtr[0] * CLIGHT, 0.0, rtk->sol.dtr[1] * CLIGHT, rtk->sol.dtr[2] * CLIGHT, rtk->sol.dtr[3] * CLIGHT);
-    }
-    else {
-        *p += sprintf(*p, "dtr,0:%.3f,1:%.3f,2:%.3f,3:%.3f,4:%.3f",
-            rtk->sol.dtr[0] * CLIGHT, rtk->sol.dtr[0] * CLIGHT, rtk->sol.dtr[1] * CLIGHT, rtk->sol.dtr[2] * CLIGHT, rtk->sol.dtr[3] * CLIGHT);
-    }
-    //*p += sprintf(*p, "\n");
-    return;
-}
 #ifdef MULBASE
 static void outDnyResult(rtksvr_t* svr, char** pbuff, char* s1, unsigned char iniEnuFlag, int fixCnt) {
     if (svr->rtk.opt.kMode == 0) {
@@ -813,13 +450,14 @@ static void outDnyResult(rtksvr_t* svr, char** pbuff, char* s1, unsigned char in
     *pbuff += sprintf(*pbuff, "\n");
 }
 #endif
-static void out_json_fail(char* idStr, char* item, stream_t* stream) {
+
+extern void out_json_fail(char* idStr, char* item, stream_t* stream) {
     char ackBuff[1024] = { 0 };
     sprintf(ackBuff, "ack,%s,%s,failed;\n", idStr, item);
     strwrite(stream, (uint8_t*)ackBuff, strlen(ackBuff));
 }
 
-static int get_json_int(char* idStr, cJSON* json, char* item, stream_t* stream, int* out) {
+extern int get_json_int(char* idStr, cJSON* json, char* item, stream_t* stream, int* out) {
     cJSON* json_data_tmp;
 
     json_data_tmp = cJSON_GetObjectItem(json, item);
@@ -833,7 +471,7 @@ static int get_json_int(char* idStr, cJSON* json, char* item, stream_t* stream, 
     return 1;
 }
 
-static int get_json_uint(char* idStr, cJSON* json, char* item, stream_t* stream, uint8_t* out)
+extern int get_json_uint(char* idStr, cJSON* json, char* item, stream_t* stream, uint8_t* out)
 {
     cJSON* json_data_tmp;
 
@@ -849,7 +487,7 @@ static int get_json_uint(char* idStr, cJSON* json, char* item, stream_t* stream,
     return 1;
 }
 
-static int get_json_double(char* idStr, cJSON* json, char* item, stream_t* stream, double* out) {
+extern int get_json_double(char* idStr, cJSON* json, char* item, stream_t* stream, double* out) {
     cJSON* json_data_tmp;
     json_data_tmp = cJSON_GetObjectItem(json, item);
 
@@ -1640,39 +1278,6 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cJSON_Delete(json);
     return 1;
 }
-#ifndef WIN32
-static void del_dbglog()
-{
-    FILE* fp_deletelog;
-    char line[1024], getfilecmd[1024], dfcmd[1024];
-    int nfile = 0;
-    sprintf(getfilecmd, "ls rtkLog -t |grep %s.*.tar.gz", &debugFile[9]);
-    printf("getfilecmd=%s\n", getfilecmd);
-    fp_deletelog = popen(getfilecmd, "r");
-
-    if (NULL != fp_deletelog)
-    {
-        while (fgets(line, 1024, fp_deletelog) != NULL)
-        {
-            nfile++;
-            if (nfile > logFileNum)
-            {
-                printf("delete log:%s", line);
-                sprintf(dfcmd, "rm -rf rtkLog/%s", line);
-                system(dfcmd);
-                sleepms(5);
-            }
-        }
-    }
-    else
-    {
-        printf("fp_deletelog poen faild!\n");
-        return;
-    }
-    pclose(fp_deletelog);
-    return;
-}
-#endif
 /* rtk server thread ---------------------------------------------------------*/
 #ifdef WIN32
 static DWORD WINAPI rtksvrthread(void* arg)
@@ -1680,7 +1285,7 @@ static DWORD WINAPI rtksvrthread(void* arg)
 static void* rtksvrthread(void* arg)
 #endif
 {
-    int i, j, f, k, m, n, cnt, dtMinIndex, flag = 0, cputime, fobs[2] = { 0 }, fnobs, state1, state2, size, ouInterval, fixCnt = 0, floCnt = 0;
+    int i, j, f, k, m, n, cnt, dtMinIndex,  cputime, fobs[2] = { 0 }, fnobs,  size, ouInterval, fixCnt = 0;
     double tt, tow, dtMin, dt[OBSBASELEN] = { 0 };
     unsigned char* p, * q, iniEnuFlag = 0, sys, prn;
     unsigned int cycle = 0, tick, tick1hz = 0, iniEnuCnt = 0, epochCnt = 0;
@@ -1702,24 +1307,13 @@ static void* rtksvrthread(void* arg)
     char* pbuff;
     char s1[32];
     gtime_t obstime = { 0 };
-    ntrip_t* ntrip;
     qobs_t qobs;
-    char roverRtcmHead[7] = { "123321" };
-    char roverRtcmEnd[7] = { "321123" };
 
-    char baseRtcmHead[7] = { "567765" };
-    char baseRtcmEnd[7] = { "765567" };
-
-    int rst;
-    char gzFileName[256], gzcommand[256];
-    int gzFileNameIndex = 0;
-
-#ifndef WIN32    
+#ifndef WIN32
     struct stat fstat = { 0 };
 #endif
     for (cycle = 0; svr->state; cycle++)
     {
-        gpdebugBuff = debugBuff;
         tick = tickget();
         time = timeget();
         trace(4, "time1=%.2f ", time.time + time.frac);
@@ -1756,12 +1350,7 @@ static void* rtksvrthread(void* arg)
             trace(4, "level_trace:%d logFileSize:%.2f writeConfigTime:%.2f writeDugTime:%.2f logFileNum:%d\n",
                 level_trace, logFileSize, writeConfigTime, writeDugTime, logFileNum);
 
-            if (gpdebugBuff - debugBuff > 0)
-                fprintf(oFile.fpDebug, "%s\n", debugBuff);
 
-#ifdef WIN32
-            printf("%s\n", debugBuff);
-#endif
         }
     if (g_cfgOpt.initEnuTime > g_cfgOpt.smoothWindowsTime) {
       svr->rtk.opt.initEnuTime = g_cfgOpt.initEnuTime = g_cfgOpt.smoothWindowsTime;
@@ -1774,18 +1363,12 @@ static void* rtksvrthread(void* arg)
                     if (svr->rtk.opt.typeSol == 0) {
                         outDnyResult(svr, &pbuff, s1, iniEnuFlag, fixCnt);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
                     }
                     else {
                         outDnyResult(svr, &pbuff, s1, iniEnuFlag, fixCnt);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
                     }
                     fixCnt = 0;
                 }
@@ -1806,18 +1389,12 @@ static void* rtksvrthread(void* arg)
                         }
                         pbuff += sprintf(pbuff, "\n");
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
 
                         pbuff = buff;
                         sprintf(pbuff, "rtk,%s,failed,%d\n", s1, rtkReturnValue);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
                     }
                     else {
                         pbuff += sprintf(pbuff, "pos,%s,%d,%d,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%d;",
@@ -1835,18 +1412,12 @@ static void* rtksvrthread(void* arg)
                         //}
                         pbuff += sprintf(pbuff, "\n");
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
 
                         pbuff = buff;
                         sprintf(pbuff, "rtk,%s,failed,%d\n", s1, rtkReturnValue);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
                     }
                 }
             }
@@ -1865,46 +1436,6 @@ static void* rtksvrthread(void* arg)
                 }
             }
         }
-        if (oFile.fpDebug && (time.time % 1 == 0)) {
-            stat(debugFile, &fstat);
-            size = fstat.st_size;
-            //printf("size1=%d\n", size);
-            if (size / 1024 > logFileSize * 1024) {
-                fclose(oFile.fpDebug);
-
-                memset(gzFileName, 0, 256);
-                memset(gzcommand, 0, 256);
-                if (logFileNum > 0) {
-                    sprintf(gzFileName, "%s%d.tar.gz", debugFile, gzFileNameIndex++);
-                    rst = stat(gzFileName, &fstat);
-                    //printf("rst:%d gzFileName:%s\n",rst,gzFileName);
-                    if (rst == 0) {
-                        sprintf(gzcommand, "rm -rf %s", gzFileName);
-                        system(gzcommand);
-                        sleepms(5);
-                        //printf("rm gz file:%s\n",gzcommand);
-                        sprintf(gzcommand, "tar -zcvf %s %s", gzFileName, debugFile);
-                        system(gzcommand);
-                        sleepms(5);
-                        //printf("create1 gz file:%s\n",gzcommand);
-                    }
-                    else {
-                        sprintf(gzcommand, "tar -zcvf %s %s", gzFileName, debugFile);
-                        system(gzcommand);
-                        sleepms(5);
-                        //printf("create2 gz file:%s\n",gzcommand);
-                    }
-                }
-                del_dbglog();
-
-                oFile.fpDebug = fopen(debugFile, "w");
-                if (oFile.fpDebug == NULL) {
-                    trace(0xff, "open file:%s error\n", debugFile);
-                    return 0;
-                }
-            }
-        }
-
 #else
         WIN32_FIND_DATA fileInfo;
         HANDLE hFind;
@@ -1923,23 +1454,9 @@ static void* rtksvrthread(void* arg)
             memset(svr->buff[i], 0, BUFFSIZE);
             p = svr->buff[i] + svr->nb[i]; q = svr->buff[i] + BUFFSIZE;
 
-            if (strtype[i] == STR_NTRIPCLI) {
-                if (i == 0) {
-                    ntrip = (ntrip_t*)svr->stream[2].port;
-                    state1 = ntrip->tcp->svr.state;
-                    if (flag < 10) {
-                        // sprintf(buff, "pid,%d\n", getpid());
-                        // strwrite(&svr->stream[2], (unsigned char*)buff, strlen(buff));
-                        state2 = ntrip->tcp->svr.state;
-                        if (state1 == 2 && state2 == 2) {
-                            printf("%s\n", buff);
-                            flag++;
-                        }
-                    }
-                }
-            }
+
             /* read receiver raw/rtcm data from input stream */
-            streamBase = i;
+            // streamBase = i; then? 
             if ((n = strread(svr->stream + i, p, q - p)) <= 0)
             {
                 //trace(0x4, "%s rec data len=%d\n", strpath[i], n);
@@ -1958,24 +1475,7 @@ static void* rtksvrthread(void* arg)
         fobs[0] = fobs[1] = 0;
         for (i = 0; i < 2; i++)
         {
-            if (level_trace == 127) {
-                if (i == 0) {
-                    fprintf(oFile.fpDebug, "\nnb[%d]=%d\n", i, svr->nb[i]);
 
-                    fwrite(roverRtcmHead, 6, 1, oFile.fpDebug);
-                    fwrite(svr->buff[i], svr->nb[i], 1, oFile.fpDebug);
-                    fwrite(roverRtcmEnd, 6, 1, oFile.fpDebug);
-                    //printf("i=%d nb=%d\n", i, svr->nb[i]);
-                }
-                if (i == 1) {
-                    fprintf(oFile.fpDebug, "\nnb[%d]=%d\n", i, svr->nb[i]);
-
-                    fwrite(baseRtcmHead, 6, 1, oFile.fpDebug);
-                    fwrite(svr->buff[i], svr->nb[i], 1, oFile.fpDebug);
-                    fwrite(baseRtcmEnd, 6, 1, oFile.fpDebug);
-                    //printf("i=%d nb=%d\n", i, svr->nb[i]);
-                }
-            }
             fobs[i] = decoderaw(svr, i);//解码rtcm data and ssr  返回每次从流里面读取以采样间隔为单位的组数
         }
         //-----------------read config-----------------
@@ -1992,9 +1492,7 @@ static void* rtksvrthread(void* arg)
             }
             if (n != 0) {
                 decodeConfig(svr, &g_cfgOpt, buff2);
-#ifndef WIN32
-                del_dbglog();
-#endif // !WIN32
+
                 memset(buff, 0, DEBUG_BUFF_LEN);
                 free(buff2);
                 //if (g_cfgOpt.param > 0 && g_cfgOpt.param<=24) {
@@ -2040,7 +1538,7 @@ static void* rtksvrthread(void* arg)
             }
             for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++) {
                 sys = satsys(svr->obs[0][i].data[j].sat, &prn);
-                if (svr->obs[0][i].data[j].sat == 29) continue;
+                
                 if (!(svr->rtk.opt.sys & 1) && sys == SYS_GPS)continue;
                 if (!(svr->rtk.opt.sys & 2) && sys == SYS_QZS)continue;
                 if (!(svr->rtk.opt.sys & 4) && sys == SYS_BDS)continue;
@@ -2169,14 +1667,6 @@ static void* rtksvrthread(void* arg)
                 svr->rtk.ssat[obs[n].sat - 1].SNR[3] = obs[n].SNR[3];
                 svr->rtk.ssat[obs[n].sat - 1].SNR[4] = obs[n].SNR[4];
                 svr->rtk.ssat[obs[n].sat - 1].SNR[5] = obs[n].SNR[5];
-
-                //svr->rtkepoch.ssat[obs[n].sat - 1].SNR[0] = obs[n].SNR[0];
-                //svr->rtkepoch.ssat[obs[n].sat - 1].SNR[1] = obs[n].SNR[1];
-                //svr->rtkepoch.ssat[obs[n].sat - 1].SNR[2] = obs[n].SNR[2];
-                //svr->rtkepoch.ssat[obs[n].sat - 1].SNR[3] = obs[n].SNR[3];
-                //svr->rtkepoch.ssat[obs[n].sat - 1].SNR[4] = obs[n].SNR[4];
-                //svr->rtkepoch.ssat[obs[n].sat - 1].SNR[5] = obs[n].SNR[5];
-
                 n++;
             }
 
@@ -2197,11 +1687,6 @@ static void* rtksvrthread(void* arg)
                 n = n + g_nbaseObsSync[dtMinIndex];
             }
             trace(0x10, "dt:%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5], dt[6], dt[7], dt[8], dt[9]);
-
-            if (oFile.fpDebug && ((svr->rtk.sol.time.time + ROUND(svr->rtk.sol.time.frac)) % (int)writeDugTime == 0))
-                if (gpdebugBuff - debugBuff > 0)
-                    fprintf(oFile.fpDebug, "%s\n", debugBuff);
-            gpdebugBuff = debugBuff;
 
             nobsepoch = 0;
             for (k = 0; k < n; k++) {
@@ -2228,12 +1713,7 @@ static void* rtksvrthread(void* arg)
                 }
             }
 #endif
-            if (oFile.fpDebug) {
-                fprintf(oFile.fpDebug, "rtkReturnValue:%d\n", rtkReturnValue);
-            }
 
-            if (svr->rtk.sol.stat != 1) floCnt++;
-            else floCnt = 0;
 
             if (rtkReturnValue != 0) {
 #ifdef MULBASE
@@ -2268,8 +1748,7 @@ static void* rtksvrthread(void* arg)
                 pbuff += sprintf(pbuff, "\n");
                 if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0) {
                     strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                    fprintf(oFile.fpDebug, "%s\n", buff);
-                    printf("%s\n", buff);
+
 
                 }
 
@@ -2277,18 +1756,11 @@ static void* rtksvrthread(void* arg)
                 sprintf(pbuff, "rtk,%s,failed,%d\n", s1, rtkReturnValue);
                 if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0) {
                     strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                    fprintf(oFile.fpDebug, "%s\n", buff);
-                    printf("%s\n", buff);
+
                 }
 
                 /* OUTPUT Log Infomation */
-                if (oFile.fpDebug && ((svr->rtk.sol.time.time + ROUND(svr->rtk.sol.time.frac)) % (int)writeDugTime == 0))
-                    if (gpdebugBuff - debugBuff > 0)
-                        fprintf(oFile.fpDebug, "%s\n", debugBuff);
-#ifdef WIN32
-                printf("%s\n", debugBuff);
-#endif
-                gpdebugBuff = debugBuff;
+
             }
             else {
                 time = svr->rtk.sol.time;
@@ -2329,25 +1801,11 @@ static void* rtksvrthread(void* arg)
                     outDnyResult(svr, &pbuff, s1, iniEnuFlag, 0);
                     if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0) {
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
                     }
                     fixCnt++;
 
-#ifdef WIN32
-                    //printf("%s\n", debugBuff);
-#endif
-                /* OUTPUT LOG Infomation */
-                    if (oFile.fpDebug && ((svr->rtk.sol.time.time + ROUND(svr->rtk.sol.time.frac)) % (int)writeDugTime == 0)) {
-                        if (gpdebugBuff - debugBuff > 0)
-                            fprintf(oFile.fpDebug, "%s\n", debugBuff);
-                    }
-#ifdef WIN32
-                    printf("%s\n", debugBuff);
-#endif
-                    gpdebugBuff = debugBuff;
+
                     //fprintf(fpversion, "%s\n", buff);
                     for (j = 0; j < 3; j++) {
                         svr->rtk.sol.rr_pre[j] = svr->rtk.sol.rr[j];
@@ -2372,31 +1830,18 @@ static void* rtksvrthread(void* arg)
                     pbuff += sprintf(pbuff, "\n");
                     if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0) {
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
                     }
 
                     pbuff = buff;
                     sprintf(pbuff, "rtk,%s,failed,%d\n", s1, 7);
                     if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0) {
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        if (oFile.fpDebug) {
-                            fprintf(oFile.fpDebug, "%s\n", buff);
-                            printf("%s\n", buff);
-                        }
+
                     }
 
-                    /* OUTPUT LOG Infomation */
-                    if (oFile.fpDebug && ((svr->rtk.sol.time.time + ROUND(svr->rtk.sol.time.frac)) % (int)writeDugTime == 0)) {
-                        if (gpdebugBuff - debugBuff > 0)
-                            fprintf(oFile.fpDebug, "%s\n", debugBuff);
-                    }
-#ifdef WIN32
-                    printf("%s\n", debugBuff);
-#endif
-                    gpdebugBuff = debugBuff;
+
+
                 }
             }
 
@@ -2419,12 +1864,7 @@ static void* rtksvrthread(void* arg)
             //trace(4, "time=%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",
             //    ntime[0], ntime[1], ntime[2], ntime[3], ntime[4],
             //    ntime[5], ntime[6], ntime[7], ntime[8], ntime[9]);
-#ifdef WIN32
-            //printf("%s\n", debugBuff);
-#endif
-            //if (oFile.fpDebug && (svr->rtk.sol.time.time % (int)writeDugTime == 0))
-            //    fprintf(oFile.fpDebug, "%s\n", debugBuff);
-            //gpdebugBuff = debugBuff;
+
         }
         /* send null solution if no solution (1hz) */
         if (svr->rtk.sol.stat == SOLQ_NONE && (int)(tick - tick1hz) >= 1000) {
@@ -2464,7 +1904,7 @@ void split(char* src, const char* separator, char** dest, int* num) {
         pNext = strtok_s(NULL, separator, &p);
 #else
         pNext = strtok_r(NULL, separator, &p);
-#endif 
+#endif
     }
     *num = count;
 }
@@ -2487,6 +1927,8 @@ int main(int argc, char** argv)
     }
     printf("version:%d\n", SVN_VERSION);
     InitQueue(&Qrover);
+    svr.rtk.mpflag = 0;
+    svr.rtk.mvflag = 0;
 #if 1
     /*TCP Client Port Input*/
     //printf("argc=%d\n", argc);
@@ -2526,7 +1968,6 @@ int main(int argc, char** argv)
     {
         if (argc == 19) //Without Configuration Parameters
         {
-            gpdebugBuff = debugBuff;
             for (i = 1; i < 4; i++)
             {
                 cfgfile = argv[i];
@@ -2575,7 +2016,6 @@ int main(int argc, char** argv)
             cfgfile = argv[i++];
             g_cfgOpt.enuWindowIndex[2] = atoi(cfgfile);
             printf("enuWindowIndex:%d %d %d\n", g_cfgOpt.enuWindowIndex[0], g_cfgOpt.enuWindowIndex[1], g_cfgOpt.enuWindowIndex[2]);
-            //fprintf(oFile.fpDebug, "%s\n", debugBuff);
 
             cfgfile = argv[i++];
             g_cfgOpt.useRtcmPosFlag = atoi(cfgfile);
@@ -2583,7 +2023,7 @@ int main(int argc, char** argv)
 
 
             svr.rtk.mpflag = atoi(argv[18]);
-
+            svr.rtk.mvflag = atoi(argv[19]);
             //cfgfile = argv[i++];
             //svr.rtk.masterRr[0] = atof(cfgfile);
             //cfgfile = argv[i++];
@@ -2683,14 +2123,25 @@ int main(int argc, char** argv)
 
     /* open cycle log module */
     char logfile[1024];
-    sprintf(logfile, "%s/rtk.log", svr.rtk.path);
-    logopen(logfile, 1024); // 1M log  for test
+    // sprintf(logfile, "%s/rtk.log", svr.rtk.path);
+    sprintf(logfile, "./rtkLog/rtk-%s-%s.log", buffport1[2], buffport2[2]);
+
+    logopen(logfile, 0); // 1M log  for test
+    
 
     /* open pos filter */
     svr.rtk.sol.window[0].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
-    svr.rtk.sol.window[1].nmax = (int)5 * 60 / svr.rtk.opt.timeInterval;
-    svr.rtk.sol.window[1].dely = (int)2 * 60 / svr.rtk.opt.timeInterval;
-    svr.rtk.sol.window[2].nmax = (int)12 * 60 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[1].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[1].dely = (int)3 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[2].nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
+
+    svr.rtk.sol.window[0].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[0].thres[1]= posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[0].thres[2]= posmaxstd(0.002, 0.02);
+
+    svr.rtk.sol.window[1].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[1].thres[1]= posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[1].thres[2]= posmaxstd(0.002, 0.02);
 
     svr.rtk.sol.wdata.nmax = (int)12 * 60 * 60 / svr.rtk.opt.timeInterval + 1;
     svr.rtk.sol.wdata.mode = FIL;
@@ -2699,7 +2150,6 @@ int main(int argc, char** argv)
     sprintf(wpospath, "%s/wpos.dat", svr.rtk.path);
     init_data(&svr.rtk.sol.wdata, wpospath);
 
-    gpdebugBuff = debugBuff;
     rtksvrinit(&svr);
 
     //svr.rtkepoch.x = zeros(NX, 1);
@@ -2857,11 +2307,6 @@ int main(int argc, char** argv)
     sopt.times = 3;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间  
     sopt.outvel = 0;
     sopt.outhead = 0;
-    //fptcp = fopen("./tcp.log", "w");
-    //if (fptcp == NULL) {
-    //    printf("tcp.log\n");
-    //    return 0;
-    //}
 
     strinitcom();//初始化网络
     memset(configFileFath, 0, MAXSTRPATH);
@@ -2917,14 +2362,7 @@ int main(int argc, char** argv)
     if (strlen(mntpntr) > 0) {
         sprintf(configFileFath,"./configFile/%s.log", mntpntr);
 
-        sprintf(debugFile, "./rtkLog/rtk-%s-%s.log", buffport1[2], buffport2[2]);
-
-        oFile.fpDebug = fopen(debugFile, "ab+");
-        printf("***debugFile:%s***\n", debugFile);
-        if (oFile.fpDebug == NULL) {
-            printf("open file:%s error\n", debugFile);
-            return 0;
-        }
+        // sprintf(debugFile, "./rtkLog/rtk-%s-%s.log", buffport1[2], buffport2[2]);
 
         sprintf(tcpFileFath, "%s%s%s", "./configFile/tcp_log/", mntpntr, "-tcp.log");
         fptcp = fopen(tcpFileFath, "w");
@@ -3017,11 +2455,6 @@ int main(int argc, char** argv)
     }
 
 
-    //if (fpversion != NULL) {
-    //    fclose(fpversion);
-    //    fpversion = NULL;
-    //}
-
     for (i = 0; i < 3; i++)
     {
         rw = i < 2 ? STR_MODE_R : STR_MODE_RW;
@@ -3035,7 +2468,7 @@ int main(int argc, char** argv)
     {
         init_rtcm(svr.rtcm + i);
         svr.nb[i] = svr.npb[i] = 0;
-        if (!(svr.buff[i] = (unsigned char*)malloc(BUFFSIZE)) || !(svr.pbuf[i] = (unsigned char*)malloc(BUFFSIZE))) {
+        if (!(svr.buff[i] = (unsigned char*)calloc(sizeof(unsigned char), BUFFSIZE)) || !(svr.pbuf[i] = (unsigned char*)calloc (sizeof(unsigned char),BUFFSIZE))) {
             return 0;
         }
     }
@@ -3070,4 +2503,4 @@ int main(int argc, char** argv)
     }
     printf("rtk thread return\n");
     return 1;
-    }
+}

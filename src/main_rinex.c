@@ -35,9 +35,6 @@ FILE* fptcp = NULL;
 struct timeval tvl;
 double start, end, ntime[10];
 double writeDugTime=10;
-char* gpdebugBuff = NULL;
-char debugBuff[DEBUG_BUFF_LEN] = { 0 };
-unsigned char streamBase;
 obsd_t g_baseObsSync[10][MAXOBS];
 unsigned char g_nbaseObsSync[10] = { 0 };
 unsigned char g_baseObsSyncIndex = 0;
@@ -610,7 +607,6 @@ int main(int argc, char** argv)
     int i, j, k, f, n, nu, nr, cnt, dtMinIndex, tsys, nobs, coutFileLine[6] = { 0 }, readFileLine[6] = { 0 }, num,rtkReturnValue;
     unsigned char sys, prn;
     char* revbuf[64] = { 0 };
-    gpdebugBuff = debugBuff;
     eph_t  eph0 = { 0,-1,-1 };
     geph_t geph0 = { 0,-1 };
     sta_t sta = { 0 };
@@ -1027,20 +1023,21 @@ int main(int argc, char** argv)
     sprintf(logfile, "%s/rtk.log", g_rtk.path);
     logopen(logfile, 1024); // 1M log  for test
 
+    if (g_rtk.mvflag == 1) {
+        /* open pos filter */
+        g_rtk.sol.window[0].nmax = (int)2 * 60 / g_rtk.opt.timeInterval;
+        g_rtk.sol.window[1].nmax = (int)2 * 60 / g_rtk.opt.timeInterval;
+        g_rtk.sol.window[1].dely = (int)3 * 60 / g_rtk.opt.timeInterval;
+        g_rtk.sol.window[2].nmax = (int)g_rtk.opt.smoothWindowsTime * 60 * 60 / g_rtk.opt.timeInterval;
 
-    /* open pos filter */
-    g_rtk.sol.window[0].nmax = (int)2 * 60 / g_rtk.opt.timeInterval;
-    g_rtk.sol.window[1].nmax = (int)2 * 60 / g_rtk.opt.timeInterval;
-    g_rtk.sol.window[1].dely = (int)3 * 60 / g_rtk.opt.timeInterval;
-    g_rtk.sol.window[2].nmax = (int)g_rtk.opt.smoothWindowsTime * 60 * 60 / g_rtk.opt.timeInterval;
+        g_rtk.sol.window[0].thres[0] = posmaxstd(0.002, 0.02); // unit:mm
+        g_rtk.sol.window[0].thres[1] = posmaxstd(0.002, 0.02);
+        g_rtk.sol.window[0].thres[2] = posmaxstd(0.005, 0.05);
 
-    g_rtk.sol.window[0].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
-    g_rtk.sol.window[0].thres[1]= posmaxstd(0.002, 0.02);
-    g_rtk.sol.window[0].thres[2]= posmaxstd(0.005, 0.05);
-
-    g_rtk.sol.window[1].thres[0]= posmaxstd(0.002, 0.02);  // unit:mm
-    g_rtk.sol.window[1].thres[1]= posmaxstd(0.002, 0.02);
-    g_rtk.sol.window[1].thres[2]= posmaxstd(0.005, 0.05);
+        g_rtk.sol.window[1].thres[0] = posmaxstd(0.002, 0.02); // unit:mm
+        g_rtk.sol.window[1].thres[1] = posmaxstd(0.002, 0.02);
+        g_rtk.sol.window[1].thres[2] = posmaxstd(0.005, 0.05);
+    }
 
     obss.n = 0; obss.nmax = 1024;
     obss.data = (obsd_t*)malloc(sizeof(obsd_t) * obss.nmax);
@@ -1413,9 +1410,6 @@ int main(int argc, char** argv)
             outsol(oFile.fpOut[1], &g_rtk, &g_rtk.sol, g_rtk.rb, &sopt);
             outResult(&g_rtk, &sopt);
         }
-        //printf("%s\n", debugBuff);
-        if (oFile.fpDebug)    fprintf(oFile.fpDebug, "%s\n", debugBuff);
-        gpdebugBuff = debugBuff;
 
     }
     if (percent == 90)

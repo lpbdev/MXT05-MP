@@ -1210,6 +1210,7 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
         }
     }
 
+#if 0
     for (i = 0; i < ns; i++) {
         sati = obs[iu[i]].sat;
         sys = satsys(sati, &prn);
@@ -1233,6 +1234,7 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
             }
         }
     }
+#endif
     n = 0;
     for (i = 0; i < nobs; i++) {
         for (j = 0; j < ns; j++) {
@@ -1283,4 +1285,382 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
         assignIon(rtk);
 
     return n;
+}
+
+extern int rtksvrinit(rtksvr_t* svr)
+{
+    eph_t  eph0 = { 0,-1,-1 };
+    geph_t geph0 = { 0,-1 };
+    int i, j;
+    for (i = 0; i < 2; i++) svr->format[i] = 0;
+    for (i = 0; i < 2; i++) svr->nb[i] = 0;
+
+    printf("calloc eph_t %d\n",sizeof(eph_t)*MAXSAT);
+    printf("calloc obsd_t %d\n",sizeof(obsd_t)*MAXOBS*2*128);
+    printf("calloc double %d\n",sizeof(double)*MAXSAT*3*MAXSAT*3);
+
+
+    if (!(g_nav.eph = (eph_t*)calloc(sizeof(eph_t) , MAXSAT)) || !(g_nav.geph = (geph_t*)calloc(sizeof(geph_t) , NSATGLO))) {
+        ////trace(1, "rtksvrinit: calloc error\n");
+        return 0;
+    }
+
+    g_nav.n = MAXSAT;
+    g_nav.ng = NSATGLO;
+    svr->navsel = 1;
+
+    for (i = 0; i < 2; i++) for (j = 0; j < 128; j++) {
+        if (!(svr->obs[i][j].data = (obsd_t*)calloc(sizeof(obsd_t), MAXOBS))) {
+            printf("rtksvrinit: calloc error\n");
+            return 0;
+        }
+    }
+    for (i = 0; i < 2; i++) {
+        memset(svr->rtcm + i, 0, sizeof(rtcm_t));
+    }
+    initlock(&svr->lock);
+    return 1;
+}
+
+extern void rtksvrfree(rtksvr_t* svr)
+{
+    int i, j;
+    if (g_nav.eph)
+        free(g_nav.eph);
+    if (g_nav.geph)
+        free(g_nav.geph);
+    for (i = 0; i < 2; i++) {
+        free(svr->buff[i]);
+        free(svr->pbuf[i]);
+        free_rtcm(&svr->rtcm[i]);
+    }
+    for (i = 0; i < 2; i++) for (j = 0; j < 128; j++) {
+        free(svr->obs[i][j].data);
+    }
+    free(svr->rtk.x); free(svr->rtk.P); free(svr->rtk.xp); free(svr->rtk.Pp); free(svr->rtk.I); free(svr->rtk.H);
+    free(svr->rtk.F); free(svr->rtk.K); free(svr->rtk.Ri); free(svr->rtk.Rj); free(svr->rtk.R); free(svr->rtk.v);
+    //rtkfree(&svr->rtk);
+}
+
+
+extern void free_rtcm(rtcm_t* rtcm)
+{
+
+    /* free memory for observation and ephemeris buffer */
+    free(rtcm->obs.data); rtcm->obs.data = NULL; rtcm->obs.n = 0;
+}
+
+extern int init_rtcm(rtcm_t* rtcm)
+{
+    gtime_t time0 = { 0 };
+    obsd_t data0 = { { 0 } };
+    int i;
+
+    rtcm->staid = rtcm->stah = rtcm->seqno = rtcm->outtype = 0;
+    rtcm->time = rtcm->time_s = time0;
+    rtcm->sta.name[0] = rtcm->sta.marker[0] = '\0';
+    rtcm->sta.antdes[0] = rtcm->sta.antsno[0] = '\0';
+    rtcm->sta.rectype[0] = rtcm->sta.recver[0] = rtcm->sta.recsno[0] = '\0';
+    rtcm->sta.antsetup = rtcm->sta.itrf = rtcm->sta.deltype = 0;
+    for (i = 0; i < 3; i++) {
+        rtcm->sta.pos[i] = rtcm->sta.del[i] = 0.0;
+    }
+    rtcm->sta.hgt = 0.0;
+    //rtcm->dgps = NULL;
+    //for (i = 0; i<MAXSAT; i++) {
+    //    rtcm->ssr[i] = ssr0;
+    //}
+    rtcm->msg[0] = rtcm->msgtype[0] = rtcm->opt[0] = '\0';
+    rtcm->obsflag = rtcm->ephsat = 0;
+
+    rtcm->nbyte = rtcm->nbit = rtcm->len = 0;
+    rtcm->word = 0;
+
+    rtcm->obs.data = NULL;
+
+    /* reallocate memory for observation and ephemris buffer */
+    if (!(rtcm->obs.data = (obsd_t*)calloc(sizeof(obsd_t) , MAXOBS))) {
+        free_rtcm(rtcm);
+        return 0;
+    }
+    rtcm->obs.n = 0;
+    for (i = 0; i < MAXOBS; i++) rtcm->obs.data[i] = data0;
+    return 1;
+}
+
+
+extern void generateSatBuf(rtk_t* rtk, char** p)
+{
+    unsigned char i, j;
+    unsigned char sys;
+    unsigned char prn;
+    double azel[2] = { 0.0 };
+    double CN0[NFREQ] = { 0.0 };
+    double r = 0.0;
+    double e[3] = { 0.0 };
+    double pos[3] = { 0.0 };
+    int qzscnt = 0;
+    //*p += sprintf(*p, "sat,");
+
+    for (i = 0; i < MAXSAT; i++)
+    {
+        if (rtk->ssat[i].rs[0] != 0)
+        {
+            sys = satsys(i + 1, &prn);
+            azel[1] = rtk->ssat[i].azel[0][0] * R2D;
+            azel[0] = rtk->ssat[i].azel[0][1] * R2D;
+            for (j = 0; j < NFREQ; j++)
+            {
+                CN0[j] = rtk->ssat[i].SNR[j] / 4.0;
+            }
+
+            if (CN0[0] != 0 || CN0[1] != 0 || CN0[2] != 0 || CN0[3] != 0 || CN0[4] != 0 || CN0[5] != 0)
+            {
+                if (azel[0] == 0 || azel[1] == 0)
+                {
+                    if ((r = geodist(rtk->ssat[i].rs, rtk->sol.rr, e)) <= 0)  continue;
+                    ecef2pos(rtk->sol.rr, pos);
+                    if (satazel(pos, e, azel) < rtk->opt.elmin)  continue;
+                    azel[0] *= R2D;
+                    azel[1] *= R2D;
+                }
+                //sat,卫星类型,卫星号,仰角,方位角,信噪比;repeated /r/n
+                if (sys == SYS_GPS)
+                {
+                    *p += sprintf(*p, "0,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
+                }
+                else if (sys == SYS_QZS)
+                {
+                    qzscnt++;
+                    *p += sprintf(*p, "1,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
+                }
+                else if (sys == SYS_BDS)
+                {
+                    *p += sprintf(*p, "2,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[5], CN0[4], CN0[2], CN0[3]);
+                }
+                else if (sys == SYS_GAL)
+                {
+                    *p += sprintf(*p, "3,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
+                }
+                else if (sys == SYS_GLO)
+                {
+                    *p += sprintf(*p, "4,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
+                }
+            }
+        }
+    }
+    if (qzscnt == 0) {
+        *p += sprintf(*p, "dtr,0:%.3f,1:%.3f,2:%.3f,3:%.3f,4:%.3f",
+            rtk->sol.dtr[0] * CLIGHT, 0.0, rtk->sol.dtr[1] * CLIGHT, rtk->sol.dtr[2] * CLIGHT, rtk->sol.dtr[3] * CLIGHT);
+    }
+    else {
+        *p += sprintf(*p, "dtr,0:%.3f,1:%.3f,2:%.3f,3:%.3f,4:%.3f",
+            rtk->sol.dtr[0] * CLIGHT, rtk->sol.dtr[0] * CLIGHT, rtk->sol.dtr[1] * CLIGHT, rtk->sol.dtr[2] * CLIGHT, rtk->sol.dtr[3] * CLIGHT);
+    }
+    //*p += sprintf(*p, "\n");
+    return;
+}
+
+
+//Initialize Configuration Option for User Setting
+extern void initCfgOpt(cfgopt_t* opt)
+{
+    opt->kMode = 1;   /* Kinematic Calculation Mode Smoothed Real-Time Kinematic */
+    opt->freq = 15;    /* L1+L2+L5=1+2+4  7:all freq*/
+    opt->iono = 0;    /* disable Ionosphere Correction */
+    opt->trop = 0;    /* enable Troposphere Correction */
+    opt->tides = 0;   /* disable Tides Correction */
+    opt->sys = 31;    /* GPS+QZS+BDS+GAL+GLO 0001 1111*/
+    opt->cn0Min = 25;    /* C/N0 Cut-off */
+    opt->diffAgeMax = 30; /* Max Age of Diff , unit:s */
+    opt->buffSize = 4; /*Buffer Size Default:4kB */
+    opt->elevMin = 15;   /* Elevation Cut-off */
+    opt->gdopThld = 4.0; /* GDOP Threshold */
+    opt->postResThld = 0.02; /* Posterior Residual Threshold*/
+    opt->timeInterval = 15.0;   /* Time Interval 1s */
+    opt->stationPCV[0] = 0.0;
+    opt->stationPCV[1] = 0.0;
+    opt->stationPCV[2] = 0.0;
+    opt->senceopt = 0;
+    opt->initEnuTime = 1;
+    opt->smoothWindowsTime = 12;
+    opt->detectSensitivity = 10;
+    opt->typeSol = 0;
+    opt->timeIntervalSolution = 0;
+
+    opt->minFixSat = 10;
+    opt->maxDelSat = 5;
+    opt->minSatRes = 0.02;
+    opt->gpsMask = -1;
+    opt->qzssMask = -1;
+    opt->glonassMask = -1;
+    opt->galieoMask = -1;
+    opt->bdsMask = -1;
+    opt->iggiiik0 = 1.5;
+    opt->iggiiik1 = 3.0;
+    opt->param = 0;
+    opt->maxPosSat = 40;
+    opt->useRtcmPosFlag = 0;
+}
+
+extern void loadCfgOpt(cfgopt_t* cfgOpt, char** argv, int i)
+{
+    char* cfgfile;
+    cfgfile = argv[i++];
+
+    cfgfile = argv[i++];
+    cfgOpt->timeInterval = atof(cfgfile);
+    printf("timeInterval:%.2f\n", cfgOpt->timeInterval);
+
+    cfgfile = argv[i++];
+    cfgOpt->freq = atoi(cfgfile);
+    printf("freq:%d\n", cfgOpt->freq);
+
+    cfgfile = argv[i++];
+    cfgOpt->iono = atoi(cfgfile);
+    printf("iono:%d\n", cfgOpt->iono);
+    cfgfile = argv[i++];
+    cfgOpt->iono = atoi(cfgfile);
+    printf("trop:%d\n", cfgOpt->trop);
+    cfgfile = argv[i++];
+    cfgOpt->iono = atoi(cfgfile);
+    printf("tides:%d\n", cfgOpt->tides);
+
+    cfgfile = argv[i++];
+    cfgOpt->elevMin = atof(cfgfile);
+    printf("elevMin:%.2f\n", cfgOpt->elevMin);
+
+    cfgfile = argv[i++];
+    cfgOpt->cn0Min = atof(cfgfile);
+    printf("cn0Min:%.2f\n", cfgOpt->cn0Min);
+
+    cfgfile = argv[i++];
+    cfgOpt->gdopThld = atof(cfgfile);
+    printf("gdopThld:%.2f\n", cfgOpt->gdopThld);
+
+    cfgfile = argv[i++];
+    cfgOpt->diffAgeMax = atoi(cfgfile);
+    printf("diffAgeMax:%d\n", cfgOpt->diffAgeMax);
+
+    cfgfile = argv[i++];
+    cfgOpt->sys = atoi(cfgfile);
+    printf("sys:%d\n", cfgOpt->sys);
+
+
+    cfgfile = argv[i++];
+    cfgOpt->postResThld = atof(cfgfile);
+    printf("postResThld:%.2f\n", cfgOpt->postResThld);
+
+    cfgfile = argv[i++];
+    cfgOpt->kMode = atoi(cfgfile);
+    printf("kMode:%d\n", cfgOpt->kMode);
+
+    cfgfile = argv[i++];
+    cfgOpt->buffSize = atoi(cfgfile);
+    printf("buffSize:%d\n", cfgOpt->buffSize);
+
+    cfgfile = argv[i++];
+    cfgOpt->stationPCV[0] = atoi(cfgfile);
+    cfgfile = argv[i++];
+    cfgOpt->stationPCV[1] = atoi(cfgfile);
+    cfgfile = argv[i++];
+    cfgOpt->stationPCV[2] = atoi(cfgfile);
+    printf("stationPCV[0]=%.2f stationPCV[1]=%.2f stationPCV[2]=%.2f\n", cfgOpt->stationPCV[0], cfgOpt->stationPCV[1], cfgOpt->stationPCV[2]);
+
+    cfgfile = argv[i++];
+    cfgOpt->senceopt = atoi(cfgfile);
+    printf("senceopt=%d\n", cfgOpt->senceopt);
+
+    cfgfile = argv[i++];
+    cfgOpt->smoothWindowsTime = atof(cfgfile);
+    printf("smoothWindowsTime=%.2f\n", cfgOpt->smoothWindowsTime);
+
+    cfgfile = argv[i++];
+    cfgOpt->initEnuTime = atof(cfgfile);
+    printf("initEnuTime=%.2f\n", cfgOpt->initEnuTime);
+
+    cfgfile = argv[i++];
+    cfgOpt->detectSensitivity = atoi(cfgfile);
+    printf("detectSensitivity=%d\n", cfgOpt->detectSensitivity);
+
+    cfgfile = argv[i++];
+    cfgOpt->typeSol = atoi(cfgfile);
+    printf("typeSol=%d\n", cfgOpt->typeSol);
+
+    cfgfile = argv[i++];
+    cfgOpt->timeIntervalSolution = atoi(cfgfile);
+    printf("timeIntervalSolution=%d\n", cfgOpt->timeIntervalSolution);
+
+}
+
+//Set Configuration Option for User Setting to Processing Option
+extern void setCfgOpt(cfgopt_t cfgOpt, prcopt_t* procOpt)
+{
+    procOpt->kMode = cfgOpt.kMode;
+    procOpt->freq = cfgOpt.freq;
+
+    procOpt->ioncfg = cfgOpt.iono;
+    procOpt->trocfg = cfgOpt.trop;
+
+    if (cfgOpt.iono == 0)
+        procOpt->ionoopt = IONOOPT_BRDC;
+    else if (cfgOpt.iono == 1)
+        procOpt->ionoopt = IONOOPT_EST;
+    else
+        procOpt->ionoopt = IONOOPT_BRDC;
+
+    if (cfgOpt.trop == 0)
+        procOpt->tropopt = TROPOPT_SAAS;
+    else if (cfgOpt.trop == 1)
+        procOpt->tropopt = TROPOPT_EST;
+    else
+        procOpt->ionoopt = TROPOPT_SAAS;
+
+    procOpt->tidecorr = cfgOpt.tides;
+    procOpt->sys = cfgOpt.sys;
+    procOpt->cn0Min = cfgOpt.cn0Min;
+    procOpt->buffSize = cfgOpt.buffSize * 1024;
+    procOpt->elmin = cfgOpt.elevMin * D2R;
+    procOpt->maxtdiff = cfgOpt.diffAgeMax;
+    procOpt->maxgdop = cfgOpt.gdopThld;
+    procOpt->postResThld = cfgOpt.postResThld;
+    procOpt->senceopt = cfgOpt.senceopt;
+    procOpt->timeInterval = cfgOpt.timeInterval;
+    procOpt->smoothWindowsTime = cfgOpt.smoothWindowsTime;
+    procOpt->initEnuTime = cfgOpt.initEnuTime;
+    procOpt->detectSensitivity = cfgOpt.detectSensitivity;
+    procOpt->typeSol = cfgOpt.typeSol;
+    procOpt->timeIntervalSolution = cfgOpt.timeIntervalSolution;
+
+    procOpt->minFixSat = cfgOpt.minFixSat;
+    procOpt->maxDelSat = cfgOpt.maxDelSat;
+    procOpt->minSatRes = cfgOpt.minSatRes;
+    procOpt->gpsMask = cfgOpt.gpsMask;
+    procOpt->qzssMask = cfgOpt.qzssMask;
+    procOpt->glonassMask = cfgOpt.glonassMask;
+    procOpt->galieoMask = cfgOpt.galieoMask;
+    procOpt->bdsMask = cfgOpt.bdsMask;
+    procOpt->iggiiik0 = cfgOpt.iggiiik0;
+    procOpt->iggiiik1 = cfgOpt.iggiiik1;
+    procOpt->param = cfgOpt.param;
+    procOpt->maxPosSat = cfgOpt.maxPosSat;
+    procOpt->rb[0] = cfgOpt.rb[0];
+    procOpt->rb[1] = cfgOpt.rb[1];
+    procOpt->rb[2] = cfgOpt.rb[2];
+    procOpt->enuWindow[0] = cfgOpt.enuWindow[0];
+    procOpt->enuWindow[1] = cfgOpt.enuWindow[1];
+    procOpt->enuWindow[2] = cfgOpt.enuWindow[2];
+    procOpt->enuWindowIndex[0] = cfgOpt.enuWindowIndex[0];
+    procOpt->enuWindowIndex[1] = cfgOpt.enuWindowIndex[1];
+    procOpt->enuWindowIndex[2] = cfgOpt.enuWindowIndex[2];
+#ifdef MULBASE
+    procOpt->masterSlaveBaseFlag = cfgOpt.masterSlaveBaseFlag;
+    procOpt->masterXyz[0] = cfgOpt.masterXyz[0];
+    procOpt->masterXyz[1] = cfgOpt.masterXyz[1];
+    procOpt->masterXyz[2] = cfgOpt.masterXyz[2];
+    procOpt->slaveXyz[0] = cfgOpt.slaveXyz[0];
+    procOpt->slaveXyz[1] = cfgOpt.slaveXyz[1];
+    procOpt->slaveXyz[2] = cfgOpt.slaveXyz[2];
+#endif
+    //time interval
 }

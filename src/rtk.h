@@ -67,7 +67,7 @@
 #define BDS3_NL_PSR_K2    1
 
 //extern FILE* fpversion;
-#define SVN_VERSION 250519
+#define SVN_VERSION 250606
 
 #define MAXEPH        10240
 #define MAXGEPH     5120
@@ -243,25 +243,25 @@ static const char frqcodes[] = "1256789"; /* frequency codes */
 #define EFACT_IRN   1.5                 /* error factor: IRNSS */
 #define EFACT_SBS   3.0                 /* error factor: SBAS */
 
-//#define SYS_NONE    0x00                /* navigation system: none */
-//#define SYS_GPS     0x01                /* navigation system: GPS */
-//#define SYS_SBS     0x02                /* navigation system: SBAS */
-//#define SYS_GLO     0x04                /* navigation system: GLONASS */
-//#define SYS_GAL     0x08                /* navigation system: Galileo */
-//#define SYS_QZS     0x10                /* navigation system: QZSS */
-//#define SYS_BDS     0x20                /* navigation system: BeiDou */
-//#define SYS_LEO     0x40                /* navigation system: LEO */
-//#define SYS_ALL     0xFF                /* navigation system: all */
-
-#define SYS_GPS     (0)                   /* navigation system: GPS */
-#define SYS_QZS     (1)                   /* navigation system: QZSS */
-#define SYS_BDS     (2)                   /* navigation system: BeiDou */
-#define SYS_GLO     (4)                   /* navigation system: GLONASS */
-#define SYS_GAL     (3)                   /* navigation system: Galileo */
-#define SYS_SBS     0x10                /* navigation system: SBAS */
+#define SYS_NONE    0x00                /* navigation system: none */
+#define SYS_GPS     0x01                /* navigation system: GPS */
+#define SYS_SBS     0x02                /* navigation system: SBAS */
+#define SYS_GLO     0x04                /* navigation system: GLONASS */
+#define SYS_GAL     0x08                /* navigation system: Galileo */
+#define SYS_QZS     0x10                /* navigation system: QZSS */
+#define SYS_BDS     0x20                /* navigation system: BeiDou */
 #define SYS_LEO     0x40                /* navigation system: LEO */
-#define SYS_NONE    0xFF                /* navigation system: none */
 #define SYS_ALL     0xFF                /* navigation system: all */
+
+// #define SYS_GPS     (0)                   /* navigation system: GPS */
+// #define SYS_QZS     (1)                   /* navigation system: QZSS */
+// #define SYS_BDS     (2)                   /* navigation system: BeiDou */
+// #define SYS_GLO     (4)                   /* navigation system: GLONASS */
+// #define SYS_GAL     (3)                   /* navigation system: Galileo */
+// #define SYS_SBS     0x10                /* navigation system: SBAS */
+// #define SYS_LEO     0x40                /* navigation system: LEO */
+// #define SYS_NONE    0xFF                /* navigation system: none */
+// #define SYS_ALL     0xFF                /* navigation system: all */
 
 #define TSYS_GPS    0                   /* time system: GPS time */
 #define TSYS_UTC    1                   /* time system: UTC */
@@ -1051,6 +1051,8 @@ typedef struct {        /* RTK control/result type */
     double masterRr[3];
     char path[MAXSTRPATH];
     int mpflag;
+    gtime_t te;
+    int mvflag; // move detect module.
 } rtk_t;
 
 typedef struct {        /* stream type */
@@ -1248,12 +1250,19 @@ extern unsigned char satsys(unsigned char sat, unsigned char* prn);
 extern void time2str(gtime_t t, char* s, int n);
 //extern void time_output(gtime_t t, char* s, int n);
 
-extern int rtksvrinit(rtksvr_t* svr);
+extern int  rtksvrinit(rtksvr_t* svr);
+extern void rtksvrfree(rtksvr_t* svr);
 extern int init_rtcm(rtcm_t* rtcm);
+extern void free_rtcm(rtcm_t* rtcm);
 extern int decoderaw(rtksvr_t* svr, int index);
 extern int adjgpsweek(int week);
 extern gtime_t bdt2time(int week, double sec);
 extern gtime_t bdt2gpst(gtime_t t);
+
+extern void generateSatBuf(rtk_t* rtk, char** p);
+extern void initCfgOpt(cfgopt_t* opt);
+extern void loadCfgOpt(cfgopt_t* cfgOpt, char** argv, int i);
+extern void setCfgOpt(cfgopt_t cfgOpt, prcopt_t* procOpt);
 
 extern int showmsg(char* format, ...);
 extern void settspan(gtime_t ts, gtime_t te);

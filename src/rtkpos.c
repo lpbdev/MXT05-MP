@@ -3037,8 +3037,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
                     for (i = 0; i < 3; i++) {
                         lsqraim[i] = 0.0;
                     }
-                }
-                else {
+                } else {
                     rtk->sol.ns[1] = rtk->sol.nsLsq;
                     break;
                 }

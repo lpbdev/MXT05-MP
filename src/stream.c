@@ -3161,4 +3161,3 @@ extern int strsetsel(stream_t * stream, const char* sel)
     strunlock(stream);
     return 1;
 }
-

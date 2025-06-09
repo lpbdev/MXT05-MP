@@ -206,7 +206,9 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
                     if (sat[j] == rtk->satLsq[f][k]) {
                         ion1 = rtk->ssat[sat[i] - 1].fix_ion;
                         ion2 = rtk->ssat[sat[j] - 1].fix_ion;
+
                         amb = rtk->ssat[sat[i] - 1].fix_amb[f] * lami[f] - rtk->ssat[sat[j] - 1].fix_amb[f] * lamj[f];
+
                         flag = 1;
                         break;
                     }
@@ -254,13 +256,21 @@ static int rescode(rtk_t* rtk, int post, const obsd_t* obs, int n, int nu, const
                         writeDat(rtk->ssat[obs[j].sat].fp_ssat, offset, data.res);
 
 
-                        trace(2, "RES0, %s, %s, %d, %.4f,%d\n",tstr, id,f,v[nv],obs[j].sat);
+                        //trace(2, "RES0, %s, %s, %d, %.4f,%d\n",tstr, id,f,v[nv],obs[j].sat);
                     }
                 }
 
                 v[nv] += -corr_j;
+                char id2[4];
+                satno2id(obs[i].sat, id2);
                 if(post==0){
-                    trace(2, "RES1, %s, %s, %d, %.4f, %d\n",tstr, id,f, v[nv],obs[j].sat);
+                    trace(2, "RES1, %s, %s, %d, %.4f, %d,%f,%d,%s, %d,%f, %f\n",
+                        tstr, id,f, v[nv],obs[j].sat,amb, obs[i].sat,id2,base_sat, 
+                        rtk->ssat[sat[i] - 1].fix_amb[f],rtk->ssat[sat[j] - 1].fix_amb[f]
+                    );
+
+                    trace(2,"BASEPRN, %s, %d, %d \n",tstr,base_sat,rtk->base_prn_pre[m][f]);
+                    rtk->base_prn_pre[m][f]=base_sat;
                 }
 
                 //if (post == 0)
