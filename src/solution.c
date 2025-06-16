@@ -617,22 +617,22 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
 
         calcjump(sol->window, sol->window + 1, sol->jump, sol->tmpjump, 3);
 
-        logmsg(2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
-               sol->window[0].ave[0], sol->window[0].ave[1], sol->window[0].ave[2],
-               sol->window[0].std[0], sol->window[0].std[1], sol->window[0].std[2]);
+        // logmsg(2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
+        //        sol->window[0].ave[0], sol->window[0].ave[1], sol->window[0].ave[2],
+        //        sol->window[0].std[0], sol->window[0].std[1], sol->window[0].std[2]);
 
-        logmsg(2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
-               sol->window[1].ave[0], sol->window[1].ave[1], sol->window[1].ave[2],
-               sol->window[1].std[0], sol->window[1].std[1], sol->window[1].std[2]);
+        // logmsg(2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
+        //        sol->window[1].ave[0], sol->window[1].ave[1], sol->window[1].ave[2],
+        //        sol->window[1].std[0], sol->window[1].std[1], sol->window[1].std[2]);
 
-        logmsg(2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
-               sol->window[2].ave[0], sol->window[2].ave[1], sol->window[2].ave[2],
-               sol->window[2].std[0], sol->window[2].std[1], sol->window[2].std[2]);
+        // logmsg(2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
+        //        sol->window[2].ave[0], sol->window[2].ave[1], sol->window[2].ave[2],
+        //        sol->window[2].std[0], sol->window[2].std[1], sol->window[2].std[2]);
 
-        logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,%.4f, %.4f, %.4f,\n", s,
-               // sol->jump[0]+sol->window[2].ave[0],sol->jump[1]+sol->window[2].ave[0],sol->jump[2]+sol->window[2].ave[0],
-               sol->window[0].jumpflag[0], sol->window[0].jumpflag[1], sol->window[0].jumpflag[2],
-               sol->jump[0], sol->jump[1], sol->jump[2], sol->tmpjump[0], sol->tmpjump[1], sol->tmpjump[2]);
+        // logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,%.4f, %.4f, %.4f,\n", s,
+        //        // sol->jump[0]+sol->window[2].ave[0],sol->jump[1]+sol->window[2].ave[0],sol->jump[2]+sol->window[2].ave[0],
+        //        sol->window[0].jumpflag[0], sol->window[0].jumpflag[1], sol->window[0].jumpflag[2],
+        //        sol->jump[0], sol->jump[1], sol->jump[2], sol->tmpjump[0], sol->tmpjump[1], sol->tmpjump[2]);
         
         logmsg(4, "rtkEnu , %s, %10.4f, %10.4f, %10.4f\n", s, enu2[0], enu2[1], enu2[2]);
 

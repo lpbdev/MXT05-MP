@@ -2022,8 +2022,8 @@ int main(int argc, char** argv)
             printf("useRtcmPosFlag:%d\n", g_cfgOpt.useRtcmPosFlag);
 
 
-            svr.rtk.mpflag = atoi(argv[18]);
-            svr.rtk.mvflag = atoi(argv[19]);
+            // svr.rtk.mpflag = atoi(argv[18]);
+            svr.rtk.mvflag = atoi(argv[18]);
             //cfgfile = argv[i++];
             //svr.rtk.masterRr[0] = atof(cfgfile);
             //cfgfile = argv[i++];
@@ -2126,9 +2126,9 @@ int main(int argc, char** argv)
     // sprintf(logfile, "%s/rtk.log", svr.rtk.path);
     sprintf(logfile, "./rtkLog/rtk-%s-%s.log", buffport1[2], buffport2[2]);
 
-    logopen(logfile, 0); // 1M log  for test
+    logopen(logfile, 100); // 1M log  for test
     
-
+    logmsg(2,"log start: mvflag=%d\n", svr.rtk.mvflag);
     /* open pos filter */
     svr.rtk.sol.window[0].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[1].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
