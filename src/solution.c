@@ -592,13 +592,13 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
         }
     }
     for (i = 0; i < 3; i++) {
-        if (sol->window[0].jumpflag[i] == 1) {
+        if (sol->window[0].jumpflag[i] == 1 ) {
             sol->window[2].n[i] = 0; // sol->window[0].n;
 
-            sol->window[2].ave[i] = 0.0;   // sol->window[0].ave[i];
-            sol->window[2].var[i] = 0.0;   // sol->window[0].var[i];
-            sol->window[2].std[i] = 0.0;   // sol->window[0].std[i];
-            sol->window[2].sumX2[i] = 0.0; // sol->window[0].sumX2[i];
+            sol->window[2].ave[i] =sol->window[2].ave[i] +sol->jump[i];   // sol->window[0].ave[i];
+            // sol->window[2].var[i] = 0.0;   // sol->window[0].var[i];
+            // sol->window[2].std[i] = 0.0;   // sol->window[0].std[i];
+            // sol->window[2].sumX2[i] = 0.0; // sol->window[0].sumX2[i];
         }
     }
     // if(sol->window[2].jn[i]!=0){

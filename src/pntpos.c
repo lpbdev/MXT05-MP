@@ -581,11 +581,7 @@ static void update_state(const prcopt_t *opt, int base, int n, obsd_t *obs, ssat
             if (obs[i].P[index] == 0.0 || obs[i].L[index] == 0.0) {
                 ssat[obs[i].sat - 1].vs = -1;
             }
-            for (j = 0; j < NFREQ; j++) {
-                if (obs[i].SNR[j] < 33 * 4) {
-                    obs[i].P[j] = obs[i].L[j] = 0;
-                }
-            }
+
             if ((ssat[obs[i].sat - 1].slip[0] & 1) || (ssat[obs[i].sat - 1].slip[0] & 2)) {
                 ssat[obs[i].sat - 1].vs = -1;
                 continue;
@@ -629,11 +625,7 @@ static void update_state(const prcopt_t *opt, int base, int n, obsd_t *obs, ssat
             if (obs[i].P[index] == 0.0 || obs[i].L[index] == 0.0) {
                 ssat[obs[i].sat - 1].vs = -1;
             }
-            for (j = 0; j < NFREQ; j++) {
-                if (obs[i].SNR[j] < 33 * 4) {
-                    obs[i].P[j] = obs[i].L[j] = 0;
-                }
-            }
+
             if ((ssat[obs[i].sat - 1].slip[0] & 1) || (ssat[obs[i].sat - 1].slip[0] & 2)) {
                 ssat[obs[i].sat - 1].vs = -1;
                 continue;

@@ -257,6 +257,7 @@ static int getWindP(wind_t wind, int index, double *pos){
 
 extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int nj){
     int i=0;
+    double stdthres =0;
 
     if(wa->n[0]<wa->nmax || wb->n[0] < wb->nmax) {
         printf("window not full\n");
@@ -264,7 +265,8 @@ extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int n
     }
 
     for(i=0;i<nj;i++){
-        if(wa->std[i]>wa->thres[i]){
+        stdthres = posmaxstd(wa->thres[i]/10,wa->thres[i] );
+        if(wa->std[i]>stdthres){
             wa->jumpflag[i]=1;
         }
 
@@ -275,7 +277,7 @@ extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int n
         }
 
         if(wa->jumpflag[i]==1 && wa->std[i]<wb->std[i]){
-            jump[i] +=tmpjump[i];
+            jump[i] =tmpjump[i];
             tmpjump[i]=0.0;
             wa->jumpflag[i]=0;
         }

@@ -847,10 +847,10 @@ static int findPreAmbIndex(rtk_t *rtk, unsigned char sati1, unsigned char frqi1,
                     *row = i;
                     *column = j;
 
-                    trace(2,"findPreAmbIndex,nxRecord, i,%d,j,%d, xIndex, %d,%d\n", i,j,
-                    rtk->ssat[sati1-1].xIndex[frqi1],
-                    rtk->ssat[satj1-1].xIndex[frqj1]
-                    );
+                    // trace(2,"findPreAmbIndex,nxRecord, i,%d,j,%d, xIndex, %d,%d\n", i,j,
+                    // rtk->ssat[sati1-1].xIndex[frqi1],
+                    // rtk->ssat[satj1-1].xIndex[frqj1]
+                    // );
                     return 1;
                 }
             }

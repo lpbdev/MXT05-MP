@@ -2426,7 +2426,7 @@ extern int relpos(rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr,
     /* temporal update of states */
     udstate(rtk, obs, sat, iu, ir, ns, r);
 
-    trace(2, "kalman xyz before while, %14.4f, %14.4f, %14.4f \n",rtk->x[0],rtk->x[1],rtk->x[2]);
+    trace(2, "kalman xyz before while, %14.4f, %14.4f, %14.4f,rb, %14.4f, %14.4f, %14.4f \n",rtk->x[0],rtk->x[1],rtk->x[2],rtk->rb[0],rtk->rb[1],rtk->rb[2]);
     trace(2, "kalman rtk->x0 = ");
     tracemat(2, rtk->x,1,6,14,4);
 
@@ -2988,16 +2988,22 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
     }
     trace(2, "kalman rtk->x, 01, ");         tracemat(2, rtk->x,1,6,14,4);
 
-    ns = getSatNum(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 25.0 * D2R, 0.0);
+    ns = getSatNum(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 15.0 * D2R, 0.0);
 
-    gloFlag(rtk, obs, nu, nr);
-    if (selectSatFlag(rtk, obs, nu, nr))
-        quickSelSat(rtk, obs, nu, nr);
+    char s1[64];
+    time2str(rtk->sol.time, s1, 2);
+    trace(2, "getSatNum, ns, n,nr,nu, %s, %d,%d, %d,%d\n",s1, ns, n,nr,nu);
+
+    // gloFlag(rtk, obs, nu, nr);
+    // if (selectSatFlag(rtk, obs, nu, nr))
+    //     quickSelSat(rtk, obs, nu, nr);
 
     detectionRes(rtk, obs, nu);
     ns = obsScan(rtk, &rtk->opt, obs, n);
+    trace(2, "obsScan, ns, %d,n, %d\n",ns, n );
     nu = nr = ns / 2;
     ns = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 0);
+    trace(2, "selsatRTK, ns, %d\n",ns);
     if (ns < 5) {
         trace(0x02, "warnning rtk ns=%d\n", ns);
         resetRtk(rtk, SOLQ_SINGLE);

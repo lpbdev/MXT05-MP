@@ -1306,7 +1306,7 @@ static int decode_msm4(rtcm_t* rtcm, int sys)
     }
     /* save obs data in msm message */
     saveMsmObs(rtcm, sys, &h, r, pr, cp, NULL, NULL, cnr, lock, NULL, half);
-    //printf("time=%d ",rtcm->time.time);
+
 
     rtcm->obsflag = !sync;
     return sync ? 0 : 1;
@@ -1572,5 +1572,3 @@ extern int input_rtcm3(rtcm_t* rtcm, unsigned char data)
     /* decode rtcm3 message */
     return decode_rtcm3(rtcm);
 }
-
-

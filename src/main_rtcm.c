@@ -799,7 +799,7 @@ static void* rtksvrthread(void* arg)
 
             for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++) {
                 sys = satsys(svr->obs[0][i].data[j].sat, &prn);
-                trace(2,"sys,freq,%d,%d\n",sys,svr->rtk.opt.freq);
+                // trace(2,"sys,freq,%d,%d\n",sys,svr->rtk.opt.freq);
                 if (sys != SYS_BDS) continue;
                 if (!(svr->rtk.opt.sys & 1) && sys == SYS_GPS)continue;
                 if (!(svr->rtk.opt.sys & 2) && sys == SYS_QZS)continue;
@@ -846,23 +846,8 @@ static void* rtksvrthread(void* arg)
                     obs[n].P[5] = obs[n].L[5] = obs[n].D[5] = 0.0;
                 }
                 for (f = 0; f < NFREQ; f++)     obs[n].LockTime[f] = 3000;
-                for (k = 0; k < NFREQ; k++)
-                {
-                    if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4)
-                    {
-                        obs[n].P[k] = obs[n].L[k] = obs[n].D[k] = 0.0;
-                    }
-                }
-                cnt = 0;
-                if (sys == SYS_BDS) {
-                    for (f = 0; f < NFREQ; f++) {
-                        if (obs[n].P[f] != 0.0) cnt++;
-                    }
-                    for (f = 0; f < NFREQ; f++) {
-                        if (cnt >= 2 && f >= 3)
-                            obs[n].P[f] = obs[n].L[f] = 0.0;
-                    }
-                }
+
+
                 n++;
             }
             qobs.n = 0;
@@ -1293,13 +1278,13 @@ int main(int argc, char** argv)
     svr.rtk.sol.window[1].dely = (int)3 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[2].nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
 
-    svr.rtk.sol.window[0].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[0].thres[1]= posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[0].thres[2]= posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[0].thres[0]= 0.01; // posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[0].thres[1]= 0.01; //posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[0].thres[2]= 0.02;  //posmaxstd(0.002, 0.02);
 
-    svr.rtk.sol.window[1].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[1].thres[1]= posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[1].thres[2]= posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[1].thres[0]= 0.01; // posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[1].thres[1]= 0.01; // posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[1].thres[2]= 0.02; // posmaxstd(0.002, 0.02);
 
     printf("%f %f %f\n",svr.rtk.sol.window[1].thres[0],svr.rtk.sol.window[1].thres[1],svr.rtk.sol.window[1].thres[2]);
 

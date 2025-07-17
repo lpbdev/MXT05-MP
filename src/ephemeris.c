@@ -366,7 +366,7 @@ static int searchAvalidPsr(obsd_t* obs) {
     }
     char id[4];
     satno2id(obs->sat, id);
-    trace(2,"searchAvalidPsr, %d,%s,\n",index,id);
+    // trace(2,"searchAvalidPsr, %d,%s,\n",index,id);
     return index;
 }
 
