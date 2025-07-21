@@ -66,7 +66,6 @@
 #define BDS3_NL_PSR_K1    0
 #define BDS3_NL_PSR_K2    1
 
-//extern FILE* fpversion;
 #define SVN_VERSION 250619
 
 #define MAXEPH        10240

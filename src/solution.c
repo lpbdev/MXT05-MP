@@ -817,21 +817,7 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
         }
     }
 
-    //if ((rtk->sol.time.time + ROUND(rtk->sol.time.frac)) % (int)writeConfigTime == 0) {
-    //    fpversion = fopen(configFileFath, "w");
-    //    if (fpversion != NULL) {
-    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %u %u %u %d\n",
-    //            1234, rtk->aveEnu[0], rtk->aveEnu[1], rtk->aveEnu[2], rtk->enuWindwoIndex[0], rtk->enuWindwoIndex[1], rtk->enuWindwoIndex[2], 5678);
-    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %d\n",
-    //            1234, rtk->rb[0], rtk->rb[1], rtk->rb[2], 5678);
-    //        fprintf(fpversion, "svn version:%d\n", SVN_VERSION);
-    //        fflush(fpversion);
-    //        fclose(fpversion);
-    //    }
-    //    else {
-    //        trace(0x10, "fopen ini file error\n");
-    //    }
-    //}
+
     if (sol->stat == SOLQ_FIX)    sol->fixCnt++;
     else    sol->floatCnt++;
     //--------------------------------original-----------------------------------
@@ -1115,22 +1101,7 @@ static int outenu2(unsigned char* buff, const char* s, rtk_t* rtk, sol_t* sol,
         }
     }
 
-    //if ((rtk->sol.time.time + ROUND(rtk->sol.time.frac)) % (int)writeConfigTime == 0) {
-    //    fpversion = fopen(configFileFath, "w");
-    //    if (fpversion != NULL) {
-    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %u %u %u %d\n",
-    //            1234, sol->ori_ave[0], sol->ori_ave[1], sol->ori_ave[2], rtk->enuWindwoIndex[0], rtk->enuWindwoIndex[1], rtk->enuWindwoIndex[2], 5678);
-    //        fprintf(fpversion, "%d %14.4lf %14.4lf %14.4lf %d\n",
-    //            1234, rtk->rb[0], rtk->rb[1], rtk->rb[2], 5678);
-    //        fprintf(fpversion, "svn version:%d\n", SVN_VERSION);
-    //        fflush(fpversion);
-    //        fclose(fpversion);
-    //        fpversion = NULL;
-    //    }
-    //    else {
-    //        trace(0xff, "fopen ini file error\n");
-    //    }
-    //}
+
 
     rtk->fftFrq[0] = rtk->fftFrq[1] = rtk->fftFrq[2] = 0.0;
     rtk->fftPower[0] = rtk->fftPower[1] = rtk->fftPower[2] = 0.0;

@@ -2932,8 +2932,9 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n) {
         trace(0x02, "base  pntpos:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf baseXyzError=%d\n",
             rtk->rb[0], rtk->rb[1], rtk->rb[2], rtk->solb.rr[0], rtk->solb.rr[1], rtk->solb.rr[2], baseXyzError);
         //if(baseRtcmPosition[0]==0.0 && baseRtcmPosition[1] == 0.0 && baseRtcmPosition[2] == 0.0)
-        if(rtk->opt.useRtcmPosFlag==0)
+        if(rtk->opt.useRtcmPosFlag==0){
             SmoothBasePosion(rtk);
+        }
         if ((fabs(rtk->rb[0] - rtk->solb.rr[0]) > 100) || (fabs(rtk->rb[1] - rtk->solb.rr[1]) > 100) || (fabs(rtk->rb[2] - rtk->solb.rr[2]) > 100) && rtk->opt.useRtcmPosFlag == 0) {
             baseXyzError++;
             if (baseXyzError > 10) {

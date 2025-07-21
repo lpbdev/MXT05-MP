@@ -35,7 +35,6 @@ cfgopt_t g_cfgOpt = { 0 };
 unsigned char rtkReturnValue;
 unsigned char rebootFlag = 0;
 unsigned char rtcmMode = 0;
-//FILE* fpversion = NULL;
 FILE* fptcp = NULL;
 FILE* fpcof = NULL;
 char configFileFath[MAXSTRPATH] = { 0 };
@@ -1805,8 +1804,6 @@ static void* rtksvrthread(void* arg)
                     }
                     fixCnt++;
 
-
-                    //fprintf(fpversion, "%s\n", buff);
                     for (j = 0; j < 3; j++) {
                         svr->rtk.sol.rr_pre[j] = svr->rtk.sol.rr[j];
                         svr->rtk.sol.vel_pre[j] = svr->rtk.sol.vel[j];
@@ -1915,16 +1912,8 @@ int main(int argc, char** argv)
     int i, len, rw;
     char* cfgfile;
     char svrBuff[1024];
-    FILE* fpVersion = NULL;
     initCfgOpt(&g_cfgOpt);
 
-    sprintf(svrBuff, "./rtkversion.log");
-    fpVersion = fopen(svrBuff, "w");
-    if (fpVersion != NULL) {
-        fprintf(fpVersion, "%d\n", SVN_VERSION);
-        fclose(fpVersion);
-        fpVersion = NULL;
-    }
     printf("version:%d\n", SVN_VERSION);
     InitQueue(&Qrover);
     svr.rtk.mpflag = 0;
@@ -2357,8 +2346,6 @@ int main(int argc, char** argv)
     if (access("./rtkLog", 0) != 0)
         createdir("./rtkLog");
 
-    //printf("---strlen(mntpntr)=%d---\n",strlen(mntpntr));
-    //strcpy(mntpntr, "test");
     if (strlen(mntpntr) > 0) {
         sprintf(configFileFath,"./configFile/%s.log", mntpntr);
 
