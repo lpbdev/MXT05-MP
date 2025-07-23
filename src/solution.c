@@ -37,8 +37,6 @@ static compx_12bit  FFTOutBuf[3][FFT_LEN] = { 0 };
 static BPF BandPassFilter;
 static FLOAT data_out_I = 0, data_out_Q = 0;
 extern double writeConfigTime;
-unsigned char satchangflag = 0;
-static double driftenu[3] = { 0.0 };
 static int fixEnuErrorCheck = 0;
 long int cntdrift = 0;
 static const int solq_nmea[] = {  /* nmea quality flags to rtklib sol quality */
@@ -476,11 +474,7 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
     ecef2enu(pos, rr, enu2); //大地坐标转站心坐标
     ecef2enu(pos, rr, enu); //大地坐标转站心坐标
 
-
-
     trace(2, "ENU2 :  %14.4lf, %14.4lf,%14.4lf,\n",  enu2[0], enu2[1], enu2[2]);
-
-
 
     trace(4, "rr:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1], sol->rr[2], enu2[0], enu2[1], enu2[2]);
     if (ROUND(rtk->opt.timeInterval) == 1)
