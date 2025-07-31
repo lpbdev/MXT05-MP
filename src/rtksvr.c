@@ -112,18 +112,6 @@ typedef struct {            /* ntrip control type */
     tcpcli_t* tcp;          /* tcp client */
 } ntrip_t;
 
-//int strtype[3] = { STR_TCPCLI,STR_TCPCLI,STR_TCPCLI };   //
-//int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3};
-//char strpath[3][1024] = { "192.168.0.10:6006","192.168.0.10:6009",":192.168.1.232:6003" };
-
-//int strtype[3] = { STR_TCPCLI,STR_TCPCLI,STR_TCPSVR };   //STR_TCPCLI STR_TCPSVR
-//int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3 };
-//char strpath[3][1024] = { "192.168.23.227:8000","192.168.23.227:8001",":8787" };
-
-//int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3 };
-//int strtype[3] = { STR_NTRIPCLI,STR_NTRIPCLI,STR_NTRIPCLI }; //NTRIP Client
-//char strpath[3][1024] = { "na2:pw2@192.168.24.43:5101/mt-rover-2","na1:pw1@192.168.24.43:5101/mt-base-1-2","na1796117835:pw1796117835@192.168.6.16:5101/mt-data-1796117835" };
-
 int strtype[3] = { STR_TCPCLI,STR_TCPCLI };   //STR_TCPCLI STR_TCPSVR
 int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3 };
 char strpath[3][1024] = { "192.168.21.196:5000","192.168.21.196:5001","" };
@@ -178,12 +166,6 @@ int EnQueue(obsqueue_t* Q, qobs_t e)
     }
     Q->data[Q->rear] = e;
     Q->rear++;
-    //printf("EnQueue rear=%d time=%d n=%d\n", Q->rear,e.data[0].time.time, e.n);
-    //printf("-----------------\n");
-    //for (i = 0; i < Q->rear; i++) {
-    //    printf("EnQueue time=%d\n", Q->data[i].data[0].time.time);
-    //}
-    //printf("*****************\n");
     return  1;
 }
 
@@ -2124,15 +2106,15 @@ int main(int argc, char** argv)
     svr.rtk.sol.window[1].dely = (int)3 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[2].nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
 
-    svr.rtk.sol.window[0].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[0].thres[1]= posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[0].thres[2]= posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[0].thres[0]=0.01;// posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[0].thres[1]=0.01;// posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[0].thres[2]=0.02;// posmaxstd(0.002, 0.02);
 
-    svr.rtk.sol.window[1].thres[0]= posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[1].thres[1]= posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[1].thres[2]= posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[1].thres[0]=0.01;// posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[1].thres[1]=0.01;// posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[1].thres[2]=0.02;// posmaxstd(0.002, 0.02);
 
-    svr.rtk.sol.wdata.nmax = (int)12 * 60 * 60 / svr.rtk.opt.timeInterval + 1;
+    svr.rtk.sol.wdata.nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval + 1;
     svr.rtk.sol.wdata.mode = FIL;
     
     char wpospath[256];

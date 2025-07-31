@@ -951,9 +951,6 @@ extern unsigned int tickget(void)
     }
 
     abort();
-    /* struct timeval  tv={0};
-    gettimeofday(&tv,NULL);
-    return tv.tv_sec*1000u+tv.tv_usec/1000u; */
 #endif /* WIN32 */
 }
 /* decode tcp/ntrip path (path=[user[:passwd]@]addr[:port][/mntpnt[:str]]) ---*/

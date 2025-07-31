@@ -66,7 +66,7 @@
 #define BDS3_NL_PSR_K1    0
 #define BDS3_NL_PSR_K2    1
 
-#define SVN_VERSION 250619
+#define SVN_VERSION 250728
 
 #define MAXEPH        10240
 #define MAXGEPH     5120
@@ -1324,9 +1324,7 @@ extern int selsatDGPS(rtk_t* rtk, const obsd_t* obs, int n,
 extern int checkFixP(rtk_t* rtk, int lcopt);
 extern int checkFloatP(rtk_t* rtk, int lcopt);
 extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs);
-#ifdef WIN32
-extern int gettimeofday(struct timeval* tp, void* tzp);
-#endif
+
 extern void assignSatBias(rtk_t* rtk, gtime_t teph, gtime_t tepb, obsd_tmp_t* obs_tmp, int ns);
 extern int rtkLsq(rtk_t* rtk, const obsd_t* obs, int n, int nu, const int* svh, double* rs, double* dts, double* var_sat,
     double* lsqraim, unsigned char ns, unsigned char* sat, unsigned char* iu, unsigned char* ir, unsigned char* exc);

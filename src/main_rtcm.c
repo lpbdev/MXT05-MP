@@ -252,8 +252,15 @@ extern int decoderaw(rtksvr_t* svr, int index)
             }
         }
         /* update rtk server */
-        if (ret > 0)
+        if (ret > 0){
             updatesvr(svr, ret, obs, index, fobs);
+            char id[4];
+            satno2id(obs->data[0].sat, id);
+            trace(2,"decoderaw: %d, %s, %d\n", obs->n,id,obs->data[0].sat);
+            for(int k =0;k<6;k++){
+                trace(2,"decoderaw: %d, %d, %14.4f\n", obs->data[0].sat,k, obs->data[0].L[k] );
+            }
+        }
         /* observation data received */
         if (ret == 1) {
             if (fobs < 128) {
@@ -775,7 +782,7 @@ static void* rtksvrthread(void* arg)
             qobs.n = 0;
             //if (svr->obs[1][k].data[0].time.time % 15 != 0)continue;
             //printf( "k=%d base  time=%d\n", k, svr->obs[1][k].data[0].time.time);
-            trace(0x10, "k=%d base  time=%d\n", k, svr->obs[1][k].data[0].time.time);
+            trace(2, "k=%d base  time=%d\n", k, svr->obs[1][k].data[0].time.time);
             if (g_baseObsSyncIndex >= OBSBASELEN) {
                 g_baseObsSyncIndex = 0;
                 g_baseObsBuffFull = 1;
@@ -1010,13 +1017,6 @@ static void* rtksvrthread(void* arg)
 //#endif
 //            }
             //sleepms(1000);
-#ifdef TIME_OUTPUT
-            gettimeofday(&tvl, NULL);
-            end = tvl.tv_sec * 1000.0 + tvl.tv_usec / 1000.0;
-            ntime[9] = end - start;
-#endif
-
-
         }
         /* send null solution if no solution (1hz) */
         if (svr->rtk.sol.stat == SOLQ_NONE && (int)(tick - tick1hz) >= 1000) {
@@ -1092,7 +1092,7 @@ int main(int argc, char** argv)
     svr.rtk.mpflag = 0;
     svr.rtk.mvflag = 0;
 #if 1
-    int j=0; gtime_t ts, te;
+    int j=0; gtime_t ts={0.0}, te={0.0};
     double es[] = { 2000,1,1,0,0,0 }, ee[] = { 2000,12,31,23,59,59 };
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "-out") && i + 1 < argc) {
