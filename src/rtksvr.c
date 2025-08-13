@@ -215,6 +215,8 @@ static void updatesvr(rtksvr_t* svr, int ret, obs_t* obs, int index, int iobs)
     //tracet(4, "updatesvr: ret=%d sat=%2d index=%d\n", ret, sat, index);
 
     if (ret == 1) { /* observation data */
+        trace(4, "update_obs, %s, %d, %d, %d\n", time_str(obs->data[0].time, 0), obs->n, index, iobs);
+
         if (iobs < 128) {
             for (i = 0; i < obs->n; i++) {
                 //if(obs->data[i].SNR[0]<40*4)continue;
@@ -265,6 +267,7 @@ extern int decoderaw(rtksvr_t* svr, int index)
             svr->rtcm[index].rcv = index;
             ret = input_rtcm3(svr->rtcm + index, svr->buff[index][i]);
             obs = &svr->rtcm[index].obs;
+            trace(2, "index,%d,time,%s,\n", index, time_str(obs[0].data[0].time, 0));
             if (ret != 0) {
                 //printf("decode rtcm3 index=%d ok\n",index);
             }
@@ -1493,6 +1496,9 @@ static void* rtksvrthread(void* arg)
                 //}
             }
         }
+
+        trace(2, "fobs[0]=%d fobs[1]=%d, g_nav.n, %d\n", fobs[0], fobs[1],g_nav.n);
+
         for (k = 0; k < fobs[1]; k++) {
             qobs.n = 0;
             //if (svr->obs[1][k].data[0].time.time % 15 != 0)continue;
@@ -1680,6 +1686,11 @@ static void* rtksvrthread(void* arg)
                 obsepoch[nobsepoch].rcv = 2;
                 nobsepoch++;
             }
+            
+            if( obs[0].time.time%((int)svr->rtk.opt.timeInterval)!= 0)
+            {
+                continue;
+            } 
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
 #ifdef MULBASE
             if (svr->rtk.opt.masterSlaveBaseFlag == 0 && svr->rtk.opt.slaveXyz[0] != 0) {
@@ -2045,7 +2056,7 @@ int main(int argc, char** argv)
         loadCfgOpt(&g_cfgOpt, argv, 3);
     }
 #else
-    oFile.fpDebug = fopen("debug.log", "wb+");
+    // oFile.fpDebug = fopen("debug.log", "wb+");
 #endif
 
     //int* strs = strtype;
@@ -2320,6 +2331,12 @@ int main(int argc, char** argv)
         }
     }
     fclose(fpcof);
+
+    char tracefile[1024]="";
+    sprintf(tracefile, "%s.trace", logfile);
+    traceopen(tracefile);
+    printf("TRACE LEVEL: %d\n",2);
+    tracelevel(2);
 
     if (access("./configFile", 0) != 0)
         createdir("./configFile");

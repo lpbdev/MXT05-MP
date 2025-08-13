@@ -806,30 +806,28 @@ static void* rtksvrthread(void* arg)
 
             for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++) {
                 sys = satsys(svr->obs[0][i].data[j].sat, &prn);
-                // trace(2,"sys,freq,%d,%d\n",sys,svr->rtk.opt.freq);
-                if (sys != SYS_BDS) continue;
-                if (!(svr->rtk.opt.sys & 1) && sys == SYS_GPS)continue;
-                if (!(svr->rtk.opt.sys & 2) && sys == SYS_QZS)continue;
-                if (!(svr->rtk.opt.sys & 4) && sys == SYS_BDS)continue;
-                if (!(svr->rtk.opt.sys & 8) && sys == SYS_GAL)continue;
-                if (!(svr->rtk.opt.sys & 16) && sys == SYS_GLO)continue;
-                // if (sys == SYS_BDS && (prn <= 5 || prn==59 || prn==60)) continue;
-                if (sys == SYS_GAL) continue;
-                if (sys == SYS_GPS && svr->rtk.opt.gpsMask >= 0) {
-                    if (!((svr->rtk.opt.gpsMask >> (prn - 1)) & 1)) continue;
-                }
-                if (sys == SYS_QZS && svr->rtk.opt.qzssMask >= 0) {
-                    if (!((svr->rtk.opt.qzssMask >> (prn - MINPRNQZS - 1)) & 1)) continue;
-                }
-                if (sys == SYS_BDS && svr->rtk.opt.bdsMask >= 0) {
-                    if (!((svr->rtk.opt.bdsMask >> (prn - 1)) & 1)) continue;
-                }
-                if (sys == SYS_GAL && svr->rtk.opt.galieoMask >= 0) {
-                    if (!((svr->rtk.opt.galieoMask >> (prn - 1)) & 1)) continue;
-                }
-                if (sys == SYS_GLO && svr->rtk.opt.glonassMask >= 0) {
-                    if (!((svr->rtk.opt.glonassMask >> (prn - 1)) & 1)) continue;
-                }
+				sys = satsys(svr->obs[0][i].data[j].sat, &prn);
+				// if (svr->obs[0][i].data[j].sat == 29) continue;
+				if (!(svr->rtk.opt.sys & 1) && sys == SYS_GPS)continue;
+				if (!(svr->rtk.opt.sys & 2) && sys == SYS_QZS)continue;
+				if (!(svr->rtk.opt.sys & 4) && sys == SYS_BDS)continue;
+				if (!(svr->rtk.opt.sys & 8) && sys == SYS_GAL)continue;
+				if (!(svr->rtk.opt.sys & 16) && sys == SYS_GLO)continue;
+				if (sys == SYS_GPS && svr->rtk.opt.gpsMask >= 0) {
+					if (!((svr->rtk.opt.gpsMask >> (prn - 1)) & 1)) continue;
+				}
+				if (sys == SYS_QZS && svr->rtk.opt.qzssMask >= 0) {
+					if (!((svr->rtk.opt.qzssMask >> (prn - MINPRNQZS - 1)) & 1)) continue;
+				}
+				if (sys == SYS_BDS && svr->rtk.opt.bdsMask >= 0) {
+					if (!((svr->rtk.opt.bdsMask >> (prn - 1)) & 1)) continue;
+				}
+				if (sys == SYS_GAL && svr->rtk.opt.galieoMask >= 0) {
+					if (!((svr->rtk.opt.galieoMask >> (prn - 1)) & 1)) continue;
+				}
+				if (sys == SYS_GLO && svr->rtk.opt.glonassMask >= 0) {
+					if (!((svr->rtk.opt.glonassMask >> (prn - 1)) & 1)) continue;
+				}
 
                 // svr->rtk.opt.freq=1;
                 obs[n] = svr->obs[0][i].data[j];
@@ -946,15 +944,17 @@ static void* rtksvrthread(void* arg)
             }
 
 
-            if (obs[0].time.time % (int)svr->rtk.opt.timeInterval != 0) {
-                continue;
-            }
             // printf("mak%ld, %.0f;\n", obs[0].time.time, svr->rtk.opt.timeInterval);
 
             if(svr->rtk.te.time !=0.0 && timediff(obs[0].time, svr->rtk.te)>0){
                 printf("Time END!\n");
                 return 0;
             }
+
+            if( obs[0].time.time%((int)svr->rtk.opt.timeInterval)!= 0)
+            {
+                continue;
+            } 
             trace(0xff, "------------rtk dynamics-------------\n");
             
             trace(2, "kalman start \n");
@@ -1116,6 +1116,7 @@ int main(int argc, char** argv)
             sscanf(argv[++i], "%lf:%lf:%lf", es + 3, es + 4, es + 5);
             ts = epoch2time(es);
         } else if (!strcmp(argv[i], "-te") && i + 2 < argc) {
+            printf("%s\n",argv[i]);
             sscanf(argv[++i], "%lf/%lf/%lf", ee, ee + 1, ee + 2);
             sscanf(argv[++i], "%lf:%lf:%lf", ee + 3, ee + 4, ee + 5);
             te = epoch2time(ee);
@@ -1312,7 +1313,7 @@ int main(int argc, char** argv)
         printf("TRACE LEVEL: %d\n",trace_level);
         tracelevel(trace_level);
     }
-
+    
     for (i = 0; i < 3; i++)
     {
         rw = i < 2 ? STR_MODE_R : STR_MODE_RW;

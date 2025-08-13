@@ -700,13 +700,21 @@ extern void quickSelSat(rtk_t *rtk, obsd_t *obs, unsigned char nu, unsigned char
 extern int selsatRTK(rtk_t *rtk, const obsd_t *obs, unsigned char nu, unsigned char nr,
                      const prcopt_t *opt, unsigned char *sat, unsigned char *iu, unsigned char *ir, unsigned char elFlag) {
     unsigned char i, j, k = 0, f, flag, nf = rtk->opt.nf;
+    char id[4];
     for (i = 0; i < nu; i++) {
-        if (rtk->ssat[obs[i].sat - 1].vs != 1)
+        satno2id(obs[i].sat,id);
+        if (rtk->ssat[obs[i].sat - 1].vs != 1){
+            trace(2,"sel,0, %s\n",id);
             continue;
-        if (rtk->ssat[obs[i].sat - 1].quickSelSatDel == 1)
+        }
+        if (rtk->ssat[obs[i].sat - 1].quickSelSatDel == 1){
+            trace(2,"sel,1, %s\n",id);
             continue;
-        if (rtk->ssat[obs[i].sat - 1].rejRes == 1)
+        }
+        if (rtk->ssat[obs[i].sat - 1].rejRes == 1){
+            trace(2,"sel,2, %s\n",id);
             continue;
+        }
         for (j = nu; j < nu + nr; j++) {
             if (obs[i].sat == obs[j].sat) { /* elevation at base station */
                 flag = 0;
@@ -719,8 +727,10 @@ extern int selsatRTK(rtk_t *rtk, const obsd_t *obs, unsigned char nu, unsigned c
                 if (flag == 0)
                     continue;
                 if (elFlag == 1) {
-                    if (rtk->ssat[obs[i].sat - 1].azel[0][1] * R2D <= 30.0 && rtk->ssat[obs[i].sat - 1].azel[1][1] * R2D <= 30.0)
+                    if (rtk->ssat[obs[i].sat - 1].azel[0][1] * R2D <= 30.0 && rtk->ssat[obs[i].sat - 1].azel[1][1] * R2D <= 30.0){
+                        trace(2,"sel,3, %s\n",id);
                         continue;
+                    }
                 }
                 if (rtk->ssat[obs[i].sat - 1].azel[0][1] >= opt->elmin && rtk->ssat[obs[i].sat - 1].azel[1][1] >= opt->elmin) {
                     sat[k] = obs[i].sat;
@@ -1488,7 +1498,7 @@ extern void initCfgOpt(cfgopt_t* opt)
     opt->typeSol = 0;
     opt->timeIntervalSolution = 0;
 
-    opt->minFixSat = 10;
+    opt->minFixSat = 5;
     opt->maxDelSat = 5;
     opt->minSatRes = 0.02;
     opt->gpsMask = -1;

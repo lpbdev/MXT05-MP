@@ -1879,7 +1879,7 @@ static int check_res(rtk_t* rtk, const obsd_t* obs, const double* x, unsigned ch
                     if (frqj != f) continue;
                     if (satj == sat[j]) break;
                 }
-                trace(2, "nxRecord, check_res(), index1,%d, index2, %d, %d,%d\n", index1, index2,
+                trace(3, "nxRecord, check_res(), index1,%d, index2, %d, %d,%d\n", index1, index2,
                     rtk->ssat[sat[i]-1].xIndex[f], rtk->ssat[sat[j]-1].xIndex[f] );
                 rtk->v[nv] -= (lami[f] * x[index1] - lami[f] * x[index2]);
                 rtk->v[nv] -= (lami[f] - lamj[f]) * x[index2];

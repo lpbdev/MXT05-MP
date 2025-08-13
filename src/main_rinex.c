@@ -1262,8 +1262,8 @@ int main(int argc, char** argv)
         //sprintf(outFileName, "%s%c%s", outDir, sep, "debug.log");
         sprintf(outFileName, "%s%c%s_%s_%s.log", outDir, sep, optsys,"debug",lsqOrkalman);
         //sprintf(outFileName, "%s%c%s", outDir, sep, "AllSYS_debug_lsq.log");
-        oFile.fpDebug = fopen(outFileName, "w");
-        if (!oFile.fpDebug) return -1;
+        // oFile.fpDebug = fopen(outFileName, "w");
+        // if (!oFile.fpDebug) return -1;
     }
 
     percent10 = nepoch / 10;
