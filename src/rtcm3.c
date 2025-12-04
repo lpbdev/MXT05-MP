@@ -228,22 +228,12 @@ static void adjweek(rtcm_t* rtcm, double tow)
             rtcm->time = gpst2time(g_week, tow);
         }
     }
-        //rtcm->time.time = 1649592000;
 
-    //    if (rtcm->time.time <= 18) {
-    //        rtcm->time.time = 0;
-    //        rtcm->time.frac = 0;
-    //        return;
-    //    }
-    //}
     tow_p = time2gpst(rtcm->time, &week);
     if (tow < tow_p - 302400.0) tow += 604800.0;
     else if (tow > tow_p + 302400.0) tow -= 604800.0;
     rtcm->time = gpst2time(week, tow);
-    if (rtcm->time.time < 1626264201) {
-        rtcm->time.time = 0;
-        rtcm->time.frac = 0;
-    }
+
 }
 #endif
 
@@ -1251,9 +1241,11 @@ static void saveMsmObs(rtcm_t* rtcm, int sys, msm_h_t* h, const double* r,
                     rtcm->obs.data[index].D[ind[k]] = (float)(-(rr[i] + rrf[j]) / wl);
                 }
                 int halfj = half[j];
+                rtcm->obs.data[index].LCK[ind[k]] = lock[j];
                 rtcm->obs.data[index].LLI[ind[k]] = lossoflock(rtcm, sat, ind[k], lock[j]) + (half[j] ? 3 : 0);
                 rtcm->obs.data[index].SNR[ind[k]] = (unsigned char)(cnr[j] * 4.0);
                 rtcm->obs.data[index].code[ind[k]] = code[k];
+
             }
             j++;
         }

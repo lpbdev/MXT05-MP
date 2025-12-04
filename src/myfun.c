@@ -720,18 +720,23 @@ extern int selsatRTK(rtk_t *rtk, const obsd_t *obs, unsigned char nu, unsigned c
                 flag = 0;
                 for (f = 0; f < nf; f++) {
                     if (obs[i].P[f] != 0.0 && obs[j].P[f] != 0.0 && obs[i].L[f] != 0.0 && obs[j].L[f] != 0.0) {
+                        trace(2,"sel,5, %s,%d,%d\n",id,f,nf);
+
                         flag = 1;
                         break;
                     }
                 }
-                if (flag == 0)
+                if (flag == 0){
+                    trace(2,"sel,3, %s,%d\n",id,nf);
                     continue;
+                }
                 if (elFlag == 1) {
                     if (rtk->ssat[obs[i].sat - 1].azel[0][1] * R2D <= 30.0 && rtk->ssat[obs[i].sat - 1].azel[1][1] * R2D <= 30.0){
-                        trace(2,"sel,3, %s\n",id);
+                        trace(2,"sel,4, %s\n",id);
                         continue;
                     }
                 }
+                trace(2, "sel,6,azel,%.2f, %.2f, %.2f\n",rtk->ssat[obs[i].sat - 1].azel[0][1],rtk->ssat[obs[i].sat - 1].azel[1][1],opt->elmin);
                 if (rtk->ssat[obs[i].sat - 1].azel[0][1] >= opt->elmin && rtk->ssat[obs[i].sat - 1].azel[1][1] >= opt->elmin) {
                     sat[k] = obs[i].sat;
                     iu[k] = i;
@@ -886,7 +891,7 @@ static void assignAmbP(rtk_t *rtk, int lcopt) {
                     rtk->P[j + rtk->nx * i] = rtk->Pp[column + rtk->nxPre * row];
                     rtk->P[i + rtk->nx * i] = rtk->Pp[row + rtk->nxPre * row];
                     rtk->P[j + rtk->nx * j] = rtk->Pp[column + rtk->nxPre * column];
-                    trace(2, "assignAmbP, i, %d, j, %d, ii, %10.4f,   jj, %10.4f,ij, %10.4f,ji, %10.4f\n",
+                    trace(3, "assignAmbP, i, %d, j, %d, ii, %10.4f,   jj, %10.4f,ij, %10.4f,ji, %10.4f\n",
                         i,j, rtk->P[i + rtk->nx * i] ,rtk->P[j + rtk->nx * j],
                         rtk->P[i + rtk->nx * j] ,rtk->P[j + rtk->nx * i]                    );
                 }
@@ -1165,8 +1170,9 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
     nr = nobs - nu;
 
     ns = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, rtk->fix30flag);
+    // trace(2, "obsScan, selsatRTK, %d\n",ns);
     if (ns > SELETE_SAT_NUM) {
-        trace(0xff, "error ns=%d\n", ns);
+        trace(2, "error ns=%d ,SELETE_SAT_NUM, %d\n", ns,SELETE_SAT_NUM);
         return 0;
     }
     murFrq = 0;
@@ -1248,12 +1254,15 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
     n = 0;
     for (i = 0; i < nobs; i++) {
         for (j = 0; j < ns; j++) {
+            //trace(2, "obsscan, i,j,obs[i].sat, sat[j], %d,%d,%d,%d\n",i,j,obs[i].sat, sat[j] );
             if (obs[i].sat == sat[j]) {
                 obs[n++] = obs[i];
                 break;
             }
         }
     }
+
+    //trace(2,"obsScan,WTF,n,%d,nobs,%d,ns,%d,i,%d,j,%d\n",n,nobs,ns,i,j);
 
     if (rtk->opt.dynamics == 0)
         rtk->np = 3;
@@ -1278,8 +1287,10 @@ extern int obsScan(rtk_t *rtk, const prcopt_t *popt, obsd_t *obs, const int nobs
     trace(0x02, "opt:%d %d %d %d %d %f %.2f %.2f\n",
           rtk->opt.ionoopt, rtk->opt.tropopt, ns, murFrq, sigFrq, rtk->opt.std, bl, differHeight);
     if (rtk->opt.bl > BSLTHRESHOLD) {
-        if (murFrq < 10)
+        if (murFrq < 10){
+            trace(2,"obsScan, murFrq, %d\n",murFrq);
             return 0;
+        }
     }
     rtk->na = nx;
     rtk->nx = rtk->np + rtk->nt + rtk->ni + rtk->na;
@@ -1481,7 +1492,7 @@ extern void initCfgOpt(cfgopt_t* opt)
     opt->trop = 0;    /* enable Troposphere Correction */
     opt->tides = 0;   /* disable Tides Correction */
     opt->sys = 31;    /* GPS+QZS+BDS+GAL+GLO 0001 1111*/
-    opt->cn0Min = 25;    /* C/N0 Cut-off */
+    opt->cn0Min = 30;    /* C/N0 Cut-off */
     opt->diffAgeMax = 30; /* Max Age of Diff , unit:s */
     opt->buffSize = 4; /*Buffer Size Default:4kB */
     opt->elevMin = 15;   /* Elevation Cut-off */

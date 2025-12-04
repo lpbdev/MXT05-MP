@@ -66,7 +66,7 @@
 #define BDS3_NL_PSR_K1    0
 #define BDS3_NL_PSR_K2    1
 
-#define SVN_VERSION 250731
+#define SVN_VERSION 251117
 
 #define MAXEPH        10240
 #define MAXGEPH     5120
@@ -603,10 +603,12 @@ typedef struct {//observation data record, single band
     uint8_t LLI[NFREQ];//lost of clock indicator
     unsigned char code[NFREQ]; /* code indicator (CODE_???) */
     unsigned long int LockTime[NFREQ];
+    unsigned char LCK[NFREQ];
     double L[NFREQ];
     double P[NFREQ];
-    float D[NFREQ];
+    float  D[NFREQ];
 }obsd_t;
+
 typedef struct {
     int n, nmax;    //number of observation data/allocated
     obsd_t* data;       /* observation data records */

@@ -62,7 +62,7 @@ int g_preBaseObsRtkNum;
 unsigned char level_trace = 0xff;
 double baseRtcmPosition[3] = { 0 };
 
-int SELETE_SAT_NUM = 20;
+int SELETE_SAT_NUM = 40;
 int NX;
 int NY;
 
@@ -254,12 +254,12 @@ extern int decoderaw(rtksvr_t* svr, int index)
         /* update rtk server */
         if (ret > 0){
             updatesvr(svr, ret, obs, index, fobs);
-            char id[4];
-            satno2id(obs->data[0].sat, id);
-            trace(2,"decoderaw: %d, %s, %d\n", obs->n,id,obs->data[0].sat);
-            for(int k =0;k<6;k++){
-                trace(2,"decoderaw: %d, %d, %14.4f\n", obs->data[0].sat,k, obs->data[0].L[k] );
-            }
+            // char id[4];
+            // satno2id(obs->data[0].sat, id);
+            // trace(2,"decoderaw: %d, %s, %d\n", obs->n,id,obs->data[0].sat);
+            // for(int k =0;k<6;k++){
+            //     trace(2,"decoderaw: %d, %d, %14.4f\n", obs->data[0].sat,k, obs->data[0].L[k] );
+            // }
         }
         /* observation data received */
         if (ret == 1) {
@@ -806,12 +806,12 @@ static void* rtksvrthread(void* arg)
 
             for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++) {
                 sys = satsys(svr->obs[0][i].data[j].sat, &prn);
-				sys = satsys(svr->obs[0][i].data[j].sat, &prn);
-				// if (svr->obs[0][i].data[j].sat == 29) continue;
-				if (!(svr->rtk.opt.sys & 1) && sys == SYS_GPS)continue;
-				if (!(svr->rtk.opt.sys & 2) && sys == SYS_QZS)continue;
-				if (!(svr->rtk.opt.sys & 4) && sys == SYS_BDS)continue;
-				if (!(svr->rtk.opt.sys & 8) && sys == SYS_GAL)continue;
+                if (sys != SYS_BDS) continue;
+
+				if (!(svr->rtk.opt.sys &  1) && sys == SYS_GPS) continue;
+				if (!(svr->rtk.opt.sys &  2) && sys == SYS_QZS) continue;
+				if (!(svr->rtk.opt.sys &  4) && sys == SYS_BDS) continue;
+				if (!(svr->rtk.opt.sys &  8) && sys == SYS_GAL) continue;
 				if (!(svr->rtk.opt.sys & 16) && sys == SYS_GLO)continue;
 				if (sys == SYS_GPS && svr->rtk.opt.gpsMask >= 0) {
 					if (!((svr->rtk.opt.gpsMask >> (prn - 1)) & 1)) continue;
@@ -850,9 +850,27 @@ static void* rtksvrthread(void* arg)
                     obs[n].P[4] = obs[n].L[4] = obs[n].D[4] = 0.0;
                     obs[n].P[5] = obs[n].L[5] = obs[n].D[5] = 0.0;
                 }
-                for (f = 0; f < NFREQ; f++)     obs[n].LockTime[f] = 3000;
-
-
+                for (f = 0; f < NFREQ; f++) 	obs[n].LockTime[f] = 3000;
+                for (k = 0; k < NFREQ; k++)
+                {
+                    if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4|| obs[n].LCK[k]<8)
+                    {
+                        obs[n].P[k] = obs[n].L[k] = obs[n].D[k] = 0.0;
+                    }
+                }
+                cnt = 0;
+                if (sys == SYS_BDS)
+                {
+                    for (f = 0; f < NFREQ; f++)
+                    {
+                        if (obs[n].P[f] != 0.0) cnt++;
+                    }
+                    for (f = 0; f < NFREQ; f++)
+                    {
+                        if (cnt >= 2 && f >= 3)
+                            obs[n].P[f] = obs[n].L[f] = 0.0;
+                    }
+                }
                 n++;
             }
             qobs.n = 0;

@@ -64,7 +64,7 @@ unsigned char level_trace = 0xff;
 unsigned char trace_flag[64] = { 0 };
 double baseRtcmPosition[3] = { 0 };
 
-int SELETE_SAT_NUM = 20;
+int SELETE_SAT_NUM = 40;
 int NX;
 int NY;
 int g_week;
@@ -267,9 +267,9 @@ extern int decoderaw(rtksvr_t* svr, int index)
             svr->rtcm[index].rcv = index;
             ret = input_rtcm3(svr->rtcm + index, svr->buff[index][i]);
             obs = &svr->rtcm[index].obs;
-            trace(2, "index,%d,time,%s,\n", index, time_str(obs[0].data[0].time, 0));
+            trace(3, "index,%d,time,%s,\n", index, time_str(obs[0].data[0].time, 0));
             if (ret != 0) {
-                //printf("decode rtcm3 index=%d ok\n",index);
+                //printf("decode rtcm3 main=%d ok\n",index);
             }
         }
         /* update rtk server */
@@ -1516,6 +1516,7 @@ static void* rtksvrthread(void* arg)
             }
             g_baseObsSyncIndex++;
         }
+        trace(2,"opt.sys, %d\n",svr->rtk.opt.sys);
         for (i = 0; i < fobs[0]; i++) {
             //if (svr->obs[0][i].data[0].time.time % 15 != 0)continue;
             trace(0x10, "k=%d rover time=%d\n", i, svr->obs[0][i].data[0].time.time);
@@ -1571,7 +1572,7 @@ static void* rtksvrthread(void* arg)
                 for (f = 0; f < NFREQ; f++)     obs[n].LockTime[f] = 3000;
                 for (k = 0; k < NFREQ; k++)
                 {
-                    if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4)
+                    if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4|| obs[n].LCK[k]<8)
                     {
                         obs[n].P[k] = obs[n].L[k] = obs[n].D[k] = 0.0;
                     }
@@ -2186,7 +2187,7 @@ int main(int argc, char** argv)
     if (svr.rtk.opt.smoothWindowsTime == 0) svr.rtk.opt.smoothWindowsTime = 24;
 
 
-    SELETE_SAT_NUM = svr.rtk.opt.maxPosSat;
+    // SELETE_SAT_NUM = svr.rtk.opt.maxPosSat;
     NX = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
     NY = NX;
 

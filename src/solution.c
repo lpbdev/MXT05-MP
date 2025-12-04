@@ -890,10 +890,10 @@ static int outenu_dynamic(unsigned char* buff, const char* s, rtk_t* rtk, sol_t*
         SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
         sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio);
     if (oFile.fpOut[0])
-        fprintf(oFile.fpOut[0], "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f\n",
+        fprintf(oFile.fpOut[0], "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f,%4.2f,%4.2f,%4.2f,\n",
             s, sep, sol->enu_original[0], sep, sol->enu_original[1], sep, sol->enu_original[2], sep, sol->stat, sep, ns, sep,
             SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
-            sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio);
+            sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio,sol->dop[0][0], sol->dop[0][1],sol->dop[0][2]);
     return p - (char*)buff;
 }
 

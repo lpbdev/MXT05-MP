@@ -410,3 +410,5 @@ doxy/*
 *.trace
 *.conf
 *.swp
+*.o
+*.exe

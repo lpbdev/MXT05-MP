@@ -1,7 +1,7 @@
 #include"rtk.h"
 #define VAR_POS     SQR(30.0) /* initial variance of receiver pos (m^2) */
-#define VAR_VEL SQR(10.0)
-#define VAR_ACC SQR(10.0)
+#define VAR_VEL     SQR(10.0)
+#define VAR_ACC     SQR(10.0)
 #define MAX_ION_STD    0.5
 #define VAR_GRA     SQR(0.001) /* initial variance of gradient (m^2) */
 #define SQRT(x)    ((x)<0.0?0.0:sqrt(x))
