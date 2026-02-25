@@ -1,247 +1,265 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include <string.h>
-#include <math.h>
 #include "pos_filter.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef _MSC_VER
-#pragma warning( disable : 4996)
+#pragma warning(disable : 4996)
 #endif
 
 #define POS_FILTER
 #ifdef POS_FILTER
-static int getDat(FILE* fp, int offset, double *value, int n) {
-    if (fp == NULL) {
-        printf("fp NULL in %s\n", __func__);
-        return 1;
-    }
-    fseek(fp, sizeof(double) * offset, SEEK_SET);
-    fread(value, sizeof(double), n, fp);
-    return 0;
+static int getDat(FILE *fp, int offset, double *value, int n) {
+  if (fp == NULL) {
+    printf("fp NULL in %s\n", __func__);
+    return 1;
+  }
+  fseek(fp, sizeof(double) * offset, SEEK_SET);
+  fread(value, sizeof(double), n, fp);
+  return 0;
 }
-static int writeDat(FILE* fp, int offset, double *value, int n) {
-    if (fp == NULL) {
-        printf("fp NULL in %s\n", __func__);
-        return 1;
-    }
-    fseek(fp, sizeof(double) * offset, SEEK_SET);
-    fwrite(value, sizeof(double), n, fp);
-    return 0;
-}
-
-extern int init_data(data_t* poss, char* posdatpath) {
-
-    if (poss->nmax == 0) {
-        printf("Failed to init poss_t! \n");
-        return 1;
-    }
-
-    poss->n = 0;
-
-    if (!(poss->data = (double *)calloc(sizeof(double), poss->nmax * NSIZE))) {
-        return 1;
-    }
-
-    if (poss->mode == FIL && posdatpath!=NULL) {
-        if (!(poss->fp= fopen(posdatpath, "wb+"))) return 1;
-
-        fwrite(poss->data, sizeof(double), poss->nmax * NSIZE, poss->fp);
-        free(poss->data);
-        poss->data= NULL;
-    }
-    printf("++++++++++++++++++++++++++++++++++++++\n");
-    printf("Pos Filter Status       : ON\n");
-    printf("Pos Filter File Path    : %s\n", posdatpath);
-    printf("Pos Filter Space Size   : %.2f KB\n", poss->nmax * NSIZE*sizeof(double)/1024.0);
-    printf("++++++++++++++++++++++++++++++++++++++\n");
-    return 0;
+static int writeDat(FILE *fp, int offset, double *value, int n) {
+  if (fp == NULL) {
+    printf("fp NULL in %s\n", __func__);
+    return 1;
+  }
+  fseek(fp, sizeof(double) * offset, SEEK_SET);
+  fwrite(value, sizeof(double), n, fp);
+  return 0;
 }
 
-extern int free_data(data_t* poss) {
+extern int init_data(data_t *poss, char *posdatpath) {
 
-    poss->nmax = 0;
-    poss->n = 0;
-    if (poss->mode == MEM){
-        free(poss->data);
-    }else if (poss->mode == FIL){
-        fclose(poss->fp);
-    }
+  if (poss->nmax == 0) {
+    printf("Failed to init poss_t! \n");
+    return 1;
+  }
 
-    return 0;
+  poss->n = 0;
+
+  if (!(poss->data = (double *)calloc(sizeof(double), poss->nmax * NSIZE))) {
+    return 1;
+  }
+
+  if (poss->mode == FIL && posdatpath != NULL) {
+    if (!(poss->fp = fopen(posdatpath, "wb+")))
+      return 1;
+
+    fwrite(poss->data, sizeof(double), poss->nmax * NSIZE, poss->fp);
+    free(poss->data);
+    poss->data = NULL;
+  }
+  printf("++++++++++++++++++++++++++++++++++++++\n");
+  printf("Pos Filter Status       : ON\n");
+  printf("Pos Filter File Path    : %s\n", posdatpath);
+  printf("Pos Filter Space Size   : %.2f KB\n",
+         poss->nmax * NSIZE * sizeof(double) / 1024.0);
+  printf("++++++++++++++++++++++++++++++++++++++\n");
+  return 0;
 }
 
-extern int update_data(data_t* poss, double* newdata) {
-    int i = 0;
-    int index = 0;
+extern int free_data(data_t *poss) {
 
-    index = poss->n % poss->nmax;
+  poss->nmax = 0;
+  poss->n = 0;
+  if (poss->mode == MEM) {
+    free(poss->data);
+  } else if (poss->mode == FIL) {
+    fclose(poss->fp);
+  }
 
-    if (poss->mode == MEM) {
-        for (i = 0; i < NSIZE; i++) {
-            poss->data[index * NSIZE + i] = newdata[i];
-        }
-    }else if (poss->mode == FIL) {
-        writeDat(poss->fp, index*NSIZE, newdata, 3);
-    }
-
-    poss->n++;
-    return 0;
+  return 0;
 }
 
-static int updatewind(wind_t *wind, double *olddata, double *newdata, int n){
-    int n1=0, n2=0, i=0;
+extern int update_data(data_t *poss, double *newdata) {
+  int i = 0;
+  int index = 0;
 
+  index = poss->n % poss->nmax;
 
-
-    /* update pos statics */
-    for (i = 0; i < n; i++) {
-        n1 = wind->n[i] >= wind->nmax ? wind->nmax : wind->n[i] + 1;
-        n2 = wind->n[i] >= wind->nmax ? wind->nmax : wind->n[i];
-
-        wind->ave[i] = (wind->ave[i] * n2 - olddata[i] + newdata[i]) / n1;
-        wind->sumX2[i] = wind->sumX2[i] - olddata[i] * olddata[i] + newdata[i] * newdata[i];
-        wind->var[i] = 1.0 * wind->sumX2[i] / n1 - wind->ave[i] * wind->ave[i];
-        wind->std[i] = sqrt(wind->var[i]);
-
-        wind->n[i]++;
-
-        if (wind->n[i] > wind->nmax * 3) {
-            wind->n[i] = wind->n[i] - wind->nmax;
-        }
-    }
-
-    return 0;
-}
-
-extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE *fp ) {
-    int i = 0, n1 = 0, n2 = 0;
-    double olddata[NSIZE] = { 0 }, newdata[NSIZE] = { 0 };
-
-    int indold = 0;
-    int indnew = 0;
-
-    indold = n - wind->nmax - wind->dely ;
-    if (indold < 0) indold += nmax;
-    indold = indold % nmax;
-
-    indnew = n - wind->dely;
-    if (indnew < 0) indnew += nmax;
-    indnew = indnew % nmax;
-
-    if (n < wind->dely) return 0;
-
-    ///* update pos statics */
-    //if (mode == MEM) {
-    //    for (i = 0; i < NSIZE; i++) {
-    //        olddata[i] = data->data[indold * NSIZE + i];
-    //        newdata[i] = data->data[indnew * NSIZE + i];
-    //    }
-    //}
-    /*else if (data->mode == FIL) {*/
-        getDat(fp, indold * NSIZE, olddata, NSIZE);
-        getDat(fp, indnew * NSIZE, newdata, NSIZE);
-    //}
-
-        for (i = 0; i < NSIZE; i++) {
-            if (wind->n[i] < wind->nmax) {
-                olddata[i] = 0;
-            }
-        }
-
-    // for (i = 0; i < NSIZE; i++) {
-    //     newdata[i] = newdata[i] - wind->jump[i];
-    //     if (n - wind->nmax - wind->dely - 1 > wind->jn[i]) {
-    //         olddata[i] = olddata[i] - wind->jump[i];
-    //     }
-    // }
-    // if (indnew = 3814 && indold == 3790)
-    //     printf("i,%d, %f, %f, %f\n", i, wind->std[0], wind->std[1], wind->std[2]);
-    updatewind(wind, olddata, newdata, NSIZE);
-
-    //if (wind->n == 70 && n1 == 24 && n2 == 24)
-    //
-
-    // trace(2, "indnew,%d,%d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%.4f, %.4f, %.4f \n",
-    //     indnew, indold,
-    //     newdata[0], newdata[1], newdata[2],
-    //     olddata[0], olddata[1], olddata[2],
-    //     wind->std[0], wind->std[1], wind->std[2]);
-
-    // printf("indold, %d, indnew, %2d, wind->n, %d, newdata=%.5f, olddata=%.5f, wind.ave=%.5f, wind.var=%.5f\n",
-    // indold, indnew, wind->n, newdata[0],olddata[0], wind->ave[index], sqrt(wind->var[index]));
-    // printf("index %d %d, newdata=%.5f, olddata=%.5f, wind.ave=%.5f, wind.var=%.5f\n",
-    //     index, wind->n, newdata[0],olddata[0], wind->ave[index], sqrt(wind->var[index]));
-
-    return 0;
-}
-
-extern double posmaxstd(double std, double maxjump){
-    return sqrt(std*std+maxjump*maxjump/4.0)*0.75;
-}
-
-extern int update_wind(wind_t* wind, data_t* data) {
-    int i = 0, n1 = 0, n2 = 0;
-    double olddata[NSIZE] = { 0 }, newdata[NSIZE]={0};
-
-    int indold = 0;
-    int indnew = 0;
-
-    indold = data->n - wind->nmax -wind->dely-1 ;
-    if (indold < 0 ) indold += data->nmax;
-    indold = indold % data->nmax;
-
-    indnew = data->n - wind->dely -1;
-    if (indnew<0) indnew += data->nmax;
-    indnew = indnew % data->nmax;
-
-    if (data->n <= wind->dely) return 0;
-
-    /* update pos statics */
-    if (data->mode == MEM) {
-        for (i = 0; i < NSIZE; i++) {
-            olddata[i] = data->data[indold * NSIZE + i];
-            newdata[i] = data->data[indnew * NSIZE + i];
-        }
-    } else if (data->mode == FIL) {
-        getDat(data->fp, indold*NSIZE, olddata, NSIZE);
-        getDat(data->fp, indnew*NSIZE, newdata, NSIZE);
-    }
+  if (poss->mode == MEM) {
     for (i = 0; i < NSIZE; i++) {
-        if (wind->n[i] < wind->nmax) {
-            olddata[i] = 0;
-        }
+      poss->data[index * NSIZE + i] = newdata[i];
     }
+  } else if (poss->mode == FIL) {
+    writeDat(poss->fp, index * NSIZE, newdata, 3);
+  }
 
-    // for (i = 0; i < NSIZE; i++) {
-    //     newdata[i] = newdata[i] - wind->jump[i];
-    //     if (data->n - wind->nmax - wind->dely - 1 > wind->jn[i]) {
-    //         olddata[i] = olddata[i] - wind->jump[i];
-    //     }
-    // }
-    updatewind(wind, olddata, newdata, NSIZE);
-
-    // printf("indold, %d, indnew, %2d, wind->n, %d, newdata=%.5f, olddata=%.5f, wind.ave=%.5f, wind.var=%.5f\n",
-    // indold, indnew, wind->n, newdata[0],olddata[0], wind->ave[index], sqrt(wind->var[index]));
-    // printf("index %d %d, newdata=%.5f, olddata=%.5f, wind.ave=%.5f, wind.var=%.5f\n",
-    //     index, wind->n, newdata[0],olddata[0], wind->ave[index], sqrt(wind->var[index]));
-
-    return 0;
+  poss->n++;
+  return 0;
 }
 
-static int getindex(wind_t* wind, data_t* data, int offset){
-    int indend = 0;
-    int indnew =0;
+static int updatewind(wind_t *wind, double *olddata, double *newdata, int n) {
+  int n1 = 0, n2 = 0, i = 0;
 
-    indend = data->n >= wind->nmax ? data->n - wind->nmax -offset : data->n + data->nmax - wind->nmax-offset;
+  /* update pos statics */
+  for (i = 0; i < n; i++) {
+    n1 = wind->n[i] >= wind->nmax ? wind->nmax : wind->n[i] + 1;
+    n2 = wind->n[i] >= wind->nmax ? wind->nmax : wind->n[i];
 
-    if (indend < 0 ) indend += data->nmax;
-    indend = indend % data->nmax;
+    wind->ave[i] = (wind->ave[i] * n2 - olddata[i] + newdata[i]) / n1;
+    wind->sumX2[i] =
+        wind->sumX2[i] - olddata[i] * olddata[i] + newdata[i] * newdata[i];
+    wind->var[i] = 1.0 * wind->sumX2[i] / n1 - wind->ave[i] * wind->ave[i];
+    wind->std[i] = sqrt(wind->var[i]);
 
-    indnew = indend + wind->nmax ;
-    indnew = indnew % data->nmax;
+    wind->n[i]++;
 
-    // if(wind->n >=0)
-    //     printf("data->n , %d,wind->n, %d, indend, %d, indnew, %d\n", data->n,  wind->n, indend,indnew);
+    if (wind->n[i] > wind->nmax * 3) {
+      wind->n[i] = wind->n[i] - wind->nmax;
+    }
+  }
+
+  return 0;
+}
+
+extern int update_wind_fp(wind_t *wind, int n, int nmax, FILE *fp) {
+  int i = 0, n1 = 0, n2 = 0;
+  double olddata[NSIZE] = {0}, newdata[NSIZE] = {0};
+
+  int indold = 0;
+  int indnew = 0;
+
+  indold = n - wind->nmax - wind->dely;
+  if (indold < 0)
+    indold += nmax;
+  indold = indold % nmax;
+
+  indnew = n - wind->dely;
+  if (indnew < 0)
+    indnew += nmax;
+  indnew = indnew % nmax;
+
+  if (n < wind->dely)
     return 0;
+
+  ///* update pos statics */
+  // if (mode == MEM) {
+  //     for (i = 0; i < NSIZE; i++) {
+  //         olddata[i] = data->data[indold * NSIZE + i];
+  //         newdata[i] = data->data[indnew * NSIZE + i];
+  //     }
+  // }
+  /*else if (data->mode == FIL) {*/
+  getDat(fp, indold * NSIZE, olddata, NSIZE);
+  getDat(fp, indnew * NSIZE, newdata, NSIZE);
+  //}
+
+  for (i = 0; i < NSIZE; i++) {
+    if (wind->n[i] < wind->nmax) {
+      olddata[i] = 0;
+    }
+  }
+
+  // for (i = 0; i < NSIZE; i++) {
+  //     newdata[i] = newdata[i] - wind->jump[i];
+  //     if (n - wind->nmax - wind->dely - 1 > wind->jn[i]) {
+  //         olddata[i] = olddata[i] - wind->jump[i];
+  //     }
+  // }
+  // if (indnew = 3814 && indold == 3790)
+  //     printf("i,%d, %f, %f, %f\n", i, wind->std[0], wind->std[1],
+  //     wind->std[2]);
+  updatewind(wind, olddata, newdata, NSIZE);
+
+  // if (wind->n == 70 && n1 == 24 && n2 == 24)
+  //
+
+  // trace(2, "indnew,%d,%d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%.4f, %.4f, %.4f
+  // \n",
+  //     indnew, indold,
+  //     newdata[0], newdata[1], newdata[2],
+  //     olddata[0], olddata[1], olddata[2],
+  //     wind->std[0], wind->std[1], wind->std[2]);
+
+  // printf("indold, %d, indnew, %2d, wind->n, %d, newdata=%.5f, olddata=%.5f,
+  // wind.ave=%.5f, wind.var=%.5f\n", indold, indnew, wind->n,
+  // newdata[0],olddata[0], wind->ave[index], sqrt(wind->var[index]));
+  // printf("index %d %d, newdata=%.5f, olddata=%.5f, wind.ave=%.5f,
+  // wind.var=%.5f\n",
+  //     index, wind->n, newdata[0],olddata[0], wind->ave[index],
+  //     sqrt(wind->var[index]));
+
+  return 0;
+}
+
+extern double posmaxstd(double std, double maxjump) {
+  return sqrt(std * std + maxjump * maxjump / 4.0) * 0.75;
+}
+
+extern int update_wind(wind_t *wind, data_t *data) {
+  int i = 0, n1 = 0, n2 = 0;
+  double olddata[NSIZE] = {0}, newdata[NSIZE] = {0};
+
+  int indold = 0;
+  int indnew = 0;
+
+  indold = data->n - wind->nmax - wind->dely - 1;
+  if (indold < 0)
+    indold += data->nmax;
+  indold = indold % data->nmax;
+
+  indnew = data->n - wind->dely - 1;
+  if (indnew < 0)
+    indnew += data->nmax;
+  indnew = indnew % data->nmax;
+
+  if (data->n <= wind->dely)
+    return 0;
+
+  /* update pos statics */
+  if (data->mode == MEM) {
+    for (i = 0; i < NSIZE; i++) {
+      olddata[i] = data->data[indold * NSIZE + i];
+      newdata[i] = data->data[indnew * NSIZE + i];
+    }
+  } else if (data->mode == FIL) {
+    getDat(data->fp, indold * NSIZE, olddata, NSIZE);
+    getDat(data->fp, indnew * NSIZE, newdata, NSIZE);
+  }
+  for (i = 0; i < NSIZE; i++) {
+    if (wind->n[i] < wind->nmax) {
+      olddata[i] = 0;
+    }
+  }
+
+  // for (i = 0; i < NSIZE; i++) {
+  //     newdata[i] = newdata[i] - wind->jump[i];
+  //     if (data->n - wind->nmax - wind->dely - 1 > wind->jn[i]) {
+  //         olddata[i] = olddata[i] - wind->jump[i];
+  //     }
+  // }
+  updatewind(wind, olddata, newdata, NSIZE);
+
+  // printf("indold, %d, indnew, %2d, wind->n, %d, newdata=%.5f, olddata=%.5f,
+  // wind.ave=%.5f, wind.var=%.5f\n", indold, indnew, wind->n,
+  // newdata[0],olddata[0], wind->ave[index], sqrt(wind->var[index]));
+  // printf("index %d %d, newdata=%.5f, olddata=%.5f, wind.ave=%.5f,
+  // wind.var=%.5f\n",
+  //     index, wind->n, newdata[0],olddata[0], wind->ave[index],
+  //     sqrt(wind->var[index]));
+
+  return 0;
+}
+
+static int getindex(wind_t *wind, data_t *data, int offset) {
+  int indend = 0;
+  int indnew = 0;
+
+  indend = data->n >= wind->nmax ? data->n - wind->nmax - offset
+                                 : data->n + data->nmax - wind->nmax - offset;
+
+  if (indend < 0)
+    indend += data->nmax;
+  indend = indend % data->nmax;
+
+  indnew = indend + wind->nmax;
+  indnew = indnew % data->nmax;
+
+  // if(wind->n >=0)
+  //     printf("data->n , %d,wind->n, %d, indend, %d, indnew, %d\n", data->n,
+  //     wind->n, indend,indnew);
+  return 0;
 }
 #if 0
 static int getWindP(wind_t wind, int index, double *pos){
@@ -255,55 +273,55 @@ static int getWindP(wind_t wind, int index, double *pos){
 }
 #endif
 
-extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump, int nj){
-    int i=0;
-    double stdthres =0;
+extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump,
+                    int nj) {
+  int i = 0;
+  double stdthres = 0;
 
-    if(wa->n[0]<wa->nmax || wb->n[0] < wb->nmax) {
-        printf("window not full\n");
-        return 1;
+  if (wa->n[0] < wa->nmax || wb->n[0] < wb->nmax) {
+    printf("window not full\n");
+    return 1;
+  }
+
+  for (i = 0; i < nj; i++) {
+    stdthres = posmaxstd(wa->thres[i] / 10, wa->thres[i]);
+    if (wa->std[i] > stdthres) {
+      wa->jumpflag[i] = 1;
     }
 
-    for(i=0;i<nj;i++){
-        stdthres = posmaxstd(wa->thres[i]/10,wa->thres[i] );
-        if(wa->std[i]>stdthres){
-            wa->jumpflag[i]=1;
-        }
-
-        if(wa->jumpflag[i]==1){
-            if(fabs(tmpjump[i])< fabs(wa->ave[i]-wb->ave[i])){
-                tmpjump[i]= wa->ave[i]-wb->ave[i];
-            }
-        }
-
-        if(wa->jumpflag[i]==1 && wa->std[i]<wb->std[i]){
-            jump[i] =tmpjump[i];
-            tmpjump[i]=0.0;
-            wa->jumpflag[i]=0;
-        }
-        // if(offset ==1 && offset2 ==1){
-        //     jumpdist = wind2m.ave[index] - wind1hd.ave[index];
-        //     jn= poss.n;
-        // }else{
-        //     if(jn!=0){
-        //         if(wind12.n - wind12.jn[index] > wind12.nmax ){
-        //             wind12.ave[index] = wind12.ave[index] +wind12.jump[index];
-        //             wind12.jump[index]=0.0;
-        //             wind12.jn[index]=0;
-        //         }
-        //         wind12.jn[index]=jn;
-        //         wind12.jump[index] += jumpdist;
-
-        //         printf("%s jumpdist=%f \n", hms, jumpdist);
-        //         jn=0;
-        //         jumpdist=0.0;
-        //     }
-        // }
-        // realpos=wind12.ave[index]+wind12.jump[index] ;
-
+    if (wa->jumpflag[i] == 1) {
+      if (fabs(tmpjump[i]) < fabs(wa->ave[i] - wb->ave[i])) {
+        tmpjump[i] = wa->ave[i] - wb->ave[i];
+      }
     }
 
-    return 0;
+    if (wa->jumpflag[i] == 1 && wa->std[i] < wb->std[i]) {
+      jump[i] = tmpjump[i];
+      tmpjump[i] = 0.0;
+      wa->jumpflag[i] = 0;
+    }
+    // if(offset ==1 && offset2 ==1){
+    //     jumpdist = wind2m.ave[index] - wind1hd.ave[index];
+    //     jn= poss.n;
+    // }else{
+    //     if(jn!=0){
+    //         if(wind12.n - wind12.jn[index] > wind12.nmax ){
+    //             wind12.ave[index] = wind12.ave[index] +wind12.jump[index];
+    //             wind12.jump[index]=0.0;
+    //             wind12.jn[index]=0;
+    //         }
+    //         wind12.jn[index]=jn;
+    //         wind12.jump[index] += jumpdist;
+
+    //         printf("%s jumpdist=%f \n", hms, jumpdist);
+    //         jn=0;
+    //         jumpdist=0.0;
+    //     }
+    // }
+    // realpos=wind12.ave[index]+wind12.jump[index] ;
+  }
+
+  return 0;
 }
 #if 0
 extern int readpos(char* pospath, int intv, int index) {
@@ -543,15 +561,17 @@ int main(){
 }
 #endif
 
-
 #else
 
-extern int init_data(data_t* poss, char* posdatpath) { return 0; }
-extern int free_data(data_t* poss) { return 0; }
-extern int update_data(data_t* poss, double* newdata) { return 0; }
-extern int update_wind(wind_t* wind, data_t* data) { return 0; }
-extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE* fp) { return 0; }
+extern int init_data(data_t *poss, char *posdatpath) { return 0; }
+extern int free_data(data_t *poss) { return 0; }
+extern int update_data(data_t *poss, double *newdata) { return 0; }
+extern int update_wind(wind_t *wind, data_t *data) { return 0; }
+extern int update_wind_fp(wind_t *wind, int n, int nmax, FILE *fp) { return 0; }
 extern double posmaxstd(double std, double maxjump) { return 0.0; }
-extern int calcjump(wind_t* wa, wind_t* wb, double* jump, double* tmpjump, int nj) { return 0; }
+extern int calcjump(wind_t *wa, wind_t *wb, double *jump, double *tmpjump,
+                    int nj) {
+  return 0;
+}
 
 #endif
