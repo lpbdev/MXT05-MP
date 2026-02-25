@@ -1,17 +1,17 @@
 # makefile for rtk
 CC = gcc
-BINDIR  = /usr/local/bin
-SRC     = ../src
+SRC_DIR     = ../src
+INC_DIR = ../src/
+BUILD_DIR = ./
 
 ifeq ($(OS), Windows_NT)
 	OPTS    = -DENACMP -DWIN32
-	LDLIBS  = -lm  -lwinmm -lpthread -lws2_32
+	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32
 else
-	LDLIBS  = -lm -lpthread
+	LDFLAGS = -lm -lpthread
 	OPTS    = -DENACMP
 endif
 
-CFLAGS  = -Wall -O0 -g -std=c11 -pedantic -I$(SRC) -DLAPACK $(OPTS)
 
 # for gprof
 #CFLAGS  = -Wall -O3 -std=c11 -pedantic -I$(SRC) -DLAPACK $(OPTS) -pg
@@ -22,85 +22,99 @@ CFLAGS  = -Wall -O0 -g -std=c11 -pedantic -I$(SRC) -DLAPACK $(OPTS)
 #CFLAGS  = -O3 -std=c11 -pedantic -I$(SRC) $(OPTS) -DMKL -I$(MKLDIR)/include
 #LDLIBS  = -L$(MKLDIR)/lib/32 -lm -lmkl_core -lmkl_intel -lmkl_gnu_thread -liomp5 -lpthread
 
-all	: main_rtcm 
-main_rtcm : main_rtcm.o rtkcmn.o rinex.o  solution.o
-main_rtcm : lambda.o myfun.o pntpos.o ephemeris.o 
-main_rtcm : rtcm3.o rtkls.o rtkpos.o  tides.o stream.o multipath.o cJSON.o BandPassFilter.o fft.o
-main_rtcm : logmod.o pos_filter.o
+SRCS =  \
+	$(SRC_DIR)/main_rtcm.c $(SRC_DIR)/rtkcmn.c $(SRC_DIR)/rinex.c  $(SRC_DIR)/solution.c \
+	$(SRC_DIR)/lambda.c $(SRC_DIR)/myfun.c  $(SRC_DIR)/pntpos.c $(SRC_DIR)/ephemeris.c \
+	$(SRC_DIR)/rtcm3.c  $(SRC_DIR)/rtkls.c  $(SRC_DIR)/rtkpos.c $(SRC_DIR)/tides.c $(SRC_DIR)/stream.c \
+	$(SRC_DIR)/multipath.c $(SRC_DIR)/cJSON.c $(SRC_DIR)/BandPassFilter.c \
+	$(SRC_DIR)/fft.c $(SRC_DIR)/logmod.c $(SRC_DIR)/pos_filter.c
 
-main_rtcm.o : $(SRC)/main_rtcm.c
-	$(CC) -c $(CFLAGS) $(SRC)/main_rtcm.c
-rtkcmn.o   : $(SRC)/rtkcmn.c
-	$(CC) -c $(CFLAGS) $(SRC)/rtkcmn.c
-rinex.o    : $(SRC)/rinex.c
-	$(CC) -c $(CFLAGS) $(SRC)/rinex.c
-solution.o : $(SRC)/solution.c
-	$(CC) -c $(CFLAGS) $(SRC)/solution.c
-lambda.o   : $(SRC)/lambda.c
-	$(CC) -c $(CFLAGS) $(SRC)/lambda.c
-myfun.o    : $(SRC)/myfun.c
-	$(CC) -c $(CFLAGS) $(SRC)/myfun.c
-pntpos.o   : $(SRC)/pntpos.c
-	$(CC) -c $(CFLAGS) $(SRC)/pntpos.c
-ephemeris.o: $(SRC)/ephemeris.c
-	$(CC) -c $(CFLAGS) $(SRC)/ephemeris.c
-rtkpos.o  : $(SRC)/rtkpos.c
-	$(CC) -c $(CFLAGS) $(SRC)/rtkpos.c
-rtcm3.o    : $(SRC)/rtcm3.c
-	$(CC) -c $(CFLAGS) $(SRC)/rtcm3.c
-rtkls.o     : $(SRC)/rtkls.c
-	$(CC) -c $(CFLAGS) $(SRC)/rtkls.c
-tides.o     : $(SRC)/tides.c
-	$(CC) -c $(CFLAGS) $(SRC)/tides.c
-stream.o     : $(SRC)/stream.c
-	$(CC) -c $(CFLAGS) $(SRC)/stream.c
+# $(info SRCS = $(SRCS))
 
-multipath.o     : $(SRC)/multipath.c
-	$(CC) -c $(CFLAGS) $(SRC)/multipath.c
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+DEPS = $(OBJS:.o=.d)
 
-cJSON.o     : $(SRC)/cJSON.c
-	$(CC) -c $(CFLAGS) $(SRC)/cJSON.c
+# 头文件
+INCS = -I$(INC_DIR)
+DEPS_INC = $(INC_DIR)/rtk.h $(INC_DIR)/cJSON.h  $(INC_DIR)/fft.h \
+		   $(INC_DIR)/BandPassFilter.h $(INC_DIR)/logmod.h $(INC_DIR)/pos_filter.h
 
-fft.o     : $(SRC)/fft.c
-	$(CC) -c $(CFLAGS) $(SRC)/fft.c
+# 目标文件
+TARGET = main_rtcm
 
-BandPassFilter.o     : $(SRC)/BandPassFilter.c
-	$(CC) -c $(CFLAGS) $(SRC)/BandPassFilter.c
+# ============================================================================
+# 版本特定配置
+# ============================================================================
 
-logmod.o     : $(SRC)/logmod.c
-	$(CC) -c $(CFLAGS) $(SRC)/logmod.c
-pos_filter.o     : $(SRC)/pos_filter.c
-	$(CC) -c $(CFLAGS) $(SRC)/pos_filter.c
+# Debug版本
+CFLAGS_DEBUG = -Wall -O0 -g -std=c11 -pedantic -I$(SRC_DIR) -DLAPACK $(OPTS)
+BUILD_DIR_DEBUG = $(BUILD_DIR)/debug
+OBJS_DEBUG = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR_DEBUG)/%.o)
+DEPS_DEBUG = $(OBJS_DEBUG:.o=.d)
+TARGET_DEBUG = $(BUILD_DIR_DEBUG)/$(TARGET)_debug
 
+# Release版本
+CFLAGS_RELEASE = -Wall -O2 -std=c11 -pedantic -I$(SRC_DIR) -DLAPACK $(OPTS)
+BUILD_DIR_RELEASE = $(BUILD_DIR)/release
+OBJS_RELEASE = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR_RELEASE)/%.o)
+DEPS_RELEASE = $(OBJS_RELEASE:.o=.d)
+TARGET_RELEASE = $(BUILD_DIR_RELEASE)/$(TARGET)
 
-main_rtcm.o 	: $(SRC)/rtk.h
-rtkcmn.o    : $(SRC)/rtk.h
-rinex.o     : $(SRC)/rtk.h
-rtkpos.o    : $(SRC)/rtk.h
-solution.o  : $(SRC)/rtk.h
-lambda.o    : $(SRC)/rtk.h
-myfun.o     : $(SRC)/rtk.h
-sbas.o      : $(SRC)/rtk.h
-preceph.o   : $(SRC)/rtk.h
-pntpos.o    : $(SRC)/rtk.h
-ephemeris.o : $(SRC)/rtk.h
-options.o   : $(SRC)/rtk.h
-ppp.o       : $(SRC)/rtk.h
-ppp_ar.o    : $(SRC)/rtk.h
-rtcm.o      : $(SRC)/rtk.h
-rtcm2.o     : $(SRC)/rtk.h
-rtcm3.o     : $(SRC)/rtk.h
-rtcm3e.o    : $(SRC)/rtk.h
-rtkls.o     : $(SRC)/rtk.h
-tides.o		: $(SRC)/rtk.h
-stream.o	: $(SRC)/rtk.h
-multipath.o : $(SRC)/rtk.h
-cJSON.o 	: $(SRC)/cJSON.h
-fft.o 		: $(SRC)/fft.h
-BandPassFilter.o :$(SRC)/BandPassFilter.h
-logmod.o :$(SRC)/logmod.h
-pos_filter.o :$(SRC)/pos_filter.h
+# ============================================================================
+# 默认目标
+# ============================================================================
 
+.PHONY: all
+all: debug release
 
+.PHONY: debug
+debug: $(TARGET_DEBUG)
+
+.PHONY: release
+release: $(TARGET_RELEASE)
+
+# ============================================================================
+# 编译规则
+# ============================================================================
+
+# Debug版本编译规则
+$(BUILD_DIR_DEBUG)/%.o: $(SRC_DIR)/%.c $(DEPS_INC)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS_COMMON) $(CFLAGS_DEBUG) $(INCS) -c $< -o $@
+
+$(TARGET_DEBUG): $(OBJS_DEBUG)
+	@mkdir -p $(dir $@)
+	$(CC) $(OBJS_DEBUG) -o $@ $(LDFLAGS)
+	@printf ">>>>>>\nDebug Exe has done: $@\n"
+
+# Release版本编译规则
+$(BUILD_DIR_RELEASE)/%.o: $(SRC_DIR)/%.c $(DEPS_INC)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS_COMMON) $(CFLAGS_RELEASE) $(INCS) -c $< -o $@
+
+$(TARGET_RELEASE): $(OBJS_RELEASE)
+	@mkdir -p $(dir $@)
+	$(CC) $(OBJS_RELEASE) -o $@ $(LDFLAGS)
+	@echo "Release Exe has done: $@"
+
+# ============================================================================
+# 代码格式化 (clang-format)
+# ============================================================================
+
+.PHONY: format
+format:
+	@echo "格式化代码..."
+	@clang-format -i $(SRCS) $(DEPS_INC)
+	@echo "代码格式化完成"
+
+.PHONY: format-check
+format-check:
+	@echo "检查代码格式..."
+	@clang-format --dry-run --Werror $(SRCS) $(DEPS_INC) || \
+		(echo "Error 代码格式不符合要求，请运行 'make format'" && exit 1)
+	@echo "Format check pass"
+
+.PHONY: clean
 clean:
-	rm -rf *.o
+	rm -rf $(BUILD_DIR)/debug $(BUILD_DIR)/release
+
