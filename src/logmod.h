@@ -8,6 +8,6 @@
 #pragma warning(disable : 4996)
 #endif
 
-extern void logopen(const char *path, int filesize);
+extern void logopen(const char* path, int filesize);
 extern void logclose();
-extern void logmsg(int level, const char *format, ...);
+extern void logmsg(int level, const char* format, ...);

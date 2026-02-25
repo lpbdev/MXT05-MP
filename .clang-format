@@ -1,0 +1,40 @@
+
+# 大括号模式，Allman or K&R
+BreakBeforeBraces: Allman
+# 基础风格（可根据需求选择，如 LLVM、Google、Mozilla 等）
+BasedOnStyle: Google
+
+# 缩进使用 Tab 键，仅用于缩进（不用于对齐）
+UseTab: Never
+
+# 1 个 Tab 等价于 4 个字符宽度
+IndentWidth: 4
+
+SortIncludes: false  # 关闭头文件排序功能，防止由于头文件的依赖关系导致编译不通过
+
+TabWidth: 4          # 与 IndentWidth 保持一致，确保 Tab 宽度匹配
+ColumnLimit: 100      # 每行最大字符数（超出自动换行）
+IndentCaseLabels: true # switch-case 标签缩进
+  
+AllowShortIfStatementsOnASingleLine: false  #false--if 语句强制换行
+AllowShortLoopsOnASingleLine: false   #false-for/while短语句强制换行
+InsertBraces: true   #true--for/if/while 等语句，强制添加大括号
+
+# 对齐尾部注释
+AlignTrailingComments: true
+
+# 参数对齐
+AlignAfterOpenBracket: BlockIndent  # 或 Align, DontAlign
+
+# 转义换行符对齐
+AlignEscapedNewlines: Left
+
+# 结构体数组对齐
+AlignArrayOfStructures: Right
+
+# 括号对齐方式
+AlignConsecutiveAssignments: true  # 对齐连续的赋值语句
+AlignConsecutiveDeclarations: true  # 对齐连续的声明
+
+PointerAlignment: Left
+
