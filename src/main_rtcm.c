@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #define __USE_MISC
 #ifndef CRTSCTS
-#define CRTSCTS  020000000000
+#define CRTSCTS 020000000000
 #endif
 #include <errno.h>
 #include <termios.h>
@@ -23,139 +23,153 @@
 #endif
 
 #ifdef _MSC_VER
-#include"../src/include/dirent_bak.h"
+#include "../src/include/dirent_bak.h"
 #else
-//#include <dirent.h>
+// #include <dirent.h>
 #endif
 
-rtksvr_t svr;
-nav_t g_nav = { 0 };
-myFile_t oFile = { 0 };
-cfgopt_t g_cfgOpt = { 0 };
-unsigned char trace_flag[64] = { 0 };
+rtksvr_t      svr;
+nav_t         g_nav          = {0};
+myFile_t      oFile          = {0};
+cfgopt_t      g_cfgOpt       = {0};
+unsigned char trace_flag[64] = {0};
 unsigned char rtkReturnValue;
-FILE* fptcp = NULL;
-FILE* fpcof = NULL;
-char configFileFath[MAXSTRPATH] = { 0 };
-char tcpFileFath[MAXSTRPATH] = { 0 };
+FILE*         fptcp                      = NULL;
+FILE*         fpcof                      = NULL;
+char          configFileFath[MAXSTRPATH] = {0};
+char          tcpFileFath[MAXSTRPATH]    = {0};
 
 unsigned char rtcmMode = 2;
-int g_week;
-char logFileSizeName[1024] = { 0 };
-double logFileSize = 100;
-double writeConfigTime = 1;
-double writeDugTime = 1;
+int           g_week;
+char          logFileSizeName[1024] = {0};
+double        logFileSize           = 100;
+double        writeConfigTime       = 1;
+double        writeDugTime          = 1;
 
-#define OBSBASELEN    30
-obsd_t g_baseObsSync[OBSBASELEN][MAXOBS];
-unsigned char g_nbaseObsSync[OBSBASELEN] = { 0 };
-unsigned char g_baseObsSyncIndex = 255;
-unsigned char g_baseObsBuffFull = 0;
+#define OBSBASELEN 30
+obsd_t        g_baseObsSync[OBSBASELEN][MAXOBS];
+unsigned char g_nbaseObsSync[OBSBASELEN] = {0};
+unsigned char g_baseObsSyncIndex         = 255;
+unsigned char g_baseObsBuffFull          = 0;
 
-double g_gpsLam[NFREQ] = { CLIGHT / FREQ1, CLIGHT / FREQ2, CLIGHT / FREQ5 };
-double g_galLam[NFREQ] = { CLIGHT / FREQ1, CLIGHT / FREQ7, CLIGHT / FREQ5 };
-double g_bdsLam[NFREQ] = { CLIGHT / FREQ1_CMP, CLIGHT / FREQ2_CMP, CLIGHT / FREQB2a_CMP,CLIGHT / FREQB2b_CMP,CLIGHT / FREQB1C_CMP,CLIGHT / FREQ3_CMP };
+double g_gpsLam[NFREQ] = {CLIGHT / FREQ1, CLIGHT / FREQ2, CLIGHT / FREQ5};
+double g_galLam[NFREQ] = {CLIGHT / FREQ1, CLIGHT / FREQ7, CLIGHT / FREQ5};
+double g_bdsLam[NFREQ] = {CLIGHT / FREQ1_CMP,   CLIGHT / FREQ2_CMP,   CLIGHT / FREQB2a_CMP,
+                          CLIGHT / FREQB2b_CMP, CLIGHT / FREQB1C_CMP, CLIGHT / FREQ3_CMP};
 
-double g_gloLam[MAXPRNGLO][NFREQ] = { 0.0 };
-obsd_t g_preBaseObsRtk[MAXOBS];
-int g_preBaseObsRtkNum;
-unsigned char level_trace = 0xff;
-double baseRtcmPosition[3] = { 0 };
+double        g_gloLam[MAXPRNGLO][NFREQ] = {0.0};
+obsd_t        g_preBaseObsRtk[MAXOBS];
+int           g_preBaseObsRtkNum;
+unsigned char level_trace         = 0xff;
+double        baseRtcmPosition[3] = {0};
 
 int SELETE_SAT_NUM = 40;
 int NX;
 int NY;
 
 #define BUFFSIZE 32768
-#define NTRIP_MAXRSP        32768       /* max size of ntrip response */
-#define NTRIP_MAXSTR        256         /* max length of mountpoint string */
+#define NTRIP_MAXRSP 32768 /* max size of ntrip response */
+#define NTRIP_MAXSTR 256   /* max length of mountpoint string */
 
 #ifdef WIN32
-#define dev_t               HANDLE
-#define socket_t            SOCKET
+#define dev_t HANDLE
+#define socket_t SOCKET
 typedef int socklen_t;
 #else
-#define dev_t               int
-#define socket_t            int
-#define closesocket         close
+#define dev_t int
+#define socket_t int
+#define closesocket close
 #endif
 
-
-typedef struct {            /* file control type */
-    FILE* fp;               /* file pointer */
-    FILE* fp_tag;           /* file pointer of tag file */
-    FILE* fp_tmp;           /* temporary file pointer for swap */
-    FILE* fp_tag_tmp;       /* temporary file pointer of tag file for swap */
-    char path[MAXSTRPATH];  /* file path */
-    char openpath[MAXSTRPATH]; /* open file path */
-    int mode;               /* file mode */
-    int timetag;            /* time tag flag (0:off,1:on) */
-    int repmode;            /* replay mode (0:master,1:slave) */
-    int offset;             /* time offset (ms) for slave */
-    int size_fpos;          /* file position size (bytes) */
-    gtime_t time;           /* start time */
-    gtime_t wtime;          /* write time */
-    uint32_t tick;          /* start tick */
-    uint32_t tick_f;        /* start tick in file */
-    long fpos_n;            /* next file position */
-    uint32_t tick_n;        /* next tick */
-    double start;           /* start offset (s) */
-    double speed;           /* replay speed (time factor) */
-    double swapintv;        /* swap interval (hr) (0: no swap) */
-    lock_t lock;            /* lock flag */
+typedef struct
+{                                  /* file control type */
+    FILE*    fp;                   /* file pointer */
+    FILE*    fp_tag;               /* file pointer of tag file */
+    FILE*    fp_tmp;               /* temporary file pointer for swap */
+    FILE*    fp_tag_tmp;           /* temporary file pointer of tag file for swap */
+    char     path[MAXSTRPATH];     /* file path */
+    char     openpath[MAXSTRPATH]; /* open file path */
+    int      mode;                 /* file mode */
+    int      timetag;              /* time tag flag (0:off,1:on) */
+    int      repmode;              /* replay mode (0:master,1:slave) */
+    int      offset;               /* time offset (ms) for slave */
+    int      size_fpos;            /* file position size (bytes) */
+    gtime_t  time;                 /* start time */
+    gtime_t  wtime;                /* write time */
+    uint32_t tick;                 /* start tick */
+    uint32_t tick_f;               /* start tick in file */
+    long     fpos_n;               /* next file position */
+    uint32_t tick_n;               /* next tick */
+    double   start;                /* start offset (s) */
+    double   speed;                /* replay speed (time factor) */
+    double   swapintv;             /* swap interval (hr) (0: no swap) */
+    lock_t   lock;                 /* lock flag */
 } file_t;
 
-
-int strtype[3] = { STR_FILE,STR_FILE,SYS_NONE };   //STR_TCPCLI STR_TCPSVR
-int format[3] = { STRFMT_RTCM3,STRFMT_RTCM3,STRFMT_RTCM3 };
-char strpath[3][1024] = { "rover.txt","base.txt","" };
+int  strtype[3]       = {STR_FILE, STR_FILE, SYS_NONE};  // STR_TCPCLI STR_TCPSVR
+int  format[3]        = {STRFMT_RTCM3, STRFMT_RTCM3, STRFMT_RTCM3};
+char strpath[3][1024] = {"rover.txt", "base.txt", ""};
 
 extern void rtksvrlock(rtksvr_t* svr) { lock(&svr->lock); }
 extern void rtksvrunlock(rtksvr_t* svr) { unlock(&svr->lock); }
 
 obsqueue_t Qrover;
-int InitQueue(obsqueue_t* Q)
+int        InitQueue(obsqueue_t* Q)
 {
     Q->rear = -1;
-    return  1;
+    return 1;
 }
 
 int GetHead(obsqueue_t* Q)
 {
     int i, j, k;
     if (Q->rear <= 0)
+    {
         return 0;
-    //printf("GetHead rear=%d time=%d n=%d\n", Q->rear, Q->data[0].data[0].time.time, Q->data[0].n);
+    }
+    // printf("GetHead rear=%d time=%d n=%d\n", Q->rear, Q->data[0].data[0].time.time,
+    // Q->data[0].n);
     if (g_baseObsSyncIndex == 255)
+    {
         return 0;
+    }
     if (Q->data[0].data[0].time.time > g_baseObsSync[g_baseObsSyncIndex - 1][0].time.time)
+    {
         return 0;
+    }
     return 1;
 }
 int EnQueue(obsqueue_t* Q, qobs_t e)
 {
     int i;
-    if (Q->rear == MAXQUEUESIZE || Q->rear == -1) {
+    if (Q->rear == MAXQUEUESIZE || Q->rear == -1)
+    {
         Q->rear = 0;
     }
     Q->data[Q->rear] = e;
     Q->rear++;
-    //printf("EnQueue rear=%d time=%d n=%d\n", Q->rear,e.data[0].time.time, e.n);
-    //printf("-----------------\n");
-    //for (i = 0; i < Q->rear; i++) {
-    //    printf("EnQueue time=%d\n", Q->data[i].data[0].time.time);
-    //}
-    //printf("*****************\n");
-    return  1;
+    // printf("EnQueue rear=%d time=%d n=%d\n", Q->rear,e.data[0].time.time, e.n);
+    // printf("-----------------\n");
+    // for (i = 0; i < Q->rear; i++) {
+    //     printf("EnQueue time=%d\n", Q->data[i].data[0].time.time);
+    // }
+    // printf("*****************\n");
+    return 1;
 }
 
 /* compare observation data -------------------------------------------------*/
 static int cmpobs(const void* p1, const void* p2)
 {
-    obsd_t* q1 = (obsd_t*)p1, * q2 = (obsd_t*)p2;
-    double tt = timediff(q1->time, q2->time);
-    if (fabs(tt) > DTTOL) return tt < 0 ? -1 : 1;
-    if (q1->rcv != q2->rcv) return (int)q1->rcv - (int)q2->rcv;
+    obsd_t *q1 = (obsd_t*)p1, *q2 = (obsd_t*)p2;
+    double  tt = timediff(q1->time, q2->time);
+    if (fabs(tt) > DTTOL)
+    {
+        return tt < 0 ? -1 : 1;
+    }
+    if (q1->rcv != q2->rcv)
+    {
+        return (int)q1->rcv - (int)q2->rcv;
+    }
     return (int)q1->sat - (int)q2->sat;
 }
 
@@ -163,25 +177,34 @@ static int sortobs(obs_t* obs)
 {
     int i, j, n;
 
-    //trace(3, "sortobs: nobs=%d\n", obs->n);
+    // trace(3, "sortobs: nobs=%d\n", obs->n);
 
-    if (obs->n <= 0) return 0;
+    if (obs->n <= 0)
+    {
+        return 0;
+    }
 
     qsort(obs->data, obs->n, sizeof(obsd_t), cmpobs);
 
     /* delete duplicated data */
-    for (i = j = 0; i < obs->n; i++) {
-        if (obs->data[i].sat != obs->data[j].sat ||
-            obs->data[i].rcv != obs->data[j].rcv ||
-            timediff(obs->data[i].time, obs->data[j].time) != 0.0) {
+    for (i = j = 0; i < obs->n; i++)
+    {
+        if (obs->data[i].sat != obs->data[j].sat || obs->data[i].rcv != obs->data[j].rcv ||
+            timediff(obs->data[i].time, obs->data[j].time) != 0.0)
+        {
             obs->data[++j] = obs->data[i];
         }
     }
     obs->n = j + 1;
 
-    for (i = n = 0; i < obs->n; i = j, n++) {
-        for (j = i + 1; j < obs->n; j++) {
-            if (timediff(obs->data[j].time, obs->data[i].time) > DTTOL) break;
+    for (i = n = 0; i < obs->n; i = j, n++)
+    {
+        for (j = i + 1; j < obs->n; j++)
+        {
+            if (timediff(obs->data[j].time, obs->data[i].time) > DTTOL)
+            {
+                break;
+            }
         }
     }
     return n;
@@ -189,42 +212,52 @@ static int sortobs(obs_t* obs)
 
 static void updatesvr(rtksvr_t* svr, int ret, obs_t* obs, int index, int iobs)
 {
-    double pos[3], del[3] = { 0 }, dr[3];
-    int i, n = 0;
+    double pos[3], del[3] = {0}, dr[3];
+    int    i, n           = 0;
 
-    //tracet(4, "updatesvr: ret=%d sat=%2d index=%d\n", ret, sat, index);
+    // tracet(4, "updatesvr: ret=%d sat=%2d index=%d\n", ret, sat, index);
 
-    if (ret == 1) { /* observation data */
-        if (iobs < 128) {
-            for (i = 0; i < obs->n; i++) {
-                //if(obs->data[i].SNR[0]<40*4)continue;
-                svr->obs[index][iobs].data[n] = obs->data[i];
+    if (ret == 1)
+    { /* observation data */
+        if (iobs < 128)
+        {
+            for (i = 0; i < obs->n; i++)
+            {
+                // if(obs->data[i].SNR[0]<40*4)continue;
+                svr->obs[index][iobs].data[n]     = obs->data[i];
                 svr->obs[index][iobs].data[n].rcv = index + 1;
                 n++;
             }
             svr->obs[index][iobs].n = n;
             sortobs(&svr->obs[index][iobs]);
         }
-        //svr->nmsg[index][0]++;
+        // svr->nmsg[index][0]++;
     }
-    else if (ret == 5 && svr->rtk.opt.useRtcmPosFlag == 1) { /* antenna postion parameters */
-        if (index == 1) {
-            for (i = 0; i < 3; i++) {
-                svr->rtk.rb[i] = svr->rtcm[1].sta.pos[i];
+    else if (ret == 5 && svr->rtk.opt.useRtcmPosFlag == 1)
+    { /* antenna postion parameters */
+        if (index == 1)
+        {
+            for (i = 0; i < 3; i++)
+            {
+                svr->rtk.rb[i]      = svr->rtcm[1].sta.pos[i];
                 baseRtcmPosition[i] = svr->rtcm[1].sta.pos[i];
             }
             /* antenna delta */
             ecef2pos(svr->rtk.rb, pos);
-            if (svr->rtcm[1].sta.deltype) { /* xyz */
+            if (svr->rtcm[1].sta.deltype)
+            { /* xyz */
                 del[2] = svr->rtcm[1].sta.hgt;
                 enu2ecef(pos, del, dr);
-                for (i = 0; i < 3; i++) {
+                for (i = 0; i < 3; i++)
+                {
                     svr->rtk.rb[i] += svr->rtcm[1].sta.del[i] + dr[i];
                 }
             }
-            else { /* enu */
+            else
+            { /* enu */
                 enu2ecef(pos, svr->rtcm[1].sta.del, dr);
-                for (i = 0; i < 3; i++) {
+                for (i = 0; i < 3; i++)
+                {
                     svr->rtk.rb[i] += dr[i];
                 }
             }
@@ -234,25 +267,32 @@ static void updatesvr(rtksvr_t* svr, int ret, obs_t* obs, int index, int iobs)
 
 extern int decoderaw(rtksvr_t* svr, int index)
 {
-    obs_t* obs = NULL;
-    int i, ret = 0, fobs = 0;
+    obs_t*        obs = NULL;
+    int           i, ret = 0, fobs = 0;
     unsigned char buff;
-    svr->format[index] = STRFMT_RTCM3;
-    file_t* fp_rtcmfile = (file_t*)svr->stream[index].port;
+    svr->format[index]       = STRFMT_RTCM3;
+    file_t* fp_rtcmfile      = (file_t*)svr->stream[index].port;
     svr->rtcm[index].obsflag = 0;
-    while (!svr->rtcm[index].obsflag) {
-        if (svr->format[index] == STRFMT_RTCM3) {
+    while (!svr->rtcm[index].obsflag)
+    {
+        if (svr->format[index] == STRFMT_RTCM3)
+        {
             svr->rtcm[index].rcv = index;
-            buff = fgetc(fp_rtcmfile->fp);
-            if (feof(fp_rtcmfile->fp)) return  0;
+            buff                 = fgetc(fp_rtcmfile->fp);
+            if (feof(fp_rtcmfile->fp))
+            {
+                return 0;
+            }
             ret = input_rtcm3(svr->rtcm + index, buff);
             obs = &svr->rtcm[index].obs;
-            if (ret != 0) {
-                //printf("decode rtcm3 index=%d ok\n",index);
+            if (ret != 0)
+            {
+                // printf("decode rtcm3 index=%d ok\n",index);
             }
         }
         /* update rtk server */
-        if (ret > 0){
+        if (ret > 0)
+        {
             updatesvr(svr, ret, obs, index, fobs);
             // char id[4];
             // satno2id(obs->data[0].sat, id);
@@ -262,62 +302,70 @@ extern int decoderaw(rtksvr_t* svr, int index)
             // }
         }
         /* observation data received */
-        if (ret == 1) {
-            if (fobs < 128) {
+        if (ret == 1)
+        {
+            if (fobs < 128)
+            {
                 fobs++;
             }
-            else svr->prcout++;
+            else
+            {
+                svr->prcout++;
+            }
         }
     }
     svr->nb[index] = 0;
     return fobs;
 }
 
-
-
-static void outDnyResult(rtksvr_t* svr, char** pbuff, char* s1, unsigned char iniEnuFlag) {
-    if (svr->rtk.opt.kMode == 0) {
-        *pbuff += sprintf(*pbuff, "pos,%s,%d,%d,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,%d;",
-            s1,
-            svr->rtk.sol.stat,
-            svr->rtk.sol.ns[0],
-            svr->rtk.sol.rr_original[0], svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2],
-            svr->rtk.sol.enu_original[0], svr->rtk.sol.enu_original[1], svr->rtk.sol.enu_original[2],
-            svr->rtk.sol.rr_filer[0], svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2],
-            svr->rtk.sol.enu[0], svr->rtk.sol.enu[1], svr->rtk.sol.enu[2],
-            svr->rtk.sol.vel[0], svr->rtk.sol.vel[1], svr->rtk.sol.vel[2],
-            svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
-            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2],
-            iniEnuFlag);
+static void outDnyResult(rtksvr_t* svr, char** pbuff, char* s1, unsigned char iniEnuFlag)
+{
+    if (svr->rtk.opt.kMode == 0)
+    {
+        *pbuff += sprintf(
+            *pbuff,
+            "pos,%s,%d,%d,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%"
+            ".6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,%d;",
+            s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_original[0],
+            svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2], svr->rtk.sol.enu_original[0],
+            svr->rtk.sol.enu_original[1], svr->rtk.sol.enu_original[2], svr->rtk.sol.rr_filer[0],
+            svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
+            svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1],
+            svr->rtk.sol.vel[2], svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
+            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag
+        );
     }
-    else {
-        *pbuff += sprintf(*pbuff, "pos,%s,%d,%d,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,%d;",
-            s1,
-            svr->rtk.sol.stat, svr->rtk.sol.ns[0],
-            svr->rtk.sol.rr_filer[0], svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2],
-            svr->rtk.sol.enu[0], svr->rtk.sol.enu[1], svr->rtk.sol.enu[2],
-            svr->rtk.sol.rr_filer[0], svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2],
-            svr->rtk.sol.enu[0], svr->rtk.sol.enu[1], svr->rtk.sol.enu[2],
-            svr->rtk.sol.vel[0], svr->rtk.sol.vel[1], svr->rtk.sol.vel[2],
-            svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
-            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2],
-            iniEnuFlag);
+    else
+    {
+        *pbuff += sprintf(
+            *pbuff,
+            "pos,%s,%d,%d,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%"
+            ".6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,%d;",
+            s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_filer[0],
+            svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
+            svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.rr_filer[0],
+            svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
+            svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1],
+            svr->rtk.sol.vel[2], svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
+            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag
+        );
     }
     /* OUTPUT FFT Infomation */
-    if (svr->rtk.opt.senceopt == 1) {
+    if (svr->rtk.opt.senceopt == 1)
+    {
         *pbuff += sprintf(*pbuff, "fft,%.4f,%.4f;", svr->rtk.fftFrq[2], svr->rtk.fftPower[2]);
     }
     *pbuff += sprintf(*pbuff, "\n");
 }
-static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
-
-    int i;
-    cJSON* json = NULL;
-    cJSON* json_data = NULL;
+static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff)
+{
+    int    i;
+    cJSON* json          = NULL;
+    cJSON* json_data     = NULL;
     cJSON* json_data_tmp = NULL;
-    char ackBuff[4096] = { 0 };
-    char idStr[64] = { 0 };
-    //printf("%s\n", buff);
+    char   ackBuff[4096] = {0};
+    char   idStr[64]     = {0};
+    // printf("%s\n", buff);
     buff = strstr(buff, "{");
     printf("%s\n", buff);
     json = cJSON_Parse(buff);
@@ -329,7 +377,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     }
 
     json_data_tmp = cJSON_GetObjectItem(json, "taskID");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("timeInterval json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,ID,failed;\n");
@@ -338,19 +387,19 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     }
     strcpy(idStr, json_data_tmp->valuestring);
 
-
-    //json_data_tmp = cJSON_GetObjectItem(json, "timeInterval");
-    //if (json_data_tmp == NULL) {
-    //    printf("timeInterval json_data_tmp is null\n");
-    //    cJSON_Delete(json);
-    //    sprintf(ackBuff, "ack,%s,timeInterval,failed;\n", idStr);
-    //    strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //    return 0;
-    //}
-    //cfgOpt->timeInterval = json_data_tmp->valueint;
+    // json_data_tmp = cJSON_GetObjectItem(json, "timeInterval");
+    // if (json_data_tmp == NULL) {
+    //     printf("timeInterval json_data_tmp is null\n");
+    //     cJSON_Delete(json);
+    //     sprintf(ackBuff, "ack,%s,timeInterval,failed;\n", idStr);
+    //     strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+    //     return 0;
+    // }
+    // cfgOpt->timeInterval = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "freq");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("freq json_data_tmp is null\n");
         cJSON_Delete(json);
         return 0;
@@ -358,7 +407,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->freq = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "iono");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("iono json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,iono,failed;\n", idStr);
@@ -368,7 +418,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->iono = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "trop");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("trop json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,trop,failed;\n", idStr);
@@ -378,7 +429,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->trop = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "tides");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("tides json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,tides,failed;\n", idStr);
@@ -388,7 +440,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->tides = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "elevMin");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("elevMin json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,elevMin,failed;\n", idStr);
@@ -398,7 +451,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->elevMin = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "cn0Min");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("cn0Min json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,cn0Min,failed;\n", idStr);
@@ -408,7 +462,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->cn0Min = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "gdopThld");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("gdopThld json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,gdopThld,failed;\n", idStr);
@@ -417,9 +472,9 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     }
     cfgOpt->gdopThld = json_data_tmp->valuedouble;
 
-
     json_data_tmp = cJSON_GetObjectItem(json, "diffAge");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("diffAgeMax json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,diffAge,failed;\n", idStr);
@@ -429,7 +484,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->diffAgeMax = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "sys");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("sys json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,sys,failed;\n", idStr);
@@ -439,7 +495,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->sys = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "postResThld");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("postResThld json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,postResThld,failed;\n", idStr);
@@ -449,7 +506,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->postResThld = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "kMode");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("kMode json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,kMode,failed;\n", idStr);
@@ -459,7 +517,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->kMode = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "buffSize");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("buffSize json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,buffSize,failed;\n", idStr);
@@ -469,7 +528,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->buffSize = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "pcvE");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("pcvE json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,pcvE,failed;\n", idStr);
@@ -479,7 +539,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->stationPCV[0] = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "pcvN");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("pcvN json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,pcvN,failed;\n", idStr);
@@ -489,7 +550,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->stationPCV[1] = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "pcvU");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("pcvU json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,pcvU,failed;\n", idStr);
@@ -499,7 +561,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->stationPCV[2] = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "scene");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("senceopt json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,scene,failed;\n", idStr);
@@ -508,18 +571,19 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     }
     cfgOpt->senceopt = json_data_tmp->valueint;
 
-    //json_data_tmp = cJSON_GetObjectItem(json, "smoothWindowTime");
-    //if (json_data_tmp == NULL) {
-    //    printf("smoothWindowsTime json_data_tmp is null\n");
-    //    cJSON_Delete(json);
-    //    sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
-    //    strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //    return 0;
-    //}
-    //cfgOpt->smoothWindowsTime = json_data_tmp->valueint;
+    // json_data_tmp = cJSON_GetObjectItem(json, "smoothWindowTime");
+    // if (json_data_tmp == NULL) {
+    //     printf("smoothWindowsTime json_data_tmp is null\n");
+    //     cJSON_Delete(json);
+    //     sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
+    //     strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+    //     return 0;
+    // }
+    // cfgOpt->smoothWindowsTime = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "initTime");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("initEnuTime json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,initTime,failed;\n", idStr);
@@ -529,7 +593,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->initEnuTime = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "detectSensitivity");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("detectSensitivity json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,detectSensitivity,failed;\n", idStr);
@@ -539,7 +604,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->detectSensitivity = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "typeSol");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("typeSol json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,typeSol,failed;\n", idStr);
@@ -548,9 +614,9 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     }
     cfgOpt->typeSol = json_data_tmp->valueint;
 
-
     json_data_tmp = cJSON_GetObjectItem(json, "timeIntervalSolution");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("timeIntervalSolution json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,timeIntervalSolution,failed;\n", idStr);
@@ -560,7 +626,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->timeIntervalSolution = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "minFixSat");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("minFixSat json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,minFixSat,failed;\n", idStr);
@@ -570,7 +637,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->minFixSat = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "maxDelSat");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("maxDelSat json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,maxDelSat,failed;\n", idStr);
@@ -580,7 +648,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->maxDelSat = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "gpsMask");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("gpsMask json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,gpsMask,failed;\n", idStr);
@@ -590,7 +659,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->gpsMask = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "qzssMask");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("qzsMask json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,qzssMask,failed\n", idStr);
@@ -600,7 +670,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->qzssMask = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "glonassMask");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("glonassMask json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,glonassMask,failed;\n", idStr);
@@ -610,7 +681,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->glonassMask = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "galieoMask");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("galieoMask json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,galieoMask,failed;\n", idStr);
@@ -620,7 +692,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->galieoMask = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "beidouMask");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("bdsMask json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,beidouMask,failed;\n", idStr);
@@ -630,7 +703,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->bdsMask = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "minSatRes");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("minSatRes json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,minSatRes,failed;\n", idStr);
@@ -640,7 +714,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->minSatRes = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "iggiiik0");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("iggiiik0 json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,iggiiik0,failed;\n", idStr);
@@ -650,7 +725,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->iggiiik0 = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "iggiiik1");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("iggiiik1 json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,iggiiik1,failed;\n", idStr);
@@ -660,7 +736,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     cfgOpt->iggiiik1 = json_data_tmp->valuedouble;
 
     json_data_tmp = cJSON_GetObjectItem(json, "levelTrace");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("levelTrace json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,levelTrace,failed;\n", idStr);
@@ -670,7 +747,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
     level_trace = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "logFileSize");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("logFileSize json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,logFileSize,failed;\n", idStr);
@@ -678,12 +756,14 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
         return 0;
     }
     logFileSize = json_data_tmp->valueint;
-    if (logFileSize <= 0) {
+    if (logFileSize <= 0)
+    {
         logFileSize = 100;
     }
 
     json_data_tmp = cJSON_GetObjectItem(json, "writeDugTIme");
-    if (json_data_tmp == NULL) {
+    if (json_data_tmp == NULL)
+    {
         printf("writeDugTIme json_data_tmp is null\n");
         cJSON_Delete(json);
         sprintf(ackBuff, "ack,%s,writeDugTIme,failed;\n", idStr);
@@ -691,7 +771,8 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff) {
         return 0;
     }
     writeDugTime = json_data_tmp->valueint;
-    if (writeDugTime <= 0) {
+    if (writeDugTime <= 0)
+    {
         writeDugTime = 10;
     }
 
@@ -709,59 +790,67 @@ static DWORD WINAPI rtksvrthread(void* arg)
 static void* rtksvrthread(void* arg)
 #endif
 {
-    int i, j, f, k, m, n, cnt, dtMinIndex,  cputime, fobs[2] = { 0 }, fnobs,  size, ouInterval, fixCnt = 0;
-    double tt, tow, dtMin, dt[OBSBASELEN] = { 0 };
-    unsigned char* p, * q, iniEnuFlag = 0, sys, prn;
-    unsigned int cycle = 0, tick, tick1hz = 0, iniEnuCnt = 0, epochCnt = 0;
-    double iniEnu[3], pos[3], dr[3];
-    gtime_t time;
-    obsd_t obs[MAXOBS * 2] = { 0 }; /* for rover and base */
-    obsd_t obsPre[MAXOBS];
-    obsd_t obsepoch[MAXOBS * 2];
-    int nobsepoch = 0;
-    int nobsPre = 0;
-    solopt_t sopt = solopt_default;
-    rtksvr_t* svr = (rtksvr_t*)arg;
-    sopt.posf = 2; //0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
-    sopt.times = 0;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
-    sopt.outvel = 0;
-    svr->tick = tickget();
-    svr->cycle = 1000;
-    char* buff = (char*)(calloc(sizeof(char), DEBUG_BUFF_LEN));
-    char* pbuff;
-    char s1[32];
-    gtime_t obstime = { 0 };
-    qobs_t qobs;
-
+    int i, j, f, k, m, n, cnt, dtMinIndex, cputime, fobs[2] = {0}, fnobs, size, ouInterval,
+                                                    fixCnt = 0;
+    double         tt, tow, dtMin, dt[OBSBASELEN] = {0};
+    unsigned char *p, *q, iniEnuFlag = 0, sys, prn;
+    unsigned int   cycle = 0, tick, tick1hz = 0, iniEnuCnt = 0, epochCnt = 0;
+    double         iniEnu[3], pos[3], dr[3];
+    gtime_t        time;
+    obsd_t         obs[MAXOBS * 2] = {0}; /* for rover and base */
+    obsd_t         obsPre[MAXOBS];
+    obsd_t         obsepoch[MAXOBS * 2];
+    int            nobsepoch = 0;
+    int            nobsPre   = 0;
+    solopt_t       sopt      = solopt_default;
+    rtksvr_t*      svr       = (rtksvr_t*)arg;
+    sopt.posf                = 2;  // 0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
+    sopt.times               = 0;  // 0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
+    sopt.outvel              = 0;
+    svr->tick                = tickget();
+    svr->cycle               = 1000;
+    char*   buff             = (char*)(calloc(sizeof(char), DEBUG_BUFF_LEN));
+    char*   pbuff;
+    char    s1[32];
+    gtime_t obstime = {0};
+    qobs_t  qobs;
 
 #ifndef WIN32
-    struct stat fstat = { 0 };
+    struct stat fstat = {0};
 #endif
     for (cycle = 0; svr->state; cycle++)
     {
         tick = tickget();
 #ifdef _MSC_VER  // Redundant Code
         WIN32_FIND_DATA fileInfo;
-        HANDLE hFind;
-        DWORD fileSize;
-        const char* fileName = tcpFileFath;
-        hFind = FindFirstFile(tcpFileFath, &fileInfo);
+        HANDLE          hFind;
+        DWORD           fileSize;
+        const char*     fileName = tcpFileFath;
+        hFind                    = FindFirstFile(tcpFileFath, &fileInfo);
         if (hFind != INVALID_HANDLE_VALUE)
+        {
             fileSize = fileInfo.nFileSizeLow;
+        }
         FindClose(hFind);
 #endif
         FILE* fp_rover = ((file_t*)svr->stream[0].port)->fp;
-        FILE* fp_base = ((file_t*)svr->stream[1].port)->fp;
+        FILE* fp_base  = ((file_t*)svr->stream[1].port)->fp;
         fobs[0] = fobs[1] = 0;
-        while (!feof(fp_rover) || !feof(fp_base)) {
+        while (!feof(fp_rover) || !feof(fp_base))
+        {
             for (i = 0; i < 2; i++)
-            {   
+            {
                 // printf("stream path: %s\n",svr->stream[1].path);
-                fobs[i] = decoderaw(svr, i);//解码rtcm data and ssr  返回每次从流里面读取以采样间隔为单位的组数
+                fobs[i] = decoderaw(
+                    svr, i
+                );  // 解码rtcm data and ssr  返回每次从流里面读取以采样间隔为单位的组数
             }
             while (svr->rtcm[0].time.time != svr->rtcm[1].time.time)
             {
-                if (feof(fp_rover) || feof(fp_base)) break;
+                if (feof(fp_rover) || feof(fp_base))
+                {
+                    break;
+                }
                 if (svr->rtcm[0].time.time > svr->rtcm[1].time.time)
                 {
                     fobs[1] = decoderaw(svr, 1);
@@ -772,62 +861,112 @@ static void* rtksvrthread(void* arg)
                 }
             }
             break;
-
         }
-        if (feof(fp_rover)) {
+        if (feof(fp_rover))
+        {
             free(buff);
             return 0;
         }
-        for (k = 0; k < fobs[1]; k++) {
+        for (k = 0; k < fobs[1]; k++)
+        {
             qobs.n = 0;
-            //if (svr->obs[1][k].data[0].time.time % 15 != 0)continue;
-            //printf( "k=%d base  time=%d\n", k, svr->obs[1][k].data[0].time.time);
+            // if (svr->obs[1][k].data[0].time.time % 15 != 0)continue;
+            // printf( "k=%d base  time=%d\n", k, svr->obs[1][k].data[0].time.time);
             trace(2, "k=%d base  time=%d\n", k, svr->obs[1][k].data[0].time.time);
-            if (g_baseObsSyncIndex >= OBSBASELEN) {
+            if (g_baseObsSyncIndex >= OBSBASELEN)
+            {
                 g_baseObsSyncIndex = 0;
-                g_baseObsBuffFull = 1;
+                g_baseObsBuffFull  = 1;
             }
             g_nbaseObsSync[g_baseObsSyncIndex] = 0;
-            for (j = 0; j < svr->obs[1][k].n; j++) {
-                for (f = 0; f < NFREQ; f++)svr->obs[1][k].data[j].LockTime[f] = 3000;
+            for (j = 0; j < svr->obs[1][k].n; j++)
+            {
+                for (f = 0; f < NFREQ; f++)
+                {
+                    svr->obs[1][k].data[j].LockTime[f] = 3000;
+                }
                 g_baseObsSync[g_baseObsSyncIndex][j] = svr->obs[1][k].data[j];
                 g_nbaseObsSync[g_baseObsSyncIndex]++;
             }
             g_baseObsSyncIndex++;
         }
-        trace(2,"svr->rtk.opt.cn0Min*4, %d\n",svr->rtk.opt.cn0Min*4);
-        for (i = 0; i < fobs[0]; i++) {
-            //if (svr->obs[0][i].data[0].time.time % 15 != 0)continue;
+        trace(2, "svr->rtk.opt.cn0Min*4, %d\n", svr->rtk.opt.cn0Min * 4);
+        for (i = 0; i < fobs[0]; i++)
+        {
+            // if (svr->obs[0][i].data[0].time.time % 15 != 0)continue;
             trace(0x10, "k=%d rover time=%d\n", i, svr->obs[0][i].data[0].time.time);
             n = 0;
-            for (j = 0; j < MAXSAT; j++) {
-                for (f = 0; f < NFREQ; f++)    svr->rtk.ssat[j].SNR[f] = 0;
+            for (j = 0; j < MAXSAT; j++)
+            {
+                for (f = 0; f < NFREQ; f++)
+                {
+                    svr->rtk.ssat[j].SNR[f] = 0;
+                }
             }
 
-            for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++) {
+            for (j = 0; j < svr->obs[0][i].n && n < MAXOBS * 2; j++)
+            {
                 sys = satsys(svr->obs[0][i].data[j].sat, &prn);
-                if (sys != SYS_BDS) continue;
+                if (sys != SYS_BDS)
+                {
+                    continue;
+                }
 
-				if (!(svr->rtk.opt.sys &  1) && sys == SYS_GPS) continue;
-				if (!(svr->rtk.opt.sys &  2) && sys == SYS_QZS) continue;
-				if (!(svr->rtk.opt.sys &  4) && sys == SYS_BDS) continue;
-				if (!(svr->rtk.opt.sys &  8) && sys == SYS_GAL) continue;
-				if (!(svr->rtk.opt.sys & 16) && sys == SYS_GLO)continue;
-				if (sys == SYS_GPS && svr->rtk.opt.gpsMask >= 0) {
-					if (!((svr->rtk.opt.gpsMask >> (prn - 1)) & 1)) continue;
-				}
-				if (sys == SYS_QZS && svr->rtk.opt.qzssMask >= 0) {
-					if (!((svr->rtk.opt.qzssMask >> (prn - MINPRNQZS - 1)) & 1)) continue;
-				}
-				if (sys == SYS_BDS && svr->rtk.opt.bdsMask >= 0) {
-					if (!((svr->rtk.opt.bdsMask >> (prn - 1)) & 1)) continue;
-				}
-				if (sys == SYS_GAL && svr->rtk.opt.galieoMask >= 0) {
-					if (!((svr->rtk.opt.galieoMask >> (prn - 1)) & 1)) continue;
-				}
-				if (sys == SYS_GLO && svr->rtk.opt.glonassMask >= 0) {
-					if (!((svr->rtk.opt.glonassMask >> (prn - 1)) & 1)) continue;
-				}
+                if (!(svr->rtk.opt.sys & 1) && sys == SYS_GPS)
+                {
+                    continue;
+                }
+                if (!(svr->rtk.opt.sys & 2) && sys == SYS_QZS)
+                {
+                    continue;
+                }
+                if (!(svr->rtk.opt.sys & 4) && sys == SYS_BDS)
+                {
+                    continue;
+                }
+                if (!(svr->rtk.opt.sys & 8) && sys == SYS_GAL)
+                {
+                    continue;
+                }
+                if (!(svr->rtk.opt.sys & 16) && sys == SYS_GLO)
+                {
+                    continue;
+                }
+                if (sys == SYS_GPS && svr->rtk.opt.gpsMask >= 0)
+                {
+                    if (!((svr->rtk.opt.gpsMask >> (prn - 1)) & 1))
+                    {
+                        continue;
+                    }
+                }
+                if (sys == SYS_QZS && svr->rtk.opt.qzssMask >= 0)
+                {
+                    if (!((svr->rtk.opt.qzssMask >> (prn - MINPRNQZS - 1)) & 1))
+                    {
+                        continue;
+                    }
+                }
+                if (sys == SYS_BDS && svr->rtk.opt.bdsMask >= 0)
+                {
+                    if (!((svr->rtk.opt.bdsMask >> (prn - 1)) & 1))
+                    {
+                        continue;
+                    }
+                }
+                if (sys == SYS_GAL && svr->rtk.opt.galieoMask >= 0)
+                {
+                    if (!((svr->rtk.opt.galieoMask >> (prn - 1)) & 1))
+                    {
+                        continue;
+                    }
+                }
+                if (sys == SYS_GLO && svr->rtk.opt.glonassMask >= 0)
+                {
+                    if (!((svr->rtk.opt.glonassMask >> (prn - 1)) & 1))
+                    {
+                        continue;
+                    }
+                }
 
                 // svr->rtk.opt.freq=1;
                 obs[n] = svr->obs[0][i].data[j];
@@ -850,10 +989,13 @@ static void* rtksvrthread(void* arg)
                     obs[n].P[4] = obs[n].L[4] = obs[n].D[4] = 0.0;
                     obs[n].P[5] = obs[n].L[5] = obs[n].D[5] = 0.0;
                 }
-                for (f = 0; f < NFREQ; f++) 	obs[n].LockTime[f] = 3000;
+                for (f = 0; f < NFREQ; f++)
+                {
+                    obs[n].LockTime[f] = 3000;
+                }
                 for (k = 0; k < NFREQ; k++)
                 {
-                    if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4|| obs[n].LCK[k]<8)
+                    if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4 || obs[n].LCK[k] < 8)
                     {
                         obs[n].P[k] = obs[n].L[k] = obs[n].D[k] = 0.0;
                     }
@@ -863,36 +1005,48 @@ static void* rtksvrthread(void* arg)
                 {
                     for (f = 0; f < NFREQ; f++)
                     {
-                        if (obs[n].P[f] != 0.0) cnt++;
+                        if (obs[n].P[f] != 0.0)
+                        {
+                            cnt++;
+                        }
                     }
                     for (f = 0; f < NFREQ; f++)
                     {
                         if (cnt >= 2 && f >= 3)
+                        {
                             obs[n].P[f] = obs[n].L[f] = 0.0;
+                        }
                     }
                 }
                 n++;
             }
             qobs.n = 0;
-            for (j = 0; j < n; j++) {
+            for (j = 0; j < n; j++)
+            {
                 qobs.data[j] = obs[j];
-                qobs.n = qobs.n + 1;
+                qobs.n       = qobs.n + 1;
             }
             if (qobs.n > 0)
+            {
                 EnQueue(&Qrover, qobs);
+            }
 
-            //收到测站数据即计算测站星空图，并发送数据 避免在后面缺基站数据，不进解算，无法计算星空图（阻塞后 无法发送该数）
-            for (j = 0; j < MAXSAT; j++) {
-                svr->rtk.ssat[j].vs = 0;
+            // 收到测站数据即计算测站星空图，并发送数据
+            // 避免在后面缺基站数据，不进解算，无法计算星空图（阻塞后 无法发送该数）
+            for (j = 0; j < MAXSAT; j++)
+            {
+                svr->rtk.ssat[j].vs         = 0;
                 svr->rtk.ssat[j].azel[0][0] = svr->rtk.ssat[j].azel[0][1] = 0.0;
                 svr->rtk.ssat[j].azel[1][0] = svr->rtk.ssat[j].azel[1][1] = 0.0;
-                svr->rtk.ssat[j].rs[0] = 0.0;
-                svr->rtk.ssat[j].rs[1] = 0.0;
-                svr->rtk.ssat[j].rs[2] = 0.0;
+                svr->rtk.ssat[j].rs[0]                                    = 0.0;
+                svr->rtk.ssat[j].rs[1]                                    = 0.0;
+                svr->rtk.ssat[j].rs[2]                                    = 0.0;
                 svr->rtk.ssat[j].SNR[0] = svr->rtk.ssat[j].SNR[1] = svr->rtk.ssat[j].SNR[2] =
-                    svr->rtk.ssat[j].SNR[3] = svr->rtk.ssat[j].SNR[4] = svr->rtk.ssat[j].SNR[5] = 0.0;
+                    svr->rtk.ssat[j].SNR[3] = svr->rtk.ssat[j].SNR[4] = svr->rtk.ssat[j].SNR[5] =
+                        0.0;
             }
-            for (j = 0; j < n; j++) {
+            for (j = 0; j < n; j++)
+            {
                 svr->rtk.ssat[obs[j].sat - 1].SNR[0] = obs[j].SNR[0];
                 svr->rtk.ssat[obs[j].sat - 1].SNR[1] = obs[j].SNR[1];
                 svr->rtk.ssat[obs[j].sat - 1].SNR[2] = obs[j].SNR[2];
@@ -902,15 +1056,18 @@ static void* rtksvrthread(void* arg)
             }
         }
         qobs.n = 0;
-        while (GetHead(&Qrover)) {
+        while (GetHead(&Qrover))
+        {
             qobs = Qrover.data[0];
-            for (i = 1; i < Qrover.rear; i++) {
+            for (i = 1; i < Qrover.rear; i++)
+            {
                 Qrover.data[i - 1] = Qrover.data[i];
             }
             Qrover.rear--;
             n = 0;
-            for (i = 0; i < qobs.n; i++) {
-                obs[n] = qobs.data[i];
+            for (i = 0; i < qobs.n; i++)
+            {
+                obs[n]                               = qobs.data[i];
                 svr->rtk.ssat[obs[n].sat - 1].SNR[0] = obs[n].SNR[0];
                 svr->rtk.ssat[obs[n].sat - 1].SNR[1] = obs[n].SNR[1];
                 svr->rtk.ssat[obs[n].sat - 1].SNR[2] = obs[n].SNR[2];
@@ -918,156 +1075,189 @@ static void* rtksvrthread(void* arg)
                 svr->rtk.ssat[obs[n].sat - 1].SNR[4] = obs[n].SNR[4];
                 svr->rtk.ssat[obs[n].sat - 1].SNR[5] = obs[n].SNR[5];
 
-
                 n++;
             }
 
             //-----------------------------find the closest time--------------------
-            dtMin = 9999.9;
+            dtMin      = 9999.9;
             dtMinIndex = -1;
-            for (j = 0; j < OBSBASELEN; j++) {
+            for (j = 0; j < OBSBASELEN; j++)
+            {
                 dt[j] = timediff(g_baseObsSync[j][0].time, obs[0].time);
-                if (fabs(dt[j]) < fabs(dtMin)) {
-                    dtMin = dt[j];
+                if (fabs(dt[j]) < fabs(dtMin))
+                {
+                    dtMin      = dt[j];
                     dtMinIndex = j;
                 }
             }
-            if (dtMinIndex != -1) {
-                for (k = 0; k < g_nbaseObsSync[dtMinIndex]; k++) {
+            if (dtMinIndex != -1)
+            {
+                for (k = 0; k < g_nbaseObsSync[dtMinIndex]; k++)
+                {
                     obs[n + k] = g_baseObsSync[dtMinIndex][k];
                 }
                 n = n + g_nbaseObsSync[dtMinIndex];
             }
-            trace(0x10, "dt:%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", dt[0], dt[1], dt[2], dt[3], dt[4], dt[5], dt[6], dt[7], dt[8], dt[9]);
-
+            trace(
+                0x10, "dt:%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", dt[0], dt[1], dt[2],
+                dt[3], dt[4], dt[5], dt[6], dt[7], dt[8], dt[9]
+            );
 
             nobsepoch = 0;
-            for (k = 0; k < n; k++) {
-                if (obs[k].rcv == 1) {
+            for (k = 0; k < n; k++)
+            {
+                if (obs[k].rcv == 1)
+                {
                     obsepoch[nobsepoch++] = obs[k];
                 }
             }
-            for (k = 0; k < nobsPre; k++) {
-                obsepoch[nobsepoch] = obsPre[k];
+            for (k = 0; k < nobsPre; k++)
+            {
+                obsepoch[nobsepoch]     = obsPre[k];
                 obsepoch[nobsepoch].rcv = 2;
                 nobsepoch++;
             }
-                    
+
             nobsPre = 0;
-            for (k = 0; k < n; k++) {
-                if (obs[k].rcv == 1) {
+            for (k = 0; k < n; k++)
+            {
+                if (obs[k].rcv == 1)
+                {
                     nobsPre++;
                     obsPre[k] = obs[k];
                 }
             }
 
-
             // printf("mak%ld, %.0f;\n", obs[0].time.time, svr->rtk.opt.timeInterval);
 
-            if(svr->rtk.te.time !=0.0 && timediff(obs[0].time, svr->rtk.te)>0){
+            if (svr->rtk.te.time != 0.0 && timediff(obs[0].time, svr->rtk.te) > 0)
+            {
                 printf("Time END!\n");
                 return 0;
             }
 
-            if( obs[0].time.time%((int)svr->rtk.opt.timeInterval)!= 0)
+            if (obs[0].time.time % ((int)svr->rtk.opt.timeInterval) != 0)
             {
                 continue;
-            } 
+            }
             trace(0xff, "------------rtk dynamics-------------\n");
-            
+
             trace(2, "kalman start \n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
             trace(2, "kalman end \n");
             time = svr->rtk.sol.time;
-            if (sopt.times == 3) {
+            if (sopt.times == 3)
+            {
                 time = gpst2utc(time);
                 time.time += 3600 * 8;
             }
             time2str(time, s1, 3);
-            if (outsol(oFile.fpOut[1], &svr->rtk, &svr->rtk.sol, svr->rtk.rb, &sopt)) {
+            if (outsol(oFile.fpOut[1], &svr->rtk, &svr->rtk.sol, svr->rtk.rb, &sopt))
+            {
                 tt = timediff(svr->rtk.sol.time, svr->rtk.sol.time_pre);
-                if (svr->rtk.sol.rr_pre[0] != 0.0 && svr->rtk.sol.rr_pre[1] != 0.0 && svr->rtk.sol.rr_pre[2] != 0.0 && tt != 0.0) {
-                    for (j = 0; j < 3; j++) {
+                if (svr->rtk.sol.rr_pre[0] != 0.0 && svr->rtk.sol.rr_pre[1] != 0.0 &&
+                    svr->rtk.sol.rr_pre[2] != 0.0 && tt != 0.0)
+                {
+                    for (j = 0; j < 3; j++)
+                    {
                         svr->rtk.sol.vel[j] = (svr->rtk.sol.rr[j] - svr->rtk.sol.rr_pre[j]) / tt;
                     }
                 }
-                if (svr->rtk.sol.vel_pre[0] != 0.0 && svr->rtk.sol.vel_pre[1] != 0.0 && svr->rtk.sol.vel_pre[2] != 0.0 && tt != 0.0) {
-                    for (j = 0; j < 3; j++) {
+                if (svr->rtk.sol.vel_pre[0] != 0.0 && svr->rtk.sol.vel_pre[1] != 0.0 &&
+                    svr->rtk.sol.vel_pre[2] != 0.0 && tt != 0.0)
+                {
+                    for (j = 0; j < 3; j++)
+                    {
                         svr->rtk.sol.acc[j] = (svr->rtk.sol.vel[j] - svr->rtk.sol.vel_pre[j]) / tt;
                     }
                 }
 
-                if (svr->rtk.tt != 0.0) {
-                    if (svr->rtk.enuWindwoIndex[0] * (double)svr->rtk.opt.timeInterval >= (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        svr->rtk.enuWindwoIndex[1] * (double)svr->rtk.opt.timeInterval >= (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        svr->rtk.enuWindwoIndex[2] * (double)svr->rtk.opt.timeInterval >= (svr->rtk.opt.initEnuTime * 3600.0) && iniEnuFlag == 0)
+                if (svr->rtk.tt != 0.0)
+                {
+                    if (svr->rtk.enuWindwoIndex[0] * (double)svr->rtk.opt.timeInterval >=
+                            (svr->rtk.opt.initEnuTime * 3600.0) &&
+                        svr->rtk.enuWindwoIndex[1] * (double)svr->rtk.opt.timeInterval >=
+                            (svr->rtk.opt.initEnuTime * 3600.0) &&
+                        svr->rtk.enuWindwoIndex[2] * (double)svr->rtk.opt.timeInterval >=
+                            (svr->rtk.opt.initEnuTime * 3600.0) &&
+                        iniEnuFlag == 0)
+                    {
                         iniEnuFlag = 1;
+                    }
                 }
                 /* OUTPUT Pos Infomation */
                 memset(buff, 0, DEBUG_BUFF_LEN);
                 pbuff = buff;
                 outDnyResult(svr, &pbuff, s1, iniEnuFlag);
                 if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0)
+                {
                     strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
+                }
 
-
-                for (j = 0; j < 3; j++) {
-                    svr->rtk.sol.rr_pre[j] = svr->rtk.sol.rr[j];
+                for (j = 0; j < 3; j++)
+                {
+                    svr->rtk.sol.rr_pre[j]  = svr->rtk.sol.rr[j];
                     svr->rtk.sol.vel_pre[j] = svr->rtk.sol.vel[j];
                 }
                 svr->rtk.sol.time_pre = svr->rtk.sol.time;
                 outResult(&svr->rtk, &sopt);
-
             }
 
-
             rtksvrunlock(svr);
-            if (svr->rtk.sol.stat != SOLQ_NONE) {
+            if (svr->rtk.sol.stat != SOLQ_NONE)
+            {
                 /* adjust current time */
                 tt = (int)(tickget() - tick) / 1000.0 + DTTOL;
                 timeset(gpst2utc(timeadd(svr->rtk.sol.time, tt)));
             }
             /* if cpu overload, inclement obs outage counter and break */
-//            if ((int)(tickget() - tick) >= svr->cycle) {
-//                svr->prcout += fobs[0] - i - 1;
-//#if 0 /* omitted v.2.4.1 */
-//                break;
-//#endif
-//            }
-            //sleepms(1000);
+            //            if ((int)(tickget() - tick) >= svr->cycle) {
+            //                svr->prcout += fobs[0] - i - 1;
+            // #if 0 /* omitted v.2.4.1 */
+            //                break;
+            // #endif
+            //            }
+            // sleepms(1000);
         }
         /* send null solution if no solution (1hz) */
-        if (svr->rtk.sol.stat == SOLQ_NONE && (int)(tick - tick1hz) >= 1000) {
+        if (svr->rtk.sol.stat == SOLQ_NONE && (int)(tick - tick1hz) >= 1000)
+        {
             tick1hz = tick;
         }
 
-        if ((cputime = (int)(tickget() - tick)) > 0) {
+        if ((cputime = (int)(tickget() - tick)) > 0)
+        {
             svr->cputime = cputime;
         }
         fobs[0] = fobs[1] = 0;
         /* sleep until next cycle */
-        //sleepms(svr->cycle - cputime);
-        //sleepms(100);
+        // sleepms(svr->cycle - cputime);
+        // sleepms(100);
     }
     free(buff);
     return 0;
 }
 
-
-void split(char* src, const char* separator, char** dest, int* num) {
+void split(char* src, const char* separator, char** dest, int* num)
+{
     char* pNext;
     char* p;
-    int count = 0;
+    int   count = 0;
     if (src == NULL || strlen(src) == 0)
+    {
         return;
+    }
     if (separator == NULL || strlen(separator) == 0)
+    {
         return;
+    }
 #ifdef WIN32
     pNext = strtok_s(src, separator, &p);
 #else
     pNext = strtok_r(src, separator, &p);
 #endif
-    while (pNext != NULL) {
+    while (pNext != NULL)
+    {
         *dest++ = pNext;
         ++count;
 #ifdef WIN32
@@ -1078,182 +1268,222 @@ void split(char* src, const char* separator, char** dest, int* num) {
     }
     *num = count;
 }
-extern FILE* fp_trace;     /* file pointer of trace */
-int main(int argc, char** argv)
+extern FILE* fp_trace; /* file pointer of trace */
+int          main(int argc, char** argv)
 {
     solopt_t sopt = solopt_default;
-    int i, len, rw;
-    char* cfgfile;
+    int      i, len, rw;
+    char*    cfgfile;
     initCfgOpt(&g_cfgOpt);
     setCfgOpt(g_cfgOpt, &(svr.rtk.opt));
 
     printf("version:%d\n", SVN_VERSION);
     InitQueue(&Qrover);
-    int trace_level=0;
+    int trace_level = 0;
 
-    //int* strs = strtype;
-    char* paths1[] = { strpath[0],strpath[1],strpath[2] };
-    char** paths = paths1;
-    char addr[256] = "", port[256] = "", user[256] = { 0 }, passwd[256] = { 0 };
-    double enuAve[3] = { 0.0 };
-    unsigned int enuAveCnt[3] = { 0 };
-    int m, n, startFlag = 0, endFlag = 0, num = 0;
-    char* revbuf[64] = { 0 };
-    double rb[3] = { 0 };
-    char infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\kunchi", projname[128];
+    // int* strs = strtype;
+    char*        paths1[]  = {strpath[0], strpath[1], strpath[2]};
+    char**       paths     = paths1;
+    char         addr[256] = "", port[256] = "", user[256] = {0}, passwd[256] = {0};
+    double       enuAve[3]    = {0.0};
+    unsigned int enuAveCnt[3] = {0};
+    int          m, n, startFlag = 0, endFlag = 0, num = 0;
+    char*        revbuf[64] = {0};
+    double       rb[3]      = {0};
+    char         infile[6][MAXSTRPATH], fileDir[MAXSTRPATH] = "D:\\rtktest\\kunchi", projname[128];
 
-    m = 0; n = 0;
+    m = 0;
+    n = 0;
 
-
-    svr.rtk.opt.timeInterval = 1.0;
+    svr.rtk.opt.timeInterval      = 1.0;
     svr.rtk.opt.smoothWindowsTime = 1;
-    svr.rtk.mpflag = 0;
-    svr.rtk.mvflag = 0;
+    svr.rtk.mpflag                = 0;
+    svr.rtk.mvflag                = 0;
 #if 1
-    int j=0; gtime_t ts={0.0}, te={0.0};
-    double es[] = { 2000,1,1,0,0,0 }, ee[] = { 2000,12,31,23,59,59 };
-    for (i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "-out") && i + 1 < argc) {
+    int     j  = 0;
+    gtime_t ts = {0.0}, te = {0.0};
+    double  es[] = {2000, 1, 1, 0, 0, 0}, ee[] = {2000, 12, 31, 23, 59, 59};
+    for (i = 1; i < argc; i++)
+    {
+        if (!strcmp(argv[i], "-out") && i + 1 < argc)
+        {
             strcpy(fileDir, argv[++i]);
-        } else if (!strcmp(argv[i], "-fr") && i + 1 < argc) {
+        }
+        else if (!strcmp(argv[i], "-fr") && i + 1 < argc)
+        {
             strcpy(strpath[0], argv[++i]);
-        } else if (!strcmp(argv[i], "-fb") && i + 1 < argc) {
+        }
+        else if (!strcmp(argv[i], "-fb") && i + 1 < argc)
+        {
             strcpy(strpath[1], argv[++i]);
-        } else if (!strcmp(argv[i], "-name") && i + 1 < argc) {
+        }
+        else if (!strcmp(argv[i], "-name") && i + 1 < argc)
+        {
             strcpy(projname, argv[++i]);
-        } else if (!strcmp(argv[i], "-refb") && i + 1 < argc) {
-            for (j = 0; j < 3; j++){
+        }
+        else if (!strcmp(argv[i], "-refb") && i + 1 < argc)
+        {
+            for (j = 0; j < 3; j++)
+            {
                 svr.rtk.opt.rb[j] = atof(argv[++i]);
             }
-        } else if (!strcmp(argv[i], "-refr") && i + 1 < argc) {
-            for (j = 0; j < 3; j++){
+        }
+        else if (!strcmp(argv[i], "-refr") && i + 1 < argc)
+        {
+            for (j = 0; j < 3; j++)
+            {
                 svr.rtk.opt.ru[j] = atof(argv[++i]);
             }
-        } else if (!strcmp(argv[i], "-ts") && i + 2 < argc) {
+        }
+        else if (!strcmp(argv[i], "-ts") && i + 2 < argc)
+        {
             sscanf(argv[++i], "%lf/%lf/%lf", es, es + 1, es + 2);
             sscanf(argv[++i], "%lf:%lf:%lf", es + 3, es + 4, es + 5);
             ts = epoch2time(es);
-        } else if (!strcmp(argv[i], "-te") && i + 2 < argc) {
-            printf("%s\n",argv[i]);
+        }
+        else if (!strcmp(argv[i], "-te") && i + 2 < argc)
+        {
+            printf("%s\n", argv[i]);
             sscanf(argv[++i], "%lf/%lf/%lf", ee, ee + 1, ee + 2);
             sscanf(argv[++i], "%lf:%lf:%lf", ee + 3, ee + 4, ee + 5);
             te = epoch2time(ee);
-        } else if (!strcmp(argv[i], "-ti") && i + 1 < argc) {
-            svr.rtk.opt.timeInterval = atof(argv[++i]);
-        } else if (!strcmp(argv[i], "-x") && i + 1 < argc) {
-            trace_level = atoi(argv[++i]);
-        } else if (!strcmp(argv[i], "-st") && i + 1 < argc) {
-            svr.rtk.opt.smoothWindowsTime = atof(argv[++i]);
-        }else if (!strcmp(argv[i], "-mp") ) {
-            svr.rtk.mpflag =1;
-        }else if (!strcmp(argv[i], "-mv") ) {
-            svr.rtk.mvflag =1;
         }
-        
+        else if (!strcmp(argv[i], "-ti") && i + 1 < argc)
+        {
+            svr.rtk.opt.timeInterval = atof(argv[++i]);
+        }
+        else if (!strcmp(argv[i], "-x") && i + 1 < argc)
+        {
+            trace_level = atoi(argv[++i]);
+        }
+        else if (!strcmp(argv[i], "-st") && i + 1 < argc)
+        {
+            svr.rtk.opt.smoothWindowsTime = atof(argv[++i]);
+        }
+        else if (!strcmp(argv[i], "-mp"))
+        {
+            svr.rtk.mpflag = 1;
+        }
+        else if (!strcmp(argv[i], "-mv"))
+        {
+            svr.rtk.mvflag = 1;
+        }
     }
 #endif
 
     rtksvrinit(&svr);
 
-    svr.rtk.te=te;
-    svr.rtk.x = zeros(NX, 1);
-    svr.rtk.P = zeros(NX, NX);
+    svr.rtk.te = te;
+    svr.rtk.x  = zeros(NX, 1);
+    svr.rtk.P  = zeros(NX, NX);
     svr.rtk.xp = zeros(NX, 1);
     svr.rtk.Pp = zeros(NX, NX);
-    svr.rtk.I = zeros(NX, NX);
-    svr.rtk.H = zeros(NY, NX);
-    svr.rtk.F = zeros(NY, NX);
-    svr.rtk.K = zeros(NY, NX);
+    svr.rtk.I  = zeros(NX, NX);
+    svr.rtk.H  = zeros(NY, NX);
+    svr.rtk.F  = zeros(NY, NX);
+    svr.rtk.K  = zeros(NY, NX);
     svr.rtk.Ri = zeros(NY, 1);
     svr.rtk.Rj = zeros(NY, 1);
-    svr.rtk.R = zeros(NY, NY);
-    svr.rtk.v = zeros(NY, 1);
-
+    svr.rtk.R  = zeros(NY, NY);
+    svr.rtk.v  = zeros(NY, 1);
 
     strinit(&svr.stream[0]);
     strinit(&svr.stream[1]);
     strinit(&svr.stream[2]);
     svr.state = 1;
-    svr.tick = tickget();
+    svr.tick  = tickget();
 
-    svr.rtk.opt.dynamics = 0;
-    svr.rtk.opt.maxgdop = 30.0;
-    svr.rtk.opt.mode = 2;
-    svr.rtk.opt.nf = NFREQ;
-    svr.rtk.opt.tidecorr = 1;
-    svr.rtk.opt.elmin = 15.0 * D2R;
-    svr.rtk.opt.maxtdiff = 5.0;
-    svr.rtk.opt.std = 0.01;
-    svr.rtk.nx = 0;
+    svr.rtk.opt.dynamics     = 0;
+    svr.rtk.opt.maxgdop      = 30.0;
+    svr.rtk.opt.mode         = 2;
+    svr.rtk.opt.nf           = NFREQ;
+    svr.rtk.opt.tidecorr     = 1;
+    svr.rtk.opt.elmin        = 15.0 * D2R;
+    svr.rtk.opt.maxtdiff     = 5.0;
+    svr.rtk.opt.std          = 0.01;
+    svr.rtk.nx               = 0;
     svr.rtk.sol.bslConstrain = 1;
-    if (svr.rtk.opt.dynamics == 2) sopt.outvel = 1;
-    if (svr.rtk.opt.smoothWindowsTime == 0) svr.rtk.opt.smoothWindowsTime = 24;
+    if (svr.rtk.opt.dynamics == 2)
+    {
+        sopt.outvel = 1;
+    }
+    if (svr.rtk.opt.smoothWindowsTime == 0)
+    {
+        svr.rtk.opt.smoothWindowsTime = 24;
+    }
     svr.rtk.opt.initEnuTime = 1;
-    SELETE_SAT_NUM = 40;
-    NX = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
-    NY = NX;
+    SELETE_SAT_NUM          = 40;
+    NX                      = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
+    NY                      = NX;
 
-    svr.rtk.x = zeros(NX, 1);
-    svr.rtk.P = zeros(NX, NX);
+    svr.rtk.x  = zeros(NX, 1);
+    svr.rtk.P  = zeros(NX, NX);
     svr.rtk.xp = zeros(NX, 1);
     svr.rtk.Pp = zeros(NX, NX);
-    svr.rtk.I = zeros(NX, NX);
-    svr.rtk.H = zeros(NY, NX);
-    svr.rtk.F = zeros(NY, NX);
-    svr.rtk.K = zeros(NY, NX);
+    svr.rtk.I  = zeros(NX, NX);
+    svr.rtk.H  = zeros(NY, NX);
+    svr.rtk.F  = zeros(NY, NX);
+    svr.rtk.K  = zeros(NY, NX);
     svr.rtk.Ri = zeros(NY, 1);
     svr.rtk.Rj = zeros(NY, 1);
-    svr.rtk.R = zeros(NY, NY);
-    svr.rtk.v = zeros(NY, 1);
+    svr.rtk.R  = zeros(NY, NY);
+    svr.rtk.v  = zeros(NY, 1);
 
+    trace_flag[0]  = 1;  // 0:定位结果
+    trace_flag[1]  = 1;  // 1:滤波后结果
+    trace_flag[2]  = 0;  // 2：单点定位结果
+    trace_flag[3]  = 0;  // 3：DOP
+    trace_flag[4]  = 0;  // 4：观测量信息
+    trace_flag[5]  = 0;  // 5：卫星位置
+    trace_flag[6]  = 0;  // 6：卫星残差
+    trace_flag[7]  = 0;  // 7：卫星仰角
+    trace_flag[8]  = 0;  // 8：多径
+    trace_flag[9]  = 0;  // 9：模糊度 电离层
+    trace_flag[10] = 1;  // 9：调试信息
 
-    trace_flag[0] = 1; //0:定位结果
-    trace_flag[1] = 1; //1:滤波后结果
-    trace_flag[2] = 0; //2：单点定位结果
-    trace_flag[3] = 0; //3：DOP
-    trace_flag[4] = 0; //4：观测量信息
-    trace_flag[5] = 0; //5：卫星位置
-    trace_flag[6] = 0; //6：卫星残差
-    trace_flag[7] = 0; //7：卫星仰角
-    trace_flag[8] = 0; //8：多径
-    trace_flag[9] = 0; //9：模糊度 电离层
-    trace_flag[10] = 1;//9：调试信息
-
-    if (ROUND(svr.rtk.opt.timeInterval) != 0.0) {
-        svr.rtk.maxSmoothPoint = svr.rtk.opt.smoothWindowsTime * 3600.0 / ROUND(svr.rtk.opt.timeInterval);
+    if (ROUND(svr.rtk.opt.timeInterval) != 0.0)
+    {
+        svr.rtk.maxSmoothPoint =
+            svr.rtk.opt.smoothWindowsTime * 3600.0 / ROUND(svr.rtk.opt.timeInterval);
     }
-    else {
+    else
+    {
         svr.rtk.maxSmoothPoint = 86400;
     }
-    if (svr.rtk.opt.senceopt == 1) {
+    if (svr.rtk.opt.senceopt == 1)
+    {
         svr.rtk.maxSmoothPoint = 10;
     }
 
-    svr.rtk.cntEnuWind = 0;
+    svr.rtk.cntEnuWind           = 0;
     svr.rtk.maxMedianFilterPoint = 1 * 3600 / svr.rtk.opt.timeInterval + 1;
-    svr.rtk.maxMedianFilterPoint = svr.rtk.maxMedianFilterPoint > 3601 ? 3601 : svr.rtk.maxMedianFilterPoint;
-    for (i = 0; i < 3; i++) {
-        if (!(svr.rtk.enuWindow[i] = (double*)calloc(svr.rtk.maxSmoothPoint, sizeof(double)))) {
+    svr.rtk.maxMedianFilterPoint =
+        svr.rtk.maxMedianFilterPoint > 3601 ? 3601 : svr.rtk.maxMedianFilterPoint;
+    for (i = 0; i < 3; i++)
+    {
+        if (!(svr.rtk.enuWindow[i] = (double*)calloc(svr.rtk.maxSmoothPoint, sizeof(double))))
+        {
             return 0;
         }
-        if (!(svr.rtk.enuWindowMedian[i] = (double*)calloc(svr.rtk.maxMedianFilterPoint, sizeof(double)))) {
+        if (!(svr.rtk.enuWindowMedian[i] =
+                  (double*)calloc(svr.rtk.maxMedianFilterPoint, sizeof(double))))
+        {
             return 0;
         }
         svr.rtk.enuWindowMedianShiftNum[i] = 0;
     }
 
-
     svr.rtk.iniCnt = 0;
 
-    sopt.posf = 2; //0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
-    sopt.times = 3;//0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
-    sopt.outvel = 0;
+    sopt.posf    = 2;  // 0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
+    sopt.times   = 3;  // 0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
+    sopt.outvel  = 0;
     sopt.outhead = 0;
 
-    strinitcom();//初始化网络
+    strinitcom();  // 初始化网络
     memset(configFileFath, 0, MAXSTRPATH);
 
-    char outDir[1024], outFileName[1024], outfile[2][1024], * ext;
+    char outDir[1024], outFileName[1024], outfile[2][1024], *ext;
     char sep = (char)FILEPATHSEP;
 
 #if 0
@@ -1274,73 +1504,91 @@ int main(int argc, char** argv)
     }
 #endif
 
-    sprintf(outDir, "%s%cresult_%s_%d_mp%d_mv%d", fileDir, sep, projname, SVN_VERSION,svr.rtk.mpflag, svr.rtk.mvflag);
+    sprintf(
+        outDir, "%s%cresult_%s_%d_mp%d_mv%d", fileDir, sep, projname, SVN_VERSION, svr.rtk.mpflag,
+        svr.rtk.mvflag
+    );
 
     if (access(outDir, 0) != 0)
+    {
         createdir(outDir);
+    }
     sprintf(outfile[0], "%s%c%s", outDir, sep, "rtk.pos");
     sprintf(outfile[1], "%s%c%s", outDir, sep, "filter.pos");
 
     sprintf(svr.rtk.path, "%s/dats", outDir);
     createdir(svr.rtk.path);
-    if (svr.rtk.mpflag == 1){
+    if (svr.rtk.mpflag == 1)
+    {
         mkfpssat(&svr.rtk);
     }
 
     char logfile[1024];
     sprintf(logfile, "%s/rtk.log", svr.rtk.path);
-    logopen(logfile, 0); // 1M log  for test
+    logopen(logfile, 0);  // 1M log  for test
 
     /* open pos filter */
     svr.rtk.sol.window[0].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[1].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[1].dely = (int)3 * 60 / svr.rtk.opt.timeInterval;
-    svr.rtk.sol.window[2].nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
+    svr.rtk.sol.window[2].nmax =
+        (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
 
-    svr.rtk.sol.window[0].thres[0]= 0.01; // posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[0].thres[1]= 0.01; //posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[0].thres[2]= 0.02;  //posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[0].thres[0] = 0.01;  // posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[0].thres[1] = 0.01;  // posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[0].thres[2] = 0.02;  // posmaxstd(0.002, 0.02);
 
-    svr.rtk.sol.window[1].thres[0]= 0.01; // posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[1].thres[1]= 0.01; // posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[1].thres[2]= 0.02; // posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[1].thres[0] = 0.01;  // posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[1].thres[1] = 0.01;  // posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[1].thres[2] = 0.02;  // posmaxstd(0.002, 0.02);
 
-    printf("%f %f %f\n",svr.rtk.sol.window[1].thres[0],svr.rtk.sol.window[1].thres[1],svr.rtk.sol.window[1].thres[2]);
+    printf(
+        "%f %f %f\n", svr.rtk.sol.window[1].thres[0], svr.rtk.sol.window[1].thres[1],
+        svr.rtk.sol.window[1].thres[2]
+    );
 
-    svr.rtk.sol.wdata.nmax = (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval + 1;
+    svr.rtk.sol.wdata.nmax =
+        (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval + 1;
     svr.rtk.sol.wdata.mode = FIL;
-
 
     char wpospath[256];
     sprintf(wpospath, "%s/wpos.dat", svr.rtk.path);
     init_data(&svr.rtk.sol.wdata, wpospath);
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 2; i++)
+    {
         /* write header to output file */
-        if (!outhead(outfile[i], infile, i, &svr.rtk.opt, &sopt)) {
-            //freeobsnav(&obss, &navs);
+        if (!outhead(outfile[i], infile, i, &svr.rtk.opt, &sopt))
+        {
+            // freeobsnav(&obss, &navs);
             return 0;
         }
         oFile.fpOut[i] = fopen(outfile[i], "a");
-        if (!oFile.fpOut[i]) return -1;
+        if (!oFile.fpOut[i])
+        {
+            return -1;
+        }
     }
     sprintf(outFileName, "%s%c%s", outDir, sep, "debug.log");
-    if (trace_level > 0) {
-        printf("TRACE FILE : %s\n",outFileName);
+    if (trace_level > 0)
+    {
+        printf("TRACE FILE : %s\n", outFileName);
         traceopen(outFileName);
-        printf("TRACE LEVEL: %d\n",trace_level);
+        printf("TRACE LEVEL: %d\n", trace_level);
         tracelevel(trace_level);
     }
-    
+
     for (i = 0; i < 3; i++)
     {
         rw = i < 2 ? STR_MODE_R : STR_MODE_RW;
-        if (!stropen(svr.stream + i, strtype[i], rw, paths[i])) {
+        if (!stropen(svr.stream + i, strtype[i], rw, paths[i]))
+        {
             printf("open stream error:%s\n", paths[i]);
             return 0;
         }
     }
-    if (trace_flag[6] == 1) {
+    if (trace_flag[6] == 1)
+    {
         sprintf(outFileName, "%s%c%s", outDir, sep, "resp.ion");
         oFile.resp = fopen(outFileName, "w");
         sprintf(outFileName, "%s%c%s", outDir, sep, "resc1.ion");
@@ -1367,71 +1615,88 @@ int main(int argc, char** argv)
         oFile.resp5 = fopen(outFileName, "w");
         sprintf(outFileName, "%s%c%s", outDir, sep, "resp6.ion");
         oFile.resp6 = fopen(outFileName, "w");
-        if (!(oFile.resp && oFile.resc1 && oFile.resp1 && oFile.resc2 && oFile.resp2 && oFile.resc3 && oFile.resp3
-            && oFile.resc4 && oFile.resc5 && oFile.resc6 && oFile.resp4 && oFile.resp5 && oFile.resp6)) return -1;
+        if (!(oFile.resp && oFile.resc1 && oFile.resp1 && oFile.resc2 && oFile.resp2 &&
+              oFile.resc3 && oFile.resp3 && oFile.resc4 && oFile.resc5 && oFile.resc6 &&
+              oFile.resp4 && oFile.resp5 && oFile.resp6))
+        {
+            return -1;
+        }
     }
     for (i = 0; i < 2; i++)
     {
         init_rtcm(svr.rtcm + i);
         svr.nb[i] = svr.npb[i] = 0;
-        if (!(svr.buff[i] = (unsigned char*)calloc(sizeof(unsigned char), BUFFSIZE)) || !(svr.pbuf[i] = (unsigned char*)calloc (sizeof(unsigned char),BUFFSIZE))) {
+        if (!(svr.buff[i] = (unsigned char*)calloc(sizeof(unsigned char), BUFFSIZE)) ||
+            !(svr.pbuf[i] = (unsigned char*)calloc(sizeof(unsigned char), BUFFSIZE)))
+        {
             return 0;
         }
     }
 
-    enuAve[0] = svr.rtk.opt.enuWindow[0];
-    enuAve[1] = svr.rtk.opt.enuWindow[1];
-    enuAve[2] = svr.rtk.opt.enuWindow[2];
+    enuAve[0]    = svr.rtk.opt.enuWindow[0];
+    enuAve[1]    = svr.rtk.opt.enuWindow[1];
+    enuAve[2]    = svr.rtk.opt.enuWindow[2];
     enuAveCnt[0] = svr.rtk.opt.enuWindowIndex[0];
     enuAveCnt[1] = svr.rtk.opt.enuWindowIndex[1];
     enuAveCnt[2] = svr.rtk.opt.enuWindowIndex[2];
 
-    if (enuAveCnt[0] > svr.rtk.maxSmoothPoint) {
+    if (enuAveCnt[0] > svr.rtk.maxSmoothPoint)
+    {
         enuAveCnt[0] = svr.rtk.maxSmoothPoint;
     }
-    if (enuAveCnt[1] > svr.rtk.maxSmoothPoint) {
+    if (enuAveCnt[1] > svr.rtk.maxSmoothPoint)
+    {
         enuAveCnt[1] = svr.rtk.maxSmoothPoint;
     }
-    if (enuAveCnt[2] > svr.rtk.maxSmoothPoint) {
+    if (enuAveCnt[2] > svr.rtk.maxSmoothPoint)
+    {
         enuAveCnt[2] = svr.rtk.maxSmoothPoint;
     }
     svr.rtk.enuWindwoIndex[0] = enuAveCnt[0];
     svr.rtk.enuWindwoIndex[1] = enuAveCnt[1];
     svr.rtk.enuWindwoIndex[2] = enuAveCnt[2];
 
-    if (svr.rtk.opt.senceopt == 1) {
+    if (svr.rtk.opt.senceopt == 1)
+    {
         enuAveCnt[0] = enuAveCnt[1] = enuAveCnt[2] = 10;
     }
-    for (i = 0; i < enuAveCnt[0]; i++) {
+    for (i = 0; i < enuAveCnt[0]; i++)
+    {
         svr.rtk.enuWindow[0][i] = enuAve[0];
     }
-    svr.rtk.sum_enu[0] = enuAve[0] * enuAveCnt[0];
+    svr.rtk.sum_enu[0]   = enuAve[0] * enuAveCnt[0];
     svr.rtk.sum_sqeun[0] = enuAve[0] * enuAve[0] * enuAveCnt[0];
 
-    for (i = 0; i < enuAveCnt[1]; i++) {
+    for (i = 0; i < enuAveCnt[1]; i++)
+    {
         svr.rtk.enuWindow[1][i] = enuAve[1];
     }
-    svr.rtk.sum_enu[1] = enuAve[1] * enuAveCnt[1];
+    svr.rtk.sum_enu[1]   = enuAve[1] * enuAveCnt[1];
     svr.rtk.sum_sqeun[1] = enuAve[1] * enuAve[1] * enuAveCnt[1];
 
-    for (i = 0; i < enuAveCnt[2]; i++) {
+    for (i = 0; i < enuAveCnt[2]; i++)
+    {
         svr.rtk.enuWindow[2][i] = enuAve[2];
     }
-    svr.rtk.sum_enu[2] = enuAve[2] * enuAveCnt[2];
+    svr.rtk.sum_enu[2]   = enuAve[2] * enuAveCnt[2];
     svr.rtk.sum_sqeun[2] = enuAve[2] * enuAve[2] * enuAveCnt[2];
-    
+
     g_preBaseObsRtkNum = 0;
     /* create rtk server thread */
 #ifdef WIN32
-    if (!(svr.thread = CreateThread(NULL, 0, rtksvrthread, &svr, 0, NULL))) {
+    if (!(svr.thread = CreateThread(NULL, 0, rtksvrthread, &svr, 0, NULL)))
+    {
 #else
-    if (pthread_create(&svr.thread, NULL, rtksvrthread, &svr)) {
+    if (pthread_create(&svr.thread, NULL, rtksvrthread, &svr))
+    {
 #endif
-        for (i = 0; i < 3; i++) strclose(svr.stream + i);
+        for (i = 0; i < 3; i++)
+        {
+            strclose(svr.stream + i);
+        }
         printf("thread1 create error\n");
         return 0;
     }
-
 
 #ifdef WIN32
     WaitForSingleObject(svr.thread, INFINITE);
@@ -1441,10 +1706,13 @@ int main(int argc, char** argv)
 #endif
     rtksvrfree(&svr);
     free_data(&svr.rtk.sol.wdata);
-    
+
     for (i = 0; i < 3; i++)
+    {
         strclose(&svr.stream[i]);
-    for (i = 0; i < 3; i++) {
+    }
+    for (i = 0; i < 3; i++)
+    {
         free(svr.rtk.enuWindow[i]);
         free(svr.rtk.enuWindowMedian[i]);
     }
