@@ -47,6 +47,7 @@ double        writeConfigTime       = 1;
 double        writeDugTime          = 1;
 
 #define OBSBASELEN 30
+
 obsd_t        g_baseObsSync[OBSBASELEN][MAXOBS];
 unsigned char g_nbaseObsSync[OBSBASELEN] = {0};
 unsigned char g_baseObsSyncIndex         = 255;
@@ -212,8 +213,8 @@ static int sortobs(obs_t* obs)
 
 static void updatesvr(rtksvr_t* svr, int ret, obs_t* obs, int index, int iobs)
 {
-    double pos[3], del[3] = {0}, dr[3];
-    int    i, n           = 0;
+    double pos[3] = {0.0}, del[3] = {0}, dr[3] = {0.0};
+    int    i = 0, n = 0;
 
     // tracet(4, "updatesvr: ret=%d sat=%2d index=%d\n", ret, sat, index);
 
@@ -278,7 +279,9 @@ extern int decoderaw(rtksvr_t* svr, int index)
         if (svr->format[index] == STRFMT_RTCM3)
         {
             svr->rtcm[index].rcv = index;
-            buff                 = fgetc(fp_rtcmfile->fp);
+
+            buff = fgetc(fp_rtcmfile->fp);
+
             if (feof(fp_rtcmfile->fp))
             {
                 return 0;
@@ -797,21 +800,28 @@ static void* rtksvrthread(void* arg)
     unsigned int   cycle = 0, tick, tick1hz = 0, iniEnuCnt = 0, epochCnt = 0;
     double         iniEnu[3], pos[3], dr[3];
     gtime_t        time;
-    obsd_t         obs[MAXOBS * 2] = {0}; /* for rover and base */
-    obsd_t         obsPre[MAXOBS];
-    obsd_t         obsepoch[MAXOBS * 2];
-    int            nobsepoch = 0;
-    int            nobsPre   = 0;
-    solopt_t       sopt      = solopt_default;
-    rtksvr_t*      svr       = (rtksvr_t*)arg;
-    sopt.posf                = 2;  // 0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
-    sopt.times               = 0;  // 0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
-    sopt.outvel              = 0;
-    svr->tick                = tickget();
-    svr->cycle               = 1000;
-    char*   buff             = (char*)(calloc(sizeof(char), DEBUG_BUFF_LEN));
-    char*   pbuff;
-    char    s1[32];
+
+    obsd_t obs[MAXOBS * 2] = {0}; /* for rover and base */
+    obsd_t obsPre[MAXOBS];
+    obsd_t obsepoch[MAXOBS * 2];
+
+    int nobsepoch = 0;
+    int nobsPre   = 0;
+
+    solopt_t  sopt = solopt_default;
+    rtksvr_t* svr  = (rtksvr_t*)arg;
+
+    sopt.posf   = 2;  // 0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
+    sopt.times  = 0;  // 0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
+    sopt.outvel = 0;
+
+    svr->tick  = tickget();
+    svr->cycle = 1000;
+
+    char* buff = (char*)(calloc(sizeof(char), DEBUG_BUFF_LEN));
+    char* pbuff;
+    char  s1[32];
+
     gtime_t obstime = {0};
     qobs_t  qobs;
 
@@ -822,11 +832,14 @@ static void* rtksvrthread(void* arg)
     {
         tick = tickget();
 #ifdef _MSC_VER  // Redundant Code
+                 //
         WIN32_FIND_DATA fileInfo;
         HANDLE          hFind;
         DWORD           fileSize;
-        const char*     fileName = tcpFileFath;
-        hFind                    = FindFirstFile(tcpFileFath, &fileInfo);
+        hFind = FindFirstFile(tcpFileFath, &fileInfo);
+
+        const char* fileName = tcpFileFath;
+
         if (hFind != INVALID_HANDLE_VALUE)
         {
             fileSize = fileInfo.nFileSizeLow;
@@ -1268,8 +1281,10 @@ void split(char* src, const char* separator, char** dest, int* num)
     }
     *num = count;
 }
+
 extern FILE* fp_trace; /* file pointer of trace */
-int          main(int argc, char** argv)
+
+int main(int argc, char** argv)
 {
     solopt_t sopt = solopt_default;
     int      i, len, rw;

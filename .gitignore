@@ -412,3 +412,4 @@ doxy/*
 *.swp
 *.o
 *.exe
+tags
