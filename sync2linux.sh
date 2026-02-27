@@ -1,1 +1,3 @@
-rsync -cvrP --delete --exclude-from="./.gitignore"   ./ lpb@192.168.24.43:/home/lpb/MXT2105/
+#!/bin/bash
+rsync -cvrP --delete   ./ pbl@47.100.242.24:/home/pbl/MXT2105-MP/
+#--exclude-from="./.gitignore" 

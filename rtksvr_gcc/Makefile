@@ -1,7 +1,8 @@
 # makefile for rtk
 CC = gcc
-BINDIR  = /usr/local/bin
 SRC_DIR     = ../src
+INC_DIR = ../src/
+BUILD_DIR = ./
 
 ifeq ($(OS), Windows_NT)
 	OPTS    = -DENACMP -DWIN32
@@ -28,10 +29,7 @@ SRCS =  \
 	$(SRC_DIR)/multipath.c $(SRC_DIR)/cJSON.c $(SRC_DIR)/BandPassFilter.c \
 	$(SRC_DIR)/fft.c $(SRC_DIR)/logmod.c $(SRC_DIR)/pos_filter.c
 
-$(info SRCS = $(SRCS))
-
-INC_DIR = ../src/
-BUILD_DIR = ./build
+# $(info SRCS = $(SRCS))
 
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 DEPS = $(OBJS:.o=.d)
@@ -67,7 +65,7 @@ TARGET_RELEASE = $(BUILD_DIR_RELEASE)/$(TARGET)
 # ============================================================================
 
 .PHONY: all
-all: debug release
+all: debug  #release
 
 .PHONY: debug
 debug: $(TARGET_DEBUG)
@@ -87,7 +85,7 @@ $(BUILD_DIR_DEBUG)/%.o: $(SRC_DIR)/%.c $(DEPS_INC)
 $(TARGET_DEBUG): $(OBJS_DEBUG)
 	@mkdir -p $(dir $@)
 	$(CC) $(OBJS_DEBUG) -o $@ $(LDFLAGS)
-	@echo "Debug Exe has done: $@"
+	@printf ">>>>>>\nDebug Exe has done: $@\n"
 
 # Release版本编译规则
 $(BUILD_DIR_RELEASE)/%.o: $(SRC_DIR)/%.c $(DEPS_INC)
@@ -97,7 +95,7 @@ $(BUILD_DIR_RELEASE)/%.o: $(SRC_DIR)/%.c $(DEPS_INC)
 $(TARGET_RELEASE): $(OBJS_RELEASE)
 	@mkdir -p $(dir $@)
 	$(CC) $(OBJS_RELEASE) -o $@ $(LDFLAGS)
-	@echo "Release Exe has done: $@"
+	@printf "Release Exe has done: $@\n"
 
 # ============================================================================
 # 代码格式化 (clang-format)
@@ -105,18 +103,18 @@ $(TARGET_RELEASE): $(OBJS_RELEASE)
 
 .PHONY: format
 format:
-	@echo "格式化代码..."
+	@printf ">>>>>>\nFormating source files ...\n"
 	@clang-format -i $(SRCS) $(DEPS_INC)
-	@echo "代码格式化完成"
+	@printf "Format work done\n"
 
 .PHONY: format-check
 format-check:
-	@echo "检查代码格式..."
+	@printf "检查代码格式..."
 	@clang-format --dry-run --Werror $(SRCS) $(DEPS_INC) || \
-		(echo "Error 代码格式不符合要求，请运行 'make format'" && exit 1)
-	@echo "Format check pass"
+		(printf "Error Code format not OK，run 'make format'" && exit 1)
+	@printf "Format check pass"
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)/debug $(BUILD_DIR)/release
 
