@@ -738,18 +738,20 @@ static int outenu_dynamic(
             trace(4, "reset thresCnt\n");
         }
     }
-    for (i = 0; i < 3; i++)
+    if (rtk->mvflag == 1)
     {
-        if (sol->window[0].jumpflag[i] == 1)
+        for (i = 0; i < 3; i++)
         {
-            sol->window[2].n[i] = 0;  // sol->window[0].n;
+            if (sol->window[0].jumpflag[i] == 1)
+            {
+                sol->window[2].n[i] = 0;  // sol->window[0].n;
 
-            sol->window[2].ave[i] =
-                sol->window[2].ave[i] +
-                sol->jump[i];  // sol->window[0].ave[i];
-                               // sol->window[2].var[i] = 0.0;   // sol->window[0].var[i];
-                               // sol->window[2].std[i] = 0.0;   // sol->window[0].std[i];
-                               // sol->window[2].sumX2[i] = 0.0; // sol->window[0].sumX2[i];
+                sol->window[2].ave[i] = sol->window[2].ave[i] + sol->jump[i];
+                // sol->window[0].ave[i];
+                // sol->window[2].var[i] = 0.0;   // sol->window[0].var[i];
+                // sol->window[2].std[i] = 0.0;   // sol->window[0].std[i];
+                // sol->window[2].sumX2[i] = 0.0; // sol->window[0].sumX2[i];
+            }
         }
     }
     // if(sol->window[2].jn[i]!=0){
@@ -866,7 +868,7 @@ static int outenu_dynamic(
                     trace(0x04, "warnning has detect shift:%.2f;k=%d\n", rtk->sol.enu_shift[k], k);
                     if (k == 0 || k == 1)
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.008)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.016)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -894,7 +896,7 @@ static int outenu_dynamic(
                     }
                     else
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.016)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.045)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -1085,7 +1087,8 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
-            enu2[i] = enu2[i] - (rtk->aveEnu[i] - rtk->sol.ori_ave[i]);
+            enu2[i] = rtk->aveEnu[i];
+            // enu2[i] = enu2[i] - (rtk->aveEnu[i] - rtk->sol.ori_ave[i]);
         }
     }
     else
@@ -1093,15 +1096,11 @@ static int outenu_dynamic(
         for (i = 0; i < 3; i++)
         {
             // enu2[i] = rtk->aveEnu[i];
-            enu2[i] = enu2[i] - (sol->window[2].ave[i] - rtk->sol.ori_ave[i]);
+            // enu2[i] = enu2[i] - (sol->window[2].ave[i] - rtk->sol.ori_ave[i]);
+            enu2[i] = sol->window[2].ave[i];
         }
     }
-    //}
-    for (i = 0; i < 3; i++)
-    {
-        // enu2[i] = rtk->aveEnu[i];
-        enu2[i] = enu2[i] - sol->window[2].ave[i];
-    }
+
     for (i = 0; i < 3; i++)
     {
         sol->enu[i] = enu2[i];

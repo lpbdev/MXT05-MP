@@ -825,6 +825,10 @@ static void* rtksvrthread(void* arg)
     gtime_t obstime = {0};
     qobs_t  qobs;
 
+    // printf("detectSensitivity=%d\n", svr->rtk.opt.detectSensitivity);
+    // printf("senceopt=%d\n", svr->rtk.opt.senceopt);
+    // printf("mvflag=%d\n", svr->rtk.mvflag);
+
 #ifndef WIN32
     struct stat fstat = {0};
 #endif
@@ -1382,6 +1386,10 @@ int main(int argc, char** argv)
         else if (!strcmp(argv[i], "-mv"))
         {
             svr.rtk.mvflag = 1;
+        }
+        else if (!strcmp(argv[i], "-ds"))
+        {
+            svr.rtk.opt.detectSensitivity = atoi(argv[++i]);
         }
     }
 #endif
