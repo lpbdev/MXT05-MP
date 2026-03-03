@@ -668,7 +668,7 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff)
     char   idStr[64]     = {0};
     printf("%s\n", buff);
     buff = strstr(buff, "{");
-    printf("%s\n", buff);
+    //printf("%s\n", buff);
     json = cJSON_Parse(buff);
 
     if (NULL == json)
@@ -1679,16 +1679,16 @@ static void* rtksvrthread(void* arg)
     {
         tick = tickget();
         time = timeget();
-        trace(4, "time1=%.2f ", time.time + time.frac);
         time.time = ROUND(time.time + time.frac);
         time.frac = 0.0;
-        trace(4, "time2=%d ", time.time);
         if (sopt.times == 3)
         {
             time = gpst2utc(time);
             time.time += 3600 * 8;
         }
         time2str(time, s1, 3);
+        
+        trace(2, "systime,%s\n", s1);
 
         ouInterval = svr->rtk.opt.timeIntervalSolution * 3600;
         if (g_cfgOpt.initEnuTime > g_cfgOpt.smoothWindowsTime)
@@ -2137,7 +2137,9 @@ static void* rtksvrthread(void* arg)
             {
                 continue;
             }
+            trace(2, "++++++rtkpos start ++++++++++++++++\n"
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
+            trace(2, "++++++rtkpos end   ++++++++++++++++\n"
 #ifdef MULBASE
             if (svr->rtk.opt.masterSlaveBaseFlag == 0 && svr->rtk.opt.slaveXyz[0] != 0)
             {
@@ -2626,8 +2628,8 @@ int main(int argc, char** argv)
     char tracefile[1024] = "";
     sprintf(tracefile, "%s.trace", logfile);
     traceopen(tracefile);
-    printf("TRACE LEVEL: %d\n", 2);
-    tracelevel(2);
+    printf("TRACE LEVEL: %d\n", 4);
+    tracelevel(4);
 
     /* open pos filter */
     svr.rtk.sol.window[0].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;

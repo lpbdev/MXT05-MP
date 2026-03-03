@@ -3264,7 +3264,7 @@ static int ddres(
                     rtk->ssat[sat[j] - 1].Ri = rtk->Rj[nv];
                     rtk->ssat[sat[i] - 1].Ri = rtk->Ri[nv];
                 }
-
+#if 0
                 if (rtk->rsat[sat[i] - 1].vfcnt[f] < 120 || rtk->bsat[sat[i] - 1].vfcnt[f] < 120)
                 {
                     rtk->Ri[nv] *= Rweight(rtk->rsat[sat[i] - 1].vfcnt[f]) *
@@ -3275,6 +3275,7 @@ static int ddres(
                     rtk->Rj[nv] *= Rweight(rtk->rsat[sat[j] - 1].vfcnt[f]) *
                                    Rweight(rtk->bsat[sat[j] - 1].vfcnt[f]);
                 }
+#endif 
 
                 if (f < nf && rtk->ssat[sat[j] - 1].resc[f] == 0.0)
                 {
@@ -3663,11 +3664,11 @@ extern int relpos(
 
     trace(
         2,
-        "kalman xyz before while, %14.4f, %14.4f, %14.4f,rb, %14.4f, %14.4f, "
+        "kalman xyz before while, %14.4f %14.4f %14.4f rb, %14.4f, %14.4f, "
         "%14.4f \n",
         rtk->x[0], rtk->x[1], rtk->x[2], rtk->rb[0], rtk->rb[1], rtk->rb[2]
     );
-    trace(2, "kalman rtk->x0 = ");
+    trace(2, "kalman rtk->x0 =         ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
     rtk->sol.stat      = rtk->opt.mode <= PMODE_DGPS ? SOLQ_DGPS : SOLQ_FLOAT;
@@ -4303,6 +4304,14 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     dts = zeros(2 * SELETE_SAT_NUM * 2, 1);
     var = zeros(SELETE_SAT_NUM * 2, 1);
 
+    char ts1[32],ts2[32];
+    time2str(obs[  0].time, s1, 3);
+    time2str(obs[n-1].time, s2, 3);
+
+    printf( "t1,%s\nt2,%s\n", s1,s2);
+
+    trace(2,"t1,%s\nt2,%s\n", s1,s2);
+
     for (i = 0; i < MAXSAT; i++)
     {
         rtk->ssat[i].vs             = 0;
@@ -4357,7 +4366,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     nu = i;  // number of rover observations
     nr = n - nu;
 
-    trace(0xff, "nu=%d nr=%d\n", nu, nr);
+    trace(2, "nu,%d nr,%d\n", nu, nr);
 
     if (nu < 4)
     {
@@ -4365,10 +4374,9 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         free(rs);
         free(dts);
         free(var);
-        // trace(2, "no rover data:%d\n", nu);
+        trace(2, "no rover data:%d\n", nu);
         return 1;
     }
-    trace(0xff, "rover time=%ld\n", obs[0].time.time);
 
     if (nr > 0)
     {
@@ -4417,8 +4425,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         return 2;
     }
     trace(
-        0x04, "%-23s:%14.4f %14.4f %14.4f\n", "rover spp", rtk->sol.rr[0], rtk->sol.rr[1],
-        rtk->sol.rr[2]
+        0x04, "%-23s:%14.4f %14.4f %14.4f\n", "rover spp", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]
     );
     trace(2, "kalman rtk->x, 00, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
