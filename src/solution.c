@@ -509,22 +509,16 @@ static int outenu_dynamic(
 )
 {
     double        pos[3], rr[3], rr_kalman[3], enu[3], enu2[3], P[9], Q[9];
-    int           i, j, k, n, cnt, ns, flag[3] = {0}, nfix, shiftCnt = 60, dynWinCnt = 0;
+    int           i, j, k, n, cnt, ns, flag[3] = {0}, shiftCnt = 60, dynWinCnt = 0;
     const char*   sep = opt2sep(opt);
     char*         p   = (char*)buff;
     double        var0, var1, thres0[3] = {0};
     double        dr[3], r[3];
-    unsigned int  maxSmoothPoint    = 0.0;
     unsigned char detectSensitivity = rtk->opt.detectSensitivity + 3;
-    int           index, truePoint;
-    double        sum, error, sumSat;
     double        precent, thres;
-    double        enuMax[3], enuMin[3];
     double        k1, k2;
-    double        delenu[3];
     double        var;
-    enuMax[0] = enuMax[1] = enuMax[2] = -999999999.9;
-    enuMin[0] = enuMin[1] = enuMin[2] = 999999999.9;
+
     if (rtk->opt.timeInterval < 5)
     {
         shiftCnt  = 255;
@@ -566,7 +560,7 @@ static int outenu_dynamic(
 
     ns = sol->stat == PMODE_SINGLE ? sol->ns[0] : sol->ns[1];
     ecef2pos(sol->rr,
-             pos);            // 7.4053201057023443  1.5051875809804434 - 0.0026813676485921700
+             pos);            // 大地坐标转站心坐标
     soltocov(sol, P);         // 得到XYZ方向状态协方差
     covenu(pos, P, Q);        // 将XYZ方向协方差转到ENU方向方差
     ecef2enu(pos, rr, enu2);  // 大地坐标转站心坐标
@@ -578,14 +572,6 @@ static int outenu_dynamic(
         4, "rr:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1],
         sol->rr[2], enu2[0], enu2[1], enu2[2]
     );
-    if (ROUND(rtk->opt.timeInterval) == 1)
-    {
-        nfix = 5;
-    }
-    else
-    {
-        nfix = 1;
-    }
 
     if (sol->stat != SOLQ_FIX || rtk->sol.ns[1] < rtk->opt.minFixSat)
     {
@@ -720,13 +706,12 @@ static int outenu_dynamic(
         }
         sol->rr_smooth_cnt++;
     }
-    if (sol->aveFixSatCnt > (int)((12 * 3600.0 - 1) / rtk->opt.timeInterval))
-    {
-        sol->aveFixSatCnt = (int)((12 * 3600.0 - 1) / rtk->opt.timeInterval);
-    }
-    rtk->sol.aveFixSat =
-        (sol->aveFixSat * sol->aveFixSatCnt + rtk->sol.ns[1]) / (sol->aveFixSatCnt + 1);
-    sol->aveFixSatCnt++;
+    // if (sol->aveFixSatCnt > (int)((12 * 3600.0 - 1) / rtk->opt.timeInterval))
+    // {
+    //     sol->aveFixSatCnt = (int)((12 * 3600.0 - 1) / rtk->opt.timeInterval);
+    // }
+    // rtk->sol.aveFixSat = (sol->aveFixSat * sol->aveFixSatCnt + rtk->sol.ns[1]) /
+    // (sol->aveFixSatCnt + 1); sol->aveFixSatCnt++;
 
     if (fabs(rtk->sol.nsFixPre - rtk->sol.ns[1]) > 2 && rtk->sol.ns[1] <= 15)
     {

@@ -928,9 +928,9 @@ typedef struct
     unsigned char bslConstrain;
     unsigned char thresCnt1[3];
     unsigned char thresCnt2[3];
-    double        aveFixSat;
-    unsigned int  aveFixSatCnt;
-    int           nAveFixCnt[3];
+    // double        aveFixSat;
+    // unsigned int  aveFixSatCnt;
+    int nAveFixCnt[3];
 
     wind_t window[3];
     double jump[3];
