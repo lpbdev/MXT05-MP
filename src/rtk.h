@@ -65,7 +65,7 @@
 #define BDS3_NL_PSR_K1 0
 #define BDS3_NL_PSR_K2 1
 
-#define SVN_VERSION 260226
+#define SVN_VERSION 260310
 
 #define MAXEPH 10240
 #define MAXGEPH 5120
@@ -888,7 +888,7 @@ typedef struct
     float   qv[6];  /* velocity variance/covariance (m^2/s^2) */
     double  rr[9];  // pos/vel (m,m/s)
     double  rr_lsq[3];
-    double  rr_ref[3];
+    // double  rr_ref[3];
     double  rr_original[3];
     double  enu_original_window[60][3];
     double  rr_filer[3];
@@ -900,7 +900,7 @@ typedef struct
     double  enu[3];
     double  enu_original[3];
     double  fixxyz[3];
-    double  rr_smooth[3];
+    // double  rr_smooth[3];
     double  rr_smooth_cnt;
     /* {c_xx,c_yy,c_zz,c_xy,c_yz,c_zx} or */
     /* {c_ee,c_nn,c_uu,c_en,c_nu,c_ue} */
@@ -930,7 +930,7 @@ typedef struct
     unsigned char thresCnt2[3];
     // double        aveFixSat;
     // unsigned int  aveFixSatCnt;
-    int nAveFixCnt[3];
+    // int nAveFixCnt[3];
 
     wind_t window[3];
     double jump[3];
@@ -1034,12 +1034,12 @@ typedef struct
 
     unsigned char nxFixNx;
     unsigned char nxFixNxPre;
-    unsigned char preStat;
+    // unsigned char preStat;
     unsigned char rejSatCnt;
     unsigned char noRejectSatCnt;
     unsigned char fix30flag;
     unsigned char fixCheckCnt;
-    unsigned char fixErrorLargeCnt;
+    // unsigned char fixErrorLargeCnt;
     sol_t         sol; /* RTK solution */
     sol_t         solb;
     double        rb[6]; /* base position/velocity (ecef) (m|m/s) */
@@ -1069,7 +1069,7 @@ typedef struct
     int           cntEnuWind;
     int           maxMedianFilterPoint;
     unsigned char sumPostCarVCnt;
-    double        aveXyz[3];
+    // double        aveXyz[3];
     double        aveEnu[3];
     double        stdEnu[3];
     unsigned int  xyzWindwoIndex;
@@ -1082,10 +1082,10 @@ typedef struct
     int     maxSmoothPoint;
     double  sum_enu[3];
     double  sum_sqeun[3];
-    gtime_t enuShiftEpochTime;
+    // gtime_t enuShiftEpochTime;
     int     delpoint[3];
     int     iniCnt;
-    double  enuDelay[60][3];
+    // double  enuDelay[60][3];
     double  dr[3];
     double  masterEnu[3];
     double  masterRr[3];

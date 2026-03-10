@@ -50,6 +50,7 @@ static const int solq_nmea[] =
      SOLQ_FLOAT, SOLQ_DR,     SOLQ_NONE, SOLQ_NONE, SOLQ_NONE
 };
 extern char configFileFath[MAXSTRPATH];
+
 static void medianFilter(double* enu, rtk_t* rtk)
 {
     int i = 0, j = 0, k = 0, index, mid = 0, segment, symboldenu[3], leveldenu[3], pickPoint = 3;
@@ -148,15 +149,8 @@ static void medianFilter(double* enu, rtk_t* rtk)
             if (rtk->enuWindowMedianShiftNum[i] < 0)
             {
                 rtk->enuWindowMedianShiftNum[i] = 0;
+
             }
-            // trace(4, "%s medianFilter-%d: cnt= %5d;\n", rtk->s, i,
-            // rtk->enuWindowMedianShiftNum[i]);
-            /*if (leveldenu[i] > 1 &&
-                (enuwindow[i][3]< rtk->aveEnu[0] && enuwindow[i][maxpoint - 3] >
-            rtk->aveEnu[0])) { trace(4, "medianFilter-E:%.3f -> ", enu[0]); enu[0] =
-            enuwindow[i][mid + symboldenu[0] * leveldenu[0] * segment]; trace(4, "%.3f
-            \n", enu[0]);
-            }*/
             if (fabs(denu[i]) > rtk->stdEnu[i] && (rtk->enuWindwoIndex[i] < rtk->maxSmoothPoint ||
                                                    rtk->enuWindowMedianShiftNum[i] == 0))
             {
@@ -512,11 +506,9 @@ static int outenu_dynamic(
     int           i, j, k, n, cnt, ns, flag[3] = {0}, shiftCnt = 60, dynWinCnt = 0;
     const char*   sep = opt2sep(opt);
     char*         p   = (char*)buff;
-    double        var0, var1, thres0[3] = {0};
     double        dr[3], r[3];
     unsigned char detectSensitivity = rtk->opt.detectSensitivity + 3;
     double        precent, thres;
-    double        k1, k2;
     double        var;
 
     if (rtk->opt.timeInterval < 5)
@@ -555,12 +547,9 @@ static int outenu_dynamic(
     {
         rr[i] = sol->rr[i] - rb[i];
     }
-    // for (i = 0; i < 3; i++) rr[i] = (sol->rr[i] + rtk->xp[i] - 2 * rb[i]) / 2;
-    // for (i = 0; i < 3; i++) rr_kalman[i] = rtk->xp[i] - rb[i];
-
+    
     ns = sol->stat == PMODE_SINGLE ? sol->ns[0] : sol->ns[1];
-    ecef2pos(sol->rr,
-             pos);            // 大地坐标转站心坐标
+    ecef2pos(sol->rr,pos);     // 大地坐标转站心坐标
     soltocov(sol, P);         // 得到XYZ方向状态协方差
     covenu(pos, P, Q);        // 将XYZ方向协方差转到ENU方向方差
     ecef2enu(pos, rr, enu2);  // 大地坐标转站心坐标
@@ -787,7 +776,6 @@ static int outenu_dynamic(
     trace(
         4, "stdEnu          :%10.4f %10.4f %10.4f\n", rtk->stdEnu[0], rtk->stdEnu[1], rtk->stdEnu[2]
     );
-    cnt = 0;
 
     if (rtk->opt.detectSensitivity == 10)
     {
@@ -797,10 +785,7 @@ static int outenu_dynamic(
         }
     }
     rtk->sol.nsFixPre = rtk->sol.ns[1];
-    // if (sol->ori_var[0] > 0.0 && sol->ori_var[1] > 0.0 && sol->ori_var[2] >
-    // 0.0)
-    //     trace(0x04, "pos std:%.3f %.3f %.3f\n", sqrt(sol->ori_var[0]),
-    //     sqrt(sol->ori_var[1]), sqrt(sol->ori_var[2]));
+
     trace(0x04, "iniCnt:%d shiftCnt=%d\n", rtk->iniCnt, shiftCnt);
     if (rtk->iniCnt < rtk->maxSmoothPoint)
     {

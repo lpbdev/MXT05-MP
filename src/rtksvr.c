@@ -551,12 +551,13 @@ static void outDnyResult(
             "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%."
             "9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,"
             "%d;",
-            s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_original[0],
-            svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2], svr->rtk.sol.enu_original[0],
-            svr->rtk.sol.enu_original[1], svr->rtk.sol.enu_original[2], svr->rtk.sol.rr_filer[0],
-            svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
-            svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1],
-            svr->rtk.sol.vel[2], svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
+            s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], 
+            svr->rtk.sol.rr_original[0],  svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2], 
+            svr->rtk.sol.enu_original[0], svr->rtk.sol.enu_original[1], svr->rtk.sol.enu_original[2], 
+            svr->rtk.sol.rr_filer[0],     svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], 
+            svr->rtk.sol.enu[0],          svr->rtk.sol.enu[1], svr->rtk.sol.enu[2],
+            svr->rtk.sol.vel[0],          svr->rtk.sol.vel[1], svr->rtk.sol.vel[2], 
+            svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
             svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag
         );
     }
@@ -2137,9 +2138,9 @@ static void* rtksvrthread(void* arg)
             {
                 continue;
             }
-            trace(2, "++++++rtkpos start ++++++++++++++++\n"
+            trace(2, "++++++rtkpos start ++++++++++++++++\n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
-            trace(2, "++++++rtkpos end   ++++++++++++++++\n"
+            trace(2, "++++++rtkpos end   ++++++++++++++++\n");
 #ifdef MULBASE
             if (svr->rtk.opt.masterSlaveBaseFlag == 0 && svr->rtk.opt.slaveXyz[0] != 0)
             {

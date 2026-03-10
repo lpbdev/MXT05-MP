@@ -4305,12 +4305,12 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     var = zeros(SELETE_SAT_NUM * 2, 1);
 
     char ts1[32],ts2[32];
-    time2str(obs[  0].time, s1, 3);
-    time2str(obs[n-1].time, s2, 3);
+    time2str(obs[  0].time, ts1, 3);
+    time2str(obs[n-1].time, ts2, 3);
 
-    printf( "t1,%s\nt2,%s\n", s1,s2);
+    printf( "t1,%s\nt2,%s\n", ts1,ts2);
 
-    trace(2,"t1,%s\nt2,%s\n", s1,s2);
+    trace(2,"t1,%s\nt2,%s\n", ts1,ts2);
 
     for (i = 0; i < MAXSAT; i++)
     {

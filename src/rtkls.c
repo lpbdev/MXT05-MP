@@ -531,14 +531,6 @@ extern int rtkLsq(
             }
         }
     }
-    // for (i = 0; i < 3; i++)
-    //     dr = dr + (rtk->sol.rr_ref[i] - rtk->sol.rr[i]) * (rtk->sol.rr_ref[i] -
-    //     rtk->sol.rr[i]);
-    // if (sqrt(dr) > 0.1)
-    //{
-    //     for (i = 0; i < 3; i++)        rtk->sol.rr_ref[i] = rtk->sol.rr[i];
-    // }
-    // for (i = 0; i < 3; i++)        x[i] = rtk->sol.rr_ref[i];
 
     for (i = 0; i < 3; i++)
     {
