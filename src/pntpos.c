@@ -785,6 +785,12 @@ static void update_state(
                 ssat[obs[i].sat - 1].vs = -1;
             }
 
+            for (j = 0; j < NFREQ; j++) {
+                if (obs[i].SNR[j] < 33 * 4) {
+                    obs[i].P[j] = obs[i].L[j] = 0;
+                }
+            }
+
             if ((ssat[obs[i].sat - 1].slip[0] & 1) || (ssat[obs[i].sat - 1].slip[0] & 2))
             {
                 ssat[obs[i].sat - 1].vs = -1;
@@ -845,6 +851,12 @@ static void update_state(
             if (obs[i].P[index] == 0.0 || obs[i].L[index] == 0.0)
             {
                 ssat[obs[i].sat - 1].vs = -1;
+            }
+
+            for (j = 0; j < NFREQ; j++) {
+                if (obs[i].SNR[j] < 33 * 4) {
+                    obs[i].P[j] = obs[i].L[j] = 0;
+                }
             }
 
             if ((ssat[obs[i].sat - 1].slip[0] & 1) || (ssat[obs[i].sat - 1].slip[0] & 2))

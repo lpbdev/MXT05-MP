@@ -1557,13 +1557,13 @@ int main(int argc, char** argv)
     svr.rtk.sol.window[2].nmax =
         (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
 
-    svr.rtk.sol.window[0].thres[0] = 0.01;  // posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[0].thres[1] = 0.01;  // posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[0].thres[2] = 0.02;  // posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[0].thres[0] = 0.02;  // posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[0].thres[1] = 0.02;  // posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[0].thres[2] = 0.05;  // posmaxstd(0.002, 0.02);
 
-    svr.rtk.sol.window[1].thres[0] = 0.01;  // posmaxstd(0.001, 0.01);  // unit:mm
-    svr.rtk.sol.window[1].thres[1] = 0.01;  // posmaxstd(0.001, 0.01);
-    svr.rtk.sol.window[1].thres[2] = 0.02;  // posmaxstd(0.002, 0.02);
+    svr.rtk.sol.window[1].thres[0] = 0.02;  // posmaxstd(0.001, 0.01);  // unit:mm
+    svr.rtk.sol.window[1].thres[1] = 0.02;  // posmaxstd(0.001, 0.01);
+    svr.rtk.sol.window[1].thres[2] = 0.05;  // posmaxstd(0.002, 0.02);
 
     printf(
         "%f %f %f\n", svr.rtk.sol.window[1].thres[0], svr.rtk.sol.window[1].thres[1],
