@@ -1253,10 +1253,10 @@ static void restamb(rtk_t* rtk, const double* bias, int nb)
                     continue;
                 }
                 indexb = i;
-                trace(
-                    2, "restamb, nxRecord, indexb, %d, xIndex, %d\n", indexb,
-                    rtk->ssat[sati - 1].xIndex[frqi]
-                );
+                //trace(
+                //    2, "restamb, nxRecord, indexb, %d, xIndex, %d\n", indexb,
+                //    rtk->ssat[sati - 1].xIndex[frqi]
+                //);
                 break;
             }
             if (indexb == -1)
@@ -2709,10 +2709,10 @@ static int check_res(
                         break;
                     }
                 }
-                trace(
-                    3, "nxRecord, check_res(), index1,%d, index2, %d, %d,%d\n", index1, index2,
-                    rtk->ssat[sat[i] - 1].xIndex[f], rtk->ssat[sat[j] - 1].xIndex[f]
-                );
+                //trace(
+                //    3, "nxRecord, check_res(), index1,%d, index2, %d, %d,%d\n", index1, index2,
+                //    rtk->ssat[sat[i] - 1].xIndex[f], rtk->ssat[sat[j] - 1].xIndex[f]
+                //);
                 rtk->v[nv] -= (lami[f] * x[index1] - lami[f] * x[index2]);
                 rtk->v[nv] -= (lami[f] - lamj[f]) * x[index2];
                 // if (rtk->opt.nf == 1) {
@@ -3235,16 +3235,16 @@ static int ddres(
                     }
                     return -2;
                 }
-                if (f < nf && post == 0)
-                {
-                    trace(
-                        2,
-                        "f=%d nv=%3d sys=%3d prn=%3d x[%3d]=%7.2f x[%3d]=%7.2f "
-                        "dbias=%7.2f v[%2d]=%10.4lf\n",
-                        f, nv, sysj, prnj, index1, x[index1], index1, x[index2],
-                        x[index1] - x[index2], nv, rtk->v[nv]
-                    );
-                }
+                //if (f < nf && post == 0)
+                //{
+                //    trace(
+                //        2,
+                //        "f=%d nv=%3d sys=%3d prn=%3d x[%3d]=%7.2f x[%3d]=%7.2f "
+                //        "dbias=%7.2f v[%2d]=%10.4lf\n",
+                //        f, nv, sysj, prnj, index1, x[index1], index1, x[index2],
+                //        x[index1] - x[index2], nv, rtk->v[nv]
+                //    );
+                //}
                 if (!post && robust[nv] == 0)
                 {
                     rtk->Rj[nv] = varrL(&obs[iu[j]], azel[1 + iu[j] * 2], bl, f, opt);
@@ -4626,58 +4626,58 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(2, "kalman rtk->x, 03, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
-    // if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt !=
-    // IONOOPT_EST) {
-    //     rtk->sol.rr_lsq[0] = rtk->sol.rr_lsq[1] = rtk->sol.rr_lsq[2] = 0.0;
-    //     rtk->sol.nsLsq = 0;
-    //     int delSat = 0;
-    //     if (rtk->fix_state == 1) {
-    //         while (1) {
-    //             lsqstat = rtkLsq(rtk, obs, 2 * ns, nu, svh, rs, dts, var,
-    //             lsqraim, ns, sat, iu, ir, exc); if (lsqstat == -2 &&
-    //             rtk->sol.ns[1] > 5 && lsqraim[0] > 0) {
-    //                 delSat++;
-    //                 exc[(int)lsqraim[0] - 1] = 1;
-    //                 sys = satsys((int)lsqraim[0], &prn);
-    //                 rtk->ssat[(int)lsqraim[0] - 1].vs = 0;
-    //                 trace(0x04, "rtkls reject sys=%d prn=%d el=%lf\n", sys,
-    //                 prn, rtk->ssat[(int)lsqraim[0] - 1].azel[0][1] * R2D); for
-    //                 (i = 0; i < NFREQ; i++) {
-    //                     rtk->ssat[(int)lsqraim[0] - 1].fix_amb[i] = 9999.9;
-    //                 }
-    //                 for (i = 0; i < 3; i++) {
-    //                     lsqraim[i] = 0.0;
-    //                 }
-    //             } else {
-    //                 rtk->sol.ns[1] = rtk->sol.nsLsq;
-    //                 break;
-    //             }
-    //         }
-    //         if (lsqstat != 0)
-    //             rtk->fix_state = 0;
-    //     }
-    //     trace(2, "kalman rtk->x, 04, ");         tracemat(2, rtk->x,1,6,14,4);
+    if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt !=
+    IONOOPT_EST) {
+        rtk->sol.rr_lsq[0] = rtk->sol.rr_lsq[1] = rtk->sol.rr_lsq[2] = 0.0;
+        rtk->sol.nsLsq = 0;
+        int delSat = 0;
+        if (rtk->fix_state == 1) {
+            while (1) {
+                lsqstat = rtkLsq(rtk, obs, 2 * ns, nu, svh, rs, dts, var,
+                lsqraim, ns, sat, iu, ir, exc); if (lsqstat == -2 &&
+                rtk->sol.ns[1] > 5 && lsqraim[0] > 0) {
+                    delSat++;
+                    exc[(int)lsqraim[0] - 1] = 1;
+                    sys = satsys((int)lsqraim[0], &prn);
+                    rtk->ssat[(int)lsqraim[0] - 1].vs = 0;
+                    trace(0x04, "rtkls reject sys=%d prn=%d el=%lf\n", sys,
+                    prn, rtk->ssat[(int)lsqraim[0] - 1].azel[0][1] * R2D); for
+                    (i = 0; i < NFREQ; i++) {
+                        rtk->ssat[(int)lsqraim[0] - 1].fix_amb[i] = 9999.9;
+                    }
+                    for (i = 0; i < 3; i++) {
+                        lsqraim[i] = 0.0;
+                    }
+                } else {
+                    rtk->sol.ns[1] = rtk->sol.nsLsq;
+                    break;
+                }
+            }
+            if (lsqstat != 0)
+                rtk->fix_state = 0;
+        }
+        trace(2, "kalman rtk->x, 04, ");         tracemat(2, rtk->x,1,6,14,4);
 
-    //     if (rtk->sol.rr_lsq[0] != 0.0 && rtk->sol.rr_lsq[1] != 0.0 &&
-    //     rtk->sol.rr_lsq[2] != 0.0 && (rtk->sol.nsLsq - rtk->sol.nsLsqPre) >=
-    //     -5) {
-    //         rtk->sol.rr[0] = rtk->sol.rr_lsq[0];
-    //         rtk->sol.rr[1] = rtk->sol.rr_lsq[1];
-    //         rtk->sol.rr[2] = rtk->sol.rr_lsq[2];
-    //         rtk->sol.nsLsqPre = rtk->sol.nsLsq;
-    //         rtk->sol.stat = SOLQ_FIX;
-    //     }
-    //     else {
-    //         rtk->sol.nsLsqPre = 0;
-    //         rtk->sol.stat = SOLQ_FLOAT;
-    //     }
-    //     delSat = rtk->opt.maxDelSat;
-    //     if (delSat > rtk->opt.maxDelSat) {
-    //         trace(0x04, "rtkls reject nsat;%d maxDelSat:%d\n", delSat,
-    //         rtk->opt.maxDelSat); rtk->sol.stat = SOLQ_FLOAT;
-    //     }
-    // }
-    // trace(2, "kalman rtk->x, 05, ");         tracemat(2, rtk->x,1,6,14,4);
+        if (rtk->sol.rr_lsq[0] != 0.0 && rtk->sol.rr_lsq[1] != 0.0 &&
+        rtk->sol.rr_lsq[2] != 0.0 && (rtk->sol.nsLsq - rtk->sol.nsLsqPre) >=
+        -5) {
+            rtk->sol.rr[0] = rtk->sol.rr_lsq[0];
+            rtk->sol.rr[1] = rtk->sol.rr_lsq[1];
+            rtk->sol.rr[2] = rtk->sol.rr_lsq[2];
+            rtk->sol.nsLsqPre = rtk->sol.nsLsq;
+            rtk->sol.stat = SOLQ_FIX;
+        }
+        else {
+            rtk->sol.nsLsqPre = 0;
+            rtk->sol.stat = SOLQ_FLOAT;
+        }
+        delSat = rtk->opt.maxDelSat;
+        if (delSat > rtk->opt.maxDelSat) {
+            trace(0x04, "rtkls reject nsat;%d maxDelSat:%d\n", delSat,
+            rtk->opt.maxDelSat); rtk->sol.stat = SOLQ_FLOAT;
+        }
+    }
+    trace(2, "kalman rtk->x, 05, ");         tracemat(2, rtk->x,1,6,14,4);
 
     if (rtk->sol.stat == SOLQ_FIX)
     {

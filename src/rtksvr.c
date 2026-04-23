@@ -2217,7 +2217,7 @@ static void* rtksvrthread(void* arg)
                     time = gpst2utc(time);
                     time.time += 3600 * 8;
                 }
-                if (svr->rtk.enuWindwoIndex[0] * (double)svr->rtk.opt.timeInterval ==
+                if (svr->rtk.enuWindwoIndex[0] * (double)svr->rtk.opt.timeInterval >=
                         (double)svr->rtk.opt.smoothWindowsTime * 3600.0 &&
                     rebootFlag == 0)
                 {

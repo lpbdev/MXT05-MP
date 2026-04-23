@@ -149,7 +149,6 @@ static void medianFilter(double* enu, rtk_t* rtk)
             if (rtk->enuWindowMedianShiftNum[i] < 0)
             {
                 rtk->enuWindowMedianShiftNum[i] = 0;
-
             }
             if (fabs(denu[i]) > rtk->stdEnu[i] && (rtk->enuWindwoIndex[i] < rtk->maxSmoothPoint ||
                                                    rtk->enuWindowMedianShiftNum[i] == 0))
@@ -513,33 +512,15 @@ static int outenu_dynamic(
 
     if (rtk->opt.timeInterval < 5)
     {
-        shiftCnt  = 255;
+        shiftCnt  = 180;
         precent   = 0.95;
         dynWinCnt = 60;
     }
-    else if (rtk->opt.timeInterval >= 5 && rtk->opt.timeInterval < 10)
+    else 
     {
-        shiftCnt  = 180;
+        shiftCnt  = 60;
         precent   = 0.95;
         dynWinCnt = 30;
-    }
-    else if (rtk->opt.timeInterval >= 10 && rtk->opt.timeInterval < 20)
-    {
-        shiftCnt  = 120;
-        precent   = 0.85;
-        dynWinCnt = 10;
-    }
-    else if (rtk->opt.timeInterval >= 20 && rtk->opt.timeInterval < 30)
-    {
-        shiftCnt  = 120;
-        precent   = 0.65;
-        dynWinCnt = 3;
-    }
-    else
-    {
-        shiftCnt  = 120;
-        precent   = 0.5;
-        dynWinCnt = 0;
     }
 
     trace(2, "detectSensitivity=%d param=%d\n", detectSensitivity, rtk->opt.param);
@@ -547,9 +528,9 @@ static int outenu_dynamic(
     {
         rr[i] = sol->rr[i] - rb[i];
     }
-    
+
     ns = sol->stat == PMODE_SINGLE ? sol->ns[0] : sol->ns[1];
-    ecef2pos(sol->rr,pos);     // 大地坐标转站心坐标
+    ecef2pos(sol->rr, pos);   // 大地坐标转站心坐标
     soltocov(sol, P);         // 得到XYZ方向状态协方差
     covenu(pos, P, Q);        // 将XYZ方向协方差转到ENU方向方差
     ecef2enu(pos, rr, enu2);  // 大地坐标转站心坐标
@@ -565,11 +546,11 @@ static int outenu_dynamic(
     if (sol->stat != SOLQ_FIX || rtk->sol.ns[1] < rtk->opt.minFixSat)
     {
         trace(
-            0x4, "warnning:stat=%d nfix=%d ns[0]=%d ns[1]=%d sumPostCarV=%.2f\n", sol->stat,
+            2, "warnning:stat=%d nfix=%d ns[0]=%d ns[1]=%d sumPostCarV=%.2f\n", sol->stat,
             rtk->nfix, rtk->sol.ns[0], rtk->sol.ns[1], rtk->sumPostCarV
         );
         trace(
-            0x4,
+            2,
             "warnning:%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%"
             "s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f\n",
             s, sep, enu2[0], sep, enu2[1], sep, enu2[2], sep, sol->stat, sep, ns, sep, SQRT(Q[0]),
@@ -597,7 +578,7 @@ static int outenu_dynamic(
             sol->stat  = 0;
             sol->ratio = 0.0;
             fixEnuErrorCheck++;
-            trace(4, "fixEnuErrorCheck:%d\n", fixEnuErrorCheck);
+            trace(2, "fixEnuErrorCheck:%d\n", fixEnuErrorCheck);
             return 0;
         }
         else
@@ -607,6 +588,7 @@ static int outenu_dynamic(
     }
     if (rtk->opt.detectSensitivity == 1)
     {
+        /*
         if (rtk->aveEnu[0] != 0)
         {
             if (fabs(enu[0] - rtk->aveEnu[0]) > 0.5)
@@ -625,7 +607,10 @@ static int outenu_dynamic(
             {
                 shiftCnt = 10;
             }
+
+            shiftCnt = 60;
         }
+            */
     }
     else
     {
@@ -702,16 +687,16 @@ static int outenu_dynamic(
     // rtk->sol.aveFixSat = (sol->aveFixSat * sol->aveFixSatCnt + rtk->sol.ns[1]) /
     // (sol->aveFixSatCnt + 1); sol->aveFixSatCnt++;
 
-    if (fabs(rtk->sol.nsFixPre - rtk->sol.ns[1]) > 2 && rtk->sol.ns[1] <= 15)
-    {
-        for (i = 0; i < 3; i++)
-        {
-            sol->thresCnt1[i] = 0;
-            sol->thresCnt2[i] = 0;
-            sol->enu_sum[i]   = 0.0;
-            trace(4, "reset thresCnt\n");
-        }
-    }
+    // if (fabs(rtk->sol.nsFixPre - rtk->sol.ns[1]) > 2 && rtk->sol.ns[1] <= 15)
+    // {
+    //     for (i = 0; i < 3; i++)
+    //     {
+    //         sol->thresCnt1[i] = 0;
+    //         sol->thresCnt2[i] = 0;
+    //         sol->enu_sum[i]   = 0.0;
+    //         trace(2, "reset thresCnt\n");
+    //     }
+    // }
     if (rtk->mvflag == 1)
     {
         for (i = 0; i < 3; i++)
@@ -745,19 +730,23 @@ static int outenu_dynamic(
 
         calcjump(sol->window, sol->window + 1, sol->jump, sol->tmpjump, 3);
 
-        trace(2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
-               sol->window[0].ave[0], sol->window[0].ave[1],
-               sol->window[0].ave[2], sol->window[0].std[0],
-               sol->window[0].std[1], sol->window[0].std[2]);
+        trace(
+            2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s, sol->window[0].ave[0],
+            sol->window[0].ave[1], sol->window[0].ave[2], sol->window[0].std[0],
+            sol->window[0].std[1], sol->window[0].std[2]
+        );
 
-        trace(2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
-               sol->window[1].ave[0], sol->window[1].ave[1],
-               sol->window[1].ave[2], sol->window[1].std[0],
-               sol->window[1].std[1], sol->window[1].std[2]);
+        trace(
+            2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s, sol->window[1].ave[0],
+            sol->window[1].ave[1], sol->window[1].ave[2], sol->window[1].std[0],
+            sol->window[1].std[1], sol->window[1].std[2]
+        );
 
-        trace(2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s,
-               sol->window[2].ave[0], sol->window[2].ave[1], sol->window[2].ave[2], 
-               sol->window[2].std[0], sol->window[2].std[1], sol->window[2].std[2]);
+        trace(
+            2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s, sol->window[2].ave[0],
+            sol->window[2].ave[1], sol->window[2].ave[2], sol->window[2].std[0],
+            sol->window[2].std[1], sol->window[2].std[2]
+        );
 
         // logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,%.4f, %.4f,
         // %.4f,\n", s,
@@ -768,12 +757,12 @@ static int outenu_dynamic(
         //        sol->jump[2], sol->tmpjump[0], sol->tmpjump[1], sol->tmpjump[2]);
     }
 
-    trace(4, "enu             :%10.4f %10.4f %10.4f\n", enu2[0], enu2[1], enu2[2]);
+    trace(2, "enu             :%10.4f %10.4f %10.4f\n", enu2[0], enu2[1], enu2[2]);
     trace(
-        4, "aveEnu          :%10.4f %10.4f %10.4f\n", rtk->aveEnu[0], rtk->aveEnu[1], rtk->aveEnu[2]
+        2, "aveEnu          :%10.4f %10.4f %10.4f\n", rtk->aveEnu[0], rtk->aveEnu[1], rtk->aveEnu[2]
     );
     trace(
-        4, "stdEnu          :%10.4f %10.4f %10.4f\n", rtk->stdEnu[0], rtk->stdEnu[1], rtk->stdEnu[2]
+        2, "stdEnu          :%10.4f %10.4f %10.4f\n", rtk->stdEnu[0], rtk->stdEnu[1], rtk->stdEnu[2]
     );
 
     if (rtk->opt.detectSensitivity == 10)
@@ -785,7 +774,7 @@ static int outenu_dynamic(
     }
     rtk->sol.nsFixPre = rtk->sol.ns[1];
 
-    trace(0x04, "iniCnt:%d shiftCnt=%d\n", rtk->iniCnt, shiftCnt);
+    trace(2, "iniCnt:%d shiftCnt=%d\n", rtk->iniCnt, shiftCnt);
     if (rtk->iniCnt < rtk->maxSmoothPoint)
     {
         rtk->iniCnt++;
@@ -794,15 +783,18 @@ static int outenu_dynamic(
     {
         if (rtk->enuWindwoIndex[k] >= rtk->maxSmoothPoint)
         {  // 窗口满
-            if (rtk->aveEnu[k] != 0.0 &&
-                fabs(enu[k] - rtk->aveEnu[k]) > detectSensitivity * rtk->stdEnu[k] &&
+            if (rtk->aveEnu[k] != 0.0 && fabs(enu[k] - rtk->aveEnu[k]) > 0.015 &&
                 rtk->iniCnt == rtk->maxSmoothPoint)
             {
                 sol->thresCnt1[k]++;
-                trace(0x04, "warnning a exceptional potin:%d\n", k);
+                trace(
+                    0x02, "warnning a exceptional potin:%d,%.4f, %.4f,%.4f, %.4f,%d,%d\n", k,
+                    enu[k], rtk->aveEnu[k], detectSensitivity, rtk->stdEnu[k], sol->thresCnt1[k],
+                    sol->thresCnt2[k]
+                );
                 if (sol->thresCnt1[k] < shiftCnt / 2.0)
                 {
-                    trace(0x04, "changed enu:%d\n", k);
+                    trace(0x02, "changed enu:%d\n", k);
                     enu[k] = rtk->aveEnu[k] + 0.0001;
                     ;
                 }
@@ -834,7 +826,7 @@ static int outenu_dynamic(
                 {
                     // rtk->sol.enu_shift[k] = sol->enu_sum[k] / (sol->thresCnt1[k] +
                     // sol->thresCnt2[k]) - rtk->aveEnu[k];
-                    trace(0x04, "warnning has detect shift:%.2f;k=%d\n", rtk->sol.enu_shift[k], k);
+                    trace(0x02, "warnning has detect shift:%.2f;k=%d\n", rtk->sol.enu_shift[k], k);
                     if (k == 0 || k == 1)
                     {
                         if (fabs(rtk->sol.enu_shift[k]) > 0.016)
@@ -865,7 +857,7 @@ static int outenu_dynamic(
                     }
                     else
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.045)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.03)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -1110,12 +1102,12 @@ static int outenu_dynamic(
     // %14.4lf\n", sol->rr_filer[0], sol->rr_filer[1], sol->rr_filer[2]);
 
     trace(
-        4, "%14.4lf %14.4lf %14.4lf %u %u %u\n", rtk->stdEnu[0], rtk->stdEnu[1], rtk->stdEnu[2],
+        2, "%14.4lf %14.4lf %14.4lf %u %u %u\n", rtk->stdEnu[0], rtk->stdEnu[1], rtk->stdEnu[2],
         rtk->enuWindwoIndex[0], rtk->enuWindwoIndex[1], rtk->enuWindwoIndex[2]
     );
-    trace(4, "rtk->tt=%.2f maxSmoothPoint=%d\n", rtk->tt, rtk->maxSmoothPoint);
-    trace(4, "cnt1:  %02d  %02d  %02d\n", sol->thresCnt1[0], sol->thresCnt1[1], sol->thresCnt1[2]);
-    trace(4, "cnt2:  %02d  %02d  %02d\n", sol->thresCnt2[0], sol->thresCnt2[1], sol->thresCnt2[2]);
+    trace(2, "rtk->tt=%.2f maxSmoothPoint=%d\n", rtk->tt, rtk->maxSmoothPoint);
+    trace(2, "cnt1:  %02d  %02d  %02d\n", sol->thresCnt1[0], sol->thresCnt1[1], sol->thresCnt1[2]);
+    trace(2, "cnt2:  %02d  %02d  %02d\n", sol->thresCnt2[0], sol->thresCnt2[1], sol->thresCnt2[2]);
 
     trace(
         0x02,

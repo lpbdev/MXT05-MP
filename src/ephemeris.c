@@ -815,9 +815,10 @@ extern void assignSatBias(rtk_t* rtk, gtime_t teph, gtime_t tepb, obsd_tmp_t* ob
                 continue;
             }
 
-            trace(
-                3, "nxRecord,assignSatBias(), k, %d, xIndex, %d\n", rtk->ssat[sati - 1].xIndex[f]
-            );
+            //trace(
+            //    3, "nxRecord,assignSatBias(), k, %d, xIndex, %d\n", rtk->ssat[sati - 1].xIndex[f]
+            //);
+
             k                                 = rtk->np - rtk->nt - rtk->ni + k;
             baseBias                          = rtk->xp[k];
             rtk->ssat[baseSat - 1].fix_amb[j] = baseBias;

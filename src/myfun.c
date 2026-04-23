@@ -995,17 +995,17 @@ extern int selsatRTK(
         satno2id(obs[i].sat, id);
         if (rtk->ssat[obs[i].sat - 1].vs != 1)
         {
-            trace(2, "sel,0, %s\n", id);
+            //trace(2, "sel,0, %s\n", id);
             continue;
         }
         if (rtk->ssat[obs[i].sat - 1].quickSelSatDel == 1)
         {
-            trace(2, "sel,1, %s\n", id);
+            //trace(2, "sel,1, %s\n", id);
             continue;
         }
         if (rtk->ssat[obs[i].sat - 1].rejRes == 1)
         {
-            trace(2, "sel,2, %s\n", id);
+            //trace(2, "sel,2, %s\n", id);
             continue;
         }
         for (j = nu; j < nu + nr; j++)
@@ -1018,7 +1018,7 @@ extern int selsatRTK(
                     if (obs[i].P[f] != 0.0 && obs[j].P[f] != 0.0 && obs[i].L[f] != 0.0 &&
                         obs[j].L[f] != 0.0)
                     {
-                        trace(2, "sel,5, %s,%d,%d\n", id, f, nf);
+                        //trace(2, "sel,5, %s,%d,%d\n", id, f, nf);
 
                         flag = 1;
                         break;
@@ -1026,7 +1026,7 @@ extern int selsatRTK(
                 }
                 if (flag == 0)
                 {
-                    trace(2, "sel,3, %s,%d\n", id, nf);
+                    //trace(2, "sel,3, %s,%d\n", id, nf);
                     continue;
                 }
                 if (elFlag == 1)
@@ -1034,14 +1034,16 @@ extern int selsatRTK(
                     if (rtk->ssat[obs[i].sat - 1].azel[0][1] * R2D <= 30.0 &&
                         rtk->ssat[obs[i].sat - 1].azel[1][1] * R2D <= 30.0)
                     {
-                        trace(2, "sel,4, %s\n", id);
+                        //trace(2, "sel,4, %s\n", id);
                         continue;
                     }
                 }
+                /*
                 trace(
                     2, "sel,6,azel,%.2f, %.2f, %.2f\n", rtk->ssat[obs[i].sat - 1].azel[0][1],
                     rtk->ssat[obs[i].sat - 1].azel[1][1], opt->elmin
                 );
+                */
                 if (rtk->ssat[obs[i].sat - 1].azel[0][1] >= opt->elmin &&
                     rtk->ssat[obs[i].sat - 1].azel[1][1] >= opt->elmin)
                 {
@@ -1255,13 +1257,13 @@ static void assignAmbP(rtk_t* rtk, int lcopt)
                     rtk->P[j + rtk->nx * i] = rtk->Pp[column + rtk->nxPre * row];
                     rtk->P[i + rtk->nx * i] = rtk->Pp[row + rtk->nxPre * row];
                     rtk->P[j + rtk->nx * j] = rtk->Pp[column + rtk->nxPre * column];
-                    trace(
-                        3,
-                        "assignAmbP, i, %d, j, %d, ii, %10.4f,   jj, %10.4f,ij, %10.4f,ji, "
-                        "%10.4f\n",
-                        i, j, rtk->P[i + rtk->nx * i], rtk->P[j + rtk->nx * j],
-                        rtk->P[i + rtk->nx * j], rtk->P[j + rtk->nx * i]
-                    );
+                    //trace(
+                    //    3,
+                    //    "assignAmbP, i, %d, j, %d, ii, %10.4f,   jj, %10.4f,ij, %10.4f,ji, "
+                    //    "%10.4f\n",
+                    //    i, j, rtk->P[i + rtk->nx * i], rtk->P[j + rtk->nx * j],
+                    //    rtk->P[i + rtk->nx * j], rtk->P[j + rtk->nx * i]
+                    //);
                 }
             }
         }

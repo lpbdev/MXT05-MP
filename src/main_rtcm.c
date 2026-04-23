@@ -39,8 +39,7 @@ FILE*         fpcof                      = NULL;
 char          configFileFath[MAXSTRPATH] = {0};
 char          tcpFileFath[MAXSTRPATH]    = {0};
 
-unsigned char rtcmMode = 2;
-int           g_week;
+unsigned char rtcmMode = 2; int           g_week;
 char          logFileSizeName[1024] = {0};
 double        logFileSize           = 100;
 double        writeConfigTime       = 1;
