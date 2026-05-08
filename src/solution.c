@@ -506,7 +506,7 @@ static int outenu_dynamic(
     const char*   sep = opt2sep(opt);
     char*         p   = (char*)buff;
     double        dr[3], r[3];
-    unsigned char detectSensitivity = rtk->opt.detectSensitivity + 3;
+    unsigned char detectSensitivity = rtk->opt.detectSensitivity + 2;
     double        precent, thres;
     double        var;
 
@@ -516,10 +516,16 @@ static int outenu_dynamic(
         precent   = 0.95;
         dynWinCnt = 60;
     }
-    else 
+    else if (rtk->opt.timeInterval < 15)
+    {
+        shiftCnt  = 30;
+        precent   = 0.95;
+        dynWinCnt = 60;
+    }
+    else
     {
         shiftCnt  = 60;
-        precent   = 0.95;
+        precent   = 0.80;
         dynWinCnt = 30;
     }
 
@@ -701,15 +707,15 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
-            if (sol->window[0].jumpflag[i] == 1)
+            if (sol->window[0].jumpflag[i] == 2)
             {
                 sol->window[2].n[i] = 0;  // sol->window[0].n;
 
-                sol->window[2].ave[i] = sol->window[2].ave[i] + sol->jump[i];
-                sol->window[2].var[i] = 0.0;   // sol->window[0].var[i];
-                sol->window[2].std[i] = 0.0;   // sol->window[0].std[i];
-                sol->window[2].sumX2[i] = 0.0; // sol->window[0].sumX2[i];
-                trace(2,"wjump,%d,%.4f\n", sol->window[0].jumpflag[i],sol->window[2].ave[i] );
+                sol->window[2].ave[i]   = sol->window[2].ave[i] + sol->jump[i];
+                sol->window[2].var[i]   = 0.0;  // sol->window[0].var[i];
+                sol->window[2].std[i]   = 0.0;  // sol->window[0].std[i];
+                sol->window[2].sumX2[i] = 0.0;  // sol->window[0].sumX2[i];
+                trace(2, "wjump,%d,%.4f\n", sol->window[0].jumpflag[i], sol->window[2].ave[i]);
             }
         }
     }
@@ -728,7 +734,7 @@ static int outenu_dynamic(
         update_wind(&rtk->sol.window[1], &rtk->sol.wdata);
         update_wind(&rtk->sol.window[2], &rtk->sol.wdata);
 
-        calcjump(sol->window, sol->window + 1, sol->jump, sol->tmpjump, 3);
+        calcjump(sol->window, sol->jump, sol->tmpjump, 3);
 
         trace(
             2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s, sol->window[0].ave[0],
@@ -774,25 +780,22 @@ static int outenu_dynamic(
     }
     rtk->sol.nsFixPre = rtk->sol.ns[1];
 
-    trace(2, "iniCnt:%d shiftCnt=%d\n", rtk->iniCnt, shiftCnt);
+    trace(2, "iniCnt:%d shiftCnt=%d, %.4f\n", rtk->iniCnt, shiftCnt);
     if (rtk->iniCnt < rtk->maxSmoothPoint)
     {
         rtk->iniCnt++;
     }
+
     for (k = 0; k < 3; k++)
     {
         if (rtk->enuWindwoIndex[k] >= rtk->maxSmoothPoint)
         {  // 窗口满
-            if (rtk->aveEnu[k] != 0.0 && fabs(enu[k] - rtk->aveEnu[k]) > 0.015 &&
-                rtk->iniCnt == rtk->maxSmoothPoint)
+            if (rtk->aveEnu[k] != 0.0 &&
+                fabs(enu[k] - rtk->aveEnu[k]) > detectSensitivity * rtk->stdEnu[k])
             {
                 sol->thresCnt1[k]++;
-                trace(
-                    0x02, "warnning a exceptional potin:%d,%.4f, %.4f,%.4f, %.4f,%d,%d\n", k,
-                    enu[k], rtk->aveEnu[k], detectSensitivity, rtk->stdEnu[k], sol->thresCnt1[k],
-                    sol->thresCnt2[k]
-                );
-                if (sol->thresCnt1[k] < shiftCnt / 2.0)
+                trace(0x02, "warnning a exceptional potin:%d\n", k);
+                if (sol->thresCnt1[k] < shiftCnt / 2.0 && rtk->opt.detectSensitivity != 10)
                 {
                     trace(0x02, "changed enu:%d\n", k);
                     enu[k] = rtk->aveEnu[k] + 0.0001;
@@ -829,7 +832,7 @@ static int outenu_dynamic(
                     trace(0x02, "warnning has detect shift:%.2f;k=%d\n", rtk->sol.enu_shift[k], k);
                     if (k == 0 || k == 1)
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.016)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.012)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -849,6 +852,10 @@ static int outenu_dynamic(
                                 rtk->sum_sqeun[k] =
                                     rtk->sum_sqeun[k] + rtk->enuWindow[k][i] * rtk->enuWindow[k][i];
                             }
+                            // if ((int)rtk->ep[3] - 2 < 0)
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2 + 24];
+                            // else
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2];
                         }
                         else
                         {
@@ -857,7 +864,7 @@ static int outenu_dynamic(
                     }
                     else
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.03)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.035)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -868,6 +875,10 @@ static int outenu_dynamic(
                                 rtk->sum_sqeun[k] =
                                     rtk->sum_sqeun[k] + rtk->enuWindow[k][i] * rtk->enuWindow[k][i];
                             }
+                            // if ((int)rtk->ep[3] - 2 < 0)
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2 + 24];
+                            // else
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2];
                         }
                         else
                         {
@@ -905,16 +916,15 @@ static int outenu_dynamic(
         else
         {  // 窗口没满
             if (rtk->aveEnu[k] != 0.0 &&
-                    fabs(enu[k] - rtk->aveEnu[k]) > detectSensitivity * rtk->stdEnu[k] &&
-                    rtk->iniCnt == rtk->maxSmoothPoint ||
+                    fabs(enu[k] - rtk->aveEnu[k]) > detectSensitivity * rtk->stdEnu[k] ||
                 (fabs(enu[k] - rtk->aveEnu[k]) > 0.5 && fabs(rtk->aveEnu[k]) != 0.0 &&
                  rtk->opt.detectSensitivity != 10))
             {
                 sol->thresCnt1[k]++;
-                trace(0x04, "warnning a exceptional potin:%d\n", k);
-                if (sol->thresCnt1[k] < shiftCnt / 2.0)
+                trace(0x02, "warnning a exceptional potin:%d\n", k);
+                if (sol->thresCnt1[k] < shiftCnt / 2.0 && rtk->opt.detectSensitivity != 10)
                 {
-                    trace(0x04, "changed enu:%d\n", k);
+                    trace(0x02, "changed enu:%d\n", k);
                     enu[k] = rtk->aveEnu[k] + 0.0001;
                 }
                 sol->enu_sum[k] += enu2[k];
@@ -947,7 +957,7 @@ static int outenu_dynamic(
                     // sol->thresCnt2[k]) - rtk->aveEnu[k];
                     if (k == 0 || k == 1)
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.016)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.012)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -958,6 +968,10 @@ static int outenu_dynamic(
                                 rtk->sum_sqeun[k] =
                                     rtk->sum_sqeun[k] + rtk->enuWindow[k][i] * rtk->enuWindow[k][i];
                             }
+                            // if ((int)rtk->ep[3] - 2 < 0)
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2 + 24];
+                            // else
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2];
                         }
                         else
                         {
@@ -966,7 +980,7 @@ static int outenu_dynamic(
                     }
                     else
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.045)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.035)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -977,6 +991,10 @@ static int outenu_dynamic(
                                 rtk->sum_sqeun[k] =
                                     rtk->sum_sqeun[k] + rtk->enuWindow[k][i] * rtk->enuWindow[k][i];
                             }
+                            // if ((int)rtk->ep[3] - 2 < 0)
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2 + 24];
+                            // else
+                            //     rtk->stdEnu[k] = rtk->stdEnuHour[k][(int)rtk->ep[3] - 2];
                         }
                         else
                         {

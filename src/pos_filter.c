@@ -214,6 +214,15 @@ extern double posmaxstd(double std, double maxjump)
 {
     return sqrt(std * std + maxjump * maxjump / 4.0) * 0.75;
 }
+// 返回检验统计量 T
+static double shift_test(double std, double maxjump, int n)
+{
+    if (n <= 0 || std <= 0)
+    {
+        return 0.0;
+    }
+    return maxjump / (std / sqrt((double)n));
+}
 
 extern int update_wind(wind_t* wind, data_t* data)
 {
@@ -317,10 +326,13 @@ static int getWindP(wind_t wind, int index, double *pos){
 }
 #endif
 
-extern int calcjump(wind_t* wa, wind_t* wb, double* jump, double* tmpjump, int nj)
+extern int calcjump(wind_t* windows, double* jump, double* tmpjump, int nj)
 {
-    int    i        = 0;
-    double stdthres = 0;
+    int     i        = 0;
+    double  stdthres = 0;
+    wind_t* wa       = windows;
+    wind_t* wb       = windows + 1;
+    wind_t* wc       = windows + 2;
 
     if (wa->n[0] < wa->nmax || wb->n[0] < wb->nmax)
     {
@@ -331,20 +343,26 @@ extern int calcjump(wind_t* wa, wind_t* wb, double* jump, double* tmpjump, int n
     for (i = 0; i < nj; i++)
     {
         stdthres = posmaxstd(wa->thres[i] / 10, wa->thres[i]);
-        if (wa->std[i] > stdthres)
+        if (wa->std[i] >= stdthres &&
+            fabs(wb->ave[i] - wc->ave[i]) <
+                wb->thres[i] * 0.75)  //&& wa->std[i] <= wb->std[i] &&
+                                      // fabs(wa->ave[i]-wb->ave[i])>wa->thres[i]/2)
         {
+            printf(
+                "thres, %d, %.4f, %.4f, %.4f, %.4f\n", i, wa->thres[i], wa->std[i], stdthres,
+                fabs(wb->ave[i] - wc->ave[i])
+            );
             wa->jumpflag[i] = 1;
         }
 
-        if (wa->jumpflag[i] == 1)
+        if (wa->jumpflag[i] == 1 && fabs(wa->ave[i] - wc->ave[i]) > wb->thres[i] / 2 &&
+            wa->std[i] < stdthres)
         {
-            if (fabs(tmpjump[i]) < fabs(wa->ave[i] - wb->ave[i]))
-            {
-                tmpjump[i] = wa->ave[i] - wb->ave[i];
-            }
+            wa->jumpflag[i] = 2;
+            tmpjump[i]      = wa->ave[i] - wc->ave[i];
         }
 
-        if (wa->jumpflag[i] == 1 && wa->std[i] < wb->std[i])
+        if (wa->jumpflag[i] == 2 && fabs(wa->ave[i] - wb->ave[i]) < wb->thres[i] / 2)
         {
             jump[i]         = tmpjump[i];
             tmpjump[i]      = 0.0;
@@ -619,6 +637,6 @@ extern int    update_data(data_t* poss, double* newdata) { return 0; }
 extern int    update_wind(wind_t* wind, data_t* data) { return 0; }
 extern int    update_wind_fp(wind_t* wind, int n, int nmax, FILE* fp) { return 0; }
 extern double posmaxstd(double std, double maxjump) { return 0.0; }
-extern int    calcjump(wind_t* wa, wind_t* wb, double* jump, double* tmpjump, int nj) { return 0; }
+extern int    calcjump(wind_t* windows, double* jump, double* tmpjump, int nj) { return 0; }
 
 #endif

@@ -39,7 +39,8 @@ FILE*         fpcof                      = NULL;
 char          configFileFath[MAXSTRPATH] = {0};
 char          tcpFileFath[MAXSTRPATH]    = {0};
 
-unsigned char rtcmMode = 2; int           g_week;
+unsigned char rtcmMode = 2;
+int           g_week;
 char          logFileSizeName[1024] = {0};
 double        logFileSize           = 100;
 double        writeConfigTime       = 1;
@@ -792,9 +793,9 @@ static DWORD WINAPI rtksvrthread(void* arg)
 static void* rtksvrthread(void* arg)
 #endif
 {
-    int i, j, f, k, m, n, cnt, dtMinIndex, cputime, fobs[2] = {0}, fnobs, size, ouInterval,
-                                                    fixCnt = 0;
-    double         tt, tow, dtMin, dt[OBSBASELEN] = {0};
+    int    i, j, f, k, m, n, cnt, dtMinIndex, cputime, fobs[2] = {0}, fnobs, size, ouInterval,
+                                                       fixCnt = 0;
+    double tt, tow, dtMin, dt[OBSBASELEN] = {0};
     unsigned char *p, *q, iniEnuFlag = 0, sys, prn;
     unsigned int   cycle = 0, tick, tick1hz = 0, iniEnuCnt = 0, epochCnt = 0;
     double         iniEnu[3], pos[3], dr[3];
@@ -1433,10 +1434,16 @@ int main(int argc, char** argv)
     {
         svr.rtk.opt.smoothWindowsTime = 24;
     }
-    svr.rtk.opt.initEnuTime = 1;
-    SELETE_SAT_NUM          = 40;
-    NX                      = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
-    NY                      = NX;
+
+    svr.rtk.opt.initEnuTime = 11;
+    if (svr.rtk.opt.initEnuTime > svr.rtk.opt.smoothWindowsTime)
+    {
+        svr.rtk.opt.initEnuTime = svr.rtk.opt.smoothWindowsTime;
+    }
+
+    SELETE_SAT_NUM = 40;
+    NX             = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
+    NY             = NX;
 
     svr.rtk.x  = zeros(NX, 1);
     svr.rtk.P  = zeros(NX, NX);

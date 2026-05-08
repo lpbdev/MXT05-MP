@@ -551,13 +551,12 @@ static void outDnyResult(
             "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%."
             "9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,"
             "%d;",
-            s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], 
-            svr->rtk.sol.rr_original[0],  svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2], 
-            svr->rtk.sol.enu_original[0], svr->rtk.sol.enu_original[1], svr->rtk.sol.enu_original[2], 
-            svr->rtk.sol.rr_filer[0],     svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], 
-            svr->rtk.sol.enu[0],          svr->rtk.sol.enu[1], svr->rtk.sol.enu[2],
-            svr->rtk.sol.vel[0],          svr->rtk.sol.vel[1], svr->rtk.sol.vel[2], 
-            svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
+            s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_original[0],
+            svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2], svr->rtk.sol.enu_original[0],
+            svr->rtk.sol.enu_original[1], svr->rtk.sol.enu_original[2], svr->rtk.sol.rr_filer[0],
+            svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
+            svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1],
+            svr->rtk.sol.vel[2], svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
             svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag
         );
     }
@@ -669,7 +668,7 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff)
     char   idStr[64]     = {0};
     printf("%s\n", buff);
     buff = strstr(buff, "{");
-    //printf("%s\n", buff);
+    // printf("%s\n", buff);
     json = cJSON_Parse(buff);
 
     if (NULL == json)
@@ -1647,9 +1646,9 @@ static DWORD WINAPI rtksvrthread(void* arg)
 static void* rtksvrthread(void* arg)
 #endif
 {
-    int i, j, f, k, m, n, cnt, dtMinIndex, cputime, fobs[2] = {0}, fnobs, size, ouInterval,
-                                                    fixCnt = 0;
-    double         tt, tow, dtMin, dt[OBSBASELEN] = {0};
+    int    i, j, f, k, m, n, cnt, dtMinIndex, cputime, fobs[2] = {0}, fnobs, size, ouInterval,
+                                                       fixCnt = 0;
+    double tt, tow, dtMin, dt[OBSBASELEN] = {0};
     unsigned char *p, *q, iniEnuFlag = 0, sys, prn;
     unsigned int   cycle = 0, tick, tick1hz = 0, iniEnuCnt = 0, epochCnt = 0;
     double         iniEnu[3], pos[3], dr[3];
@@ -1678,8 +1677,8 @@ static void* rtksvrthread(void* arg)
     traceconfig();
     for (cycle = 0; svr->state; cycle++)
     {
-        tick = tickget();
-        time = timeget();
+        tick      = tickget();
+        time      = timeget();
         time.time = ROUND(time.time + time.frac);
         time.frac = 0.0;
         if (sopt.times == 3)
@@ -1688,7 +1687,7 @@ static void* rtksvrthread(void* arg)
             time.time += 3600 * 8;
         }
         time2str(time, s1, 3);
-        
+
         trace(2, "systime,%s\n", s1);
 
         ouInterval = svr->rtk.opt.timeIntervalSolution * 3600;

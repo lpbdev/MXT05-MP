@@ -41,4 +41,4 @@ extern int    update_data(data_t* poss, double* newdata);
 extern int    update_wind(wind_t* wind, data_t* data);
 extern int    update_wind_fp(wind_t* wind, int n, int nmax, FILE* fp);
 extern double posmaxstd(double std, double maxjump);
-extern int    calcjump(wind_t* wa, wind_t* wb, double* jump, double* tmpjump, int nj);
+extern int    calcjump(wind_t* windows, double* jump, double* tmpjump, int nj);
