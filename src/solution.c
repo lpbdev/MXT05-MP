@@ -518,7 +518,7 @@ static int outenu_dynamic(
     }
     else if (rtk->opt.timeInterval < 15)
     {
-        shiftCnt  = 30;
+        shiftCnt  = 60;
         precent   = 0.95;
         dynWinCnt = 60;
     }
@@ -815,11 +815,18 @@ static int outenu_dynamic(
                     sol->thresCnt2[k] = 0;
                 }
             }
+            if ((sol->thresCnt2[k] -sol->thresCnt1[k] >=15) && (sol->thresCnt1[k]<=5) ){
+                sol->thresCnt1[k] = 0;
+                sol->thresCnt2[k] = 0;
+                sol->enu_sum[k]   = 0.0;
+            }
+            trace(2,"thresCnt,k=%d, %d,%d,%.4f,%.4f\n",k,sol->thresCnt1[k], sol->thresCnt2[k],fabs(enu[k] - rtk->aveEnu[k]) ,detectSensitivity * rtk->stdEnu[k]);
+            
             if (sol->thresCnt1[k] + sol->thresCnt2[k] >= shiftCnt)
             {
                 rtk->sol.enu_shift[k] =
                     sol->enu_sum[k] / (sol->thresCnt1[k] + sol->thresCnt2[k]) - rtk->aveEnu[k];
-                if (fabs(rtk->sol.enu_shift[k]) > 0.05 && rtk->opt.timeInterval >= 15)
+                if (fabs(rtk->sol.enu_shift[k]) > 0.03 && rtk->opt.timeInterval >= 15)
                 {
                     precent = 0.5;
                 }
@@ -832,7 +839,7 @@ static int outenu_dynamic(
                     trace(0x02, "warnning has detect shift:%.2f;k=%d\n", rtk->sol.enu_shift[k], k);
                     if (k == 0 || k == 1)
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.012)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.01)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -864,7 +871,7 @@ static int outenu_dynamic(
                     }
                     else
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.035)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.03)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -941,11 +948,16 @@ static int outenu_dynamic(
                     sol->thresCnt2[k] = 0;
                 }
             }
+            if ((sol->thresCnt2[k] - sol->thresCnt1[k]) * rtk->opt.timeInterval >= 60 ){
+                sol->thresCnt1[k] = 0;
+                sol->thresCnt2[k] = 0;
+                sol->enu_sum[k]   = 0.0;
+            }
             if (sol->thresCnt1[k] + sol->thresCnt2[k] >= shiftCnt)
             {
                 rtk->sol.enu_shift[k] =
                     sol->enu_sum[k] / (sol->thresCnt1[k] + sol->thresCnt2[k]) - rtk->aveEnu[k];
-                if (fabs(rtk->sol.enu_shift[k]) > 0.05 && rtk->opt.timeInterval >= 15)
+                if (fabs(rtk->sol.enu_shift[k]) > 0.03 && rtk->opt.timeInterval >= 15)
                 {
                     precent = 0.5;
                 }
@@ -957,7 +969,7 @@ static int outenu_dynamic(
                     // sol->thresCnt2[k]) - rtk->aveEnu[k];
                     if (k == 0 || k == 1)
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.012)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.01)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
@@ -980,7 +992,7 @@ static int outenu_dynamic(
                     }
                     else
                     {
-                        if (fabs(rtk->sol.enu_shift[k]) > 0.035)
+                        if (fabs(rtk->sol.enu_shift[k]) > 0.03)
                         {
                             rtk->sum_enu[k]   = 0;
                             rtk->sum_sqeun[k] = 0;
