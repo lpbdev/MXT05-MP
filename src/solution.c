@@ -738,21 +738,21 @@ static int outenu_dynamic(
         calcjump(sol->window, sol->jump, sol->tmpjump, 3);
 
         trace(
-            2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s, sol->window[0].ave[0],
+            2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s, sol->window[0].ave[0],
             sol->window[0].ave[1], sol->window[0].ave[2], sol->window[0].std[0],
-            sol->window[0].std[1], sol->window[0].std[2]
+            sol->window[0].std[1], sol->window[0].std[2],sol->window[0].n[0],sol->window[0].n[1],sol->window[0].n[2]
         );
 
         trace(
-            2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s, sol->window[1].ave[0],
+            2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s, sol->window[1].ave[0],
             sol->window[1].ave[1], sol->window[1].ave[2], sol->window[1].std[0],
-            sol->window[1].std[1], sol->window[1].std[2]
+            sol->window[1].std[1], sol->window[1].std[2],sol->window[1].n[0],sol->window[1].n[1],sol->window[1].n[2]
         );
 
         trace(
-            2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,\n", s, sol->window[2].ave[0],
+            2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s, sol->window[2].ave[0],
             sol->window[2].ave[1], sol->window[2].ave[2], sol->window[2].std[0],
-            sol->window[2].std[1], sol->window[2].std[2]
+            sol->window[2].std[1], sol->window[2].std[2],sol->window[2].n[0],sol->window[2].n[1],sol->window[2].n[2]
         );
 
         // logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,%.4f, %.4f,

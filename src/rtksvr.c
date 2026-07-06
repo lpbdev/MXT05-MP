@@ -56,9 +56,9 @@ double g_gpsLam[NFREQ] = {CLIGHT / FREQ1, CLIGHT / FREQ2, CLIGHT / FREQ5};
 double g_galLam[NFREQ] = {CLIGHT / FREQ1, CLIGHT / FREQ7, CLIGHT / FREQ5};
 // double g_bdsLam[NFREQ] = { CLIGHT / FREQ1_CMP, CLIGHT / FREQ2_CMP, CLIGHT /
 // FREQ3_CMP,CLIGHT / FREQB1C_CMP ,CLIGHT / FREQB2a_CMP ,CLIGHT / FREQB2b_CMP };
-double g_bdsLam[NFREQ] = {CLIGHT / FREQ1_CMP,   CLIGHT / FREQ2_CMP,
+double g_bdsLam[NFREQ] = {CLIGHT / FREQ1_CMP,   CLIGHT / FREQ3_CMP,
                           CLIGHT / FREQB2a_CMP, CLIGHT / FREQB2b_CMP,
-                          CLIGHT / FREQB1C_CMP, CLIGHT / FREQ3_CMP};  // FREQB2a_CMP
+                          CLIGHT / FREQB1C_CMP, CLIGHT / FREQ2_CMP};  // FREQB2a_CMP
 
 double        g_gloLam[MAXPRNGLO][NFREQ] = {0.0};
 obsd_t        g_preBaseObsRtk[MAXOBS];
@@ -366,6 +366,15 @@ extern int decoderaw(rtksvr_t* svr, int index)
         if (ret > 0)
         {
             updatesvr(svr, ret, obs, index, fobs);
+            if(index==0){
+                trace(2, "decoderaw: index,%d,ret,%d,nobs,%d,time,%d,%d,%d,%d\n", 
+                    index, ret, obs->n, obs->data[0].time.time,obs->acc_warn[0],obs->acc_warn[1],obs->acc_warn[2]);
+                for(int k=0;k<3;k++){
+                    if(obs->acc_warn[k] == 1){
+                        svr->rtk.sol.acc_warn_time[k] = obs->data[0].time;
+                    }
+                }
+            }
         }
         /* observation data received */
         if (ret == 1)
@@ -1707,11 +1716,13 @@ static void* rtksvrthread(void* arg)
                     {
                         outDnyResult(svr, &pbuff, s1, iniEnuFlag, fixCnt);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
+                        //trace(2,"%s\n", buff);
                     }
                     else
                     {
                         outDnyResult(svr, &pbuff, s1, iniEnuFlag, fixCnt);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
+                        //trace(2,"%s\n", buff);
                     }
                     fixCnt = 0;
                 }
@@ -2039,12 +2050,7 @@ static void* rtksvrthread(void* arg)
             }
             for (j = 0; j < n; j++)
             {
-                svr->rtk.ssat[obs[j].sat - 1].SNR[0] = obs[j].SNR[0];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[1] = obs[j].SNR[1];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[2] = obs[j].SNR[2];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[3] = obs[j].SNR[3];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[4] = obs[j].SNR[4];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[5] = obs[j].SNR[5];
+                obs2ssat(svr->rtk.ssat+obs[j].sat - 1, obs+j);
             }
             if (!pntpos(0, obs, n, &svr->rtk.sol, NULL, svr->rtk.ssat, &svr->rtk.opt, 0))
             {  // 0:is ok  -1 eoror
@@ -2084,12 +2090,7 @@ static void* rtksvrthread(void* arg)
             for (i = 0; i < qobs.n; i++)
             {
                 obs[n]                               = qobs.data[i];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[0] = obs[n].SNR[0];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[1] = obs[n].SNR[1];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[2] = obs[n].SNR[2];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[3] = obs[n].SNR[3];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[4] = obs[n].SNR[4];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[5] = obs[n].SNR[5];
+                obs2ssat(svr->rtk.ssat+obs[n].sat - 1, obs+n);
                 n++;
             }
 
@@ -2348,7 +2349,19 @@ static void* rtksvrthread(void* arg)
     free(buff);
     return 0;
 }
+static int init_wind(wind_t *wind, double *enu){
 
+    int i=0;
+    trace(2,"init_wind,%.4f,%.4f,%.4f\n",enu[0],enu[1],enu[2]);
+    for(i=0;i<3;i++){
+        wind->n[i] = wind->nmax;
+        wind->ave[i] = enu[i];
+        wind->sumX2[i] = wind->nmax * wind->ave[i]*wind->ave[i];
+        wind->var[i] = 0.02 * 0.02; 
+        wind->std[i] = 0.02;
+    }
+    return 0;
+}
 void split(char* src, const char* separator, char** dest, int* num)
 {
     char* pNext;
@@ -2620,6 +2633,8 @@ int main(int argc, char** argv)
         mkfpssat(&svr.rtk);
     }
 
+
+
     /* open cycle log module */
     char logfile[1024];
     // sprintf(logfile, "%s/rtk.log", svr.rtk.path);
@@ -2636,7 +2651,7 @@ int main(int argc, char** argv)
     svr.rtk.sol.window[1].nmax = (int)2 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[1].dely = (int)3 * 60 / svr.rtk.opt.timeInterval;
     svr.rtk.sol.window[2].nmax =
-        (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval;
+        (int)(svr.rtk.opt.smoothWindowsTime+1)* 60 * 60 / svr.rtk.opt.timeInterval;
 
     svr.rtk.sol.window[0].thres[0] = 0.02;  // posmaxstd(0.001, 0.01);  // unit:mm
     svr.rtk.sol.window[0].thres[1] = 0.02;  // posmaxstd(0.001, 0.01);
@@ -2647,12 +2662,30 @@ int main(int argc, char** argv)
     svr.rtk.sol.window[1].thres[2] = 0.05;  // posmaxstd(0.002, 0.02);
 
     svr.rtk.sol.wdata.nmax =
-        (int)svr.rtk.opt.smoothWindowsTime * 60 * 60 / svr.rtk.opt.timeInterval + 1;
+        (int)(svr.rtk.opt.smoothWindowsTime+1) * 60 * 60 / svr.rtk.opt.timeInterval + 1;
     svr.rtk.sol.wdata.mode = FIL;
 
     char wpospath[256];
     sprintf(wpospath, "%s/wpos.dat", svr.rtk.path);
-    init_data(&svr.rtk.sol.wdata, wpospath);
+    if (!(svr.rtk.sol.wdata.data = (double*)calloc(sizeof(double), svr.rtk.sol.wdata.nmax * NSIZE)))
+    {
+        return 1;
+    }
+    if (g_cfgOpt.enuWindow[0] != 0.0 || g_cfgOpt.enuWindow[1] != 0.0 ||g_cfgOpt.enuWindow[2] != 0.0)
+    {
+        for (i = 0; i < svr.rtk.sol.wdata.nmax; i++)
+        {
+            for (int j = 0; j < NSIZE; j++)
+            {
+                svr.rtk.sol.wdata.data[j + i * NSIZE] = g_cfgOpt.enuWindow[j];
+            }
+        }
+
+        for(i=0;i<3;i++){
+            init_wind(svr.rtk.sol.window+i, g_cfgOpt.enuWindow);
+        }
+    }
+    init_data(&svr.rtk.sol.wdata, wpospath,g_cfgOpt.enuWindow);
 
     rtksvrinit(&svr);
 
@@ -2808,6 +2841,12 @@ int main(int argc, char** argv)
     svr.rtk.sum_enu[2]   = enuAve[2] * enuAveCnt[2];
     svr.rtk.sum_sqeun[2] = enuAve[2] * enuAve[2] * enuAveCnt[2];
 
+    printf("Version 7,enuAve   ,%.4f,%.4f,%.4f,\n",enuAve[0] ,enuAve[1] ,enuAve[2]);
+    printf("Version 7,enuAveCnt,%d,%d,%d,\n",enuAveCnt[0] ,enuAveCnt[1] ,enuAveCnt[2]);
+    
+    printf("Version 7,sum_enu  ,%.4f,%.4f,%.4f,\n",svr.rtk.sum_enu[0] ,svr.rtk.sum_enu[1] ,svr.rtk.sum_enu[2]);
+    printf("Version 7,sum_sqeun,%.4f,%.4f,%.4f,\n",svr.rtk.sum_sqeun[0] ,svr.rtk.sum_sqeun[1] ,svr.rtk.sum_sqeun[2]);
+    
     if (enuAveCnt[0] == svr.rtk.maxSmoothPoint)
     {
         rebootFlag = 1;
