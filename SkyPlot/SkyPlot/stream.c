@@ -1395,10 +1395,7 @@ static int statextcpsvr(tcpsvr_t* tcpsvr, char* msg)
 static int consock(tcpcli_t* tcpcli, char* msg)
 {
     int stat, err;
-    gtime_t time;
     char s[64] = { 0 };
-    time = timeget();
-    time2str(time, s, 0);
     //if (fptcp)   fprintf(fptcp,"consock: sock=%d\n", tcpcli->svr.sock);
 
     /* wait re-connect */

@@ -286,6 +286,52 @@ extern int rtksvrinit(rtksvr_t* svr)
 	return 1;
 }
 
+static int obs2ssat(ssat_t *ssat, obsd_t *obs){
+    int i = 9, j = 0, k = 0;
+    unsigned char sys=0;
+
+    sys=satsys(obs->sat, NULL);
+
+    if (sys == SYS_BDS)
+    {
+        trace(2,"SKYSYS,%d\n",SYS_BDS);
+        for (k = 0; k < NFREQ; k++)
+        {
+            switch (obs->code[k])
+            {
+                case CODE_L1I:  // B1I
+                    ssat->SNR[0] = obs->SNR[k];
+                    break;
+                case CODE_L6I:  // B3I
+                    ssat->SNR[2] = obs->SNR[k];
+                    break;
+                case CODE_L1D:  // B1C
+                    ssat->SNR[3] = obs->SNR[k];
+                    break;
+                case CODE_L5D:  // B2A
+                    ssat->SNR[4] = obs->SNR[k];
+                    break;
+                case CODE_L7D:  // B2B
+                    ssat->SNR[5] = obs->SNR[k];
+                    break;
+                default:
+                    break;
+            }
+        }
+        return 0;
+    }
+    else
+    {
+        ssat->SNR[0] = obs->SNR[0];
+        ssat->SNR[1] = obs->SNR[1];
+        ssat->SNR[2] = obs->SNR[2];
+        ssat->SNR[3] = obs->SNR[3];
+        ssat->SNR[4] = obs->SNR[4];
+        ssat->SNR[5] = obs->SNR[5];
+    }
+
+    return 0;
+}
 static void generateSatBuf(rtk_t* rtk, char** p)
 {
 	unsigned char i, j;
@@ -332,8 +378,8 @@ static void generateSatBuf(rtk_t* rtk, char** p)
 				}
 				else if (sys == SYS_BDS)
 				{
-					*p += sprintf(*p, "2,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[5], CN0[4], CN0[2], CN0[3]);
-				}
+					*p += sprintf(*p, "2,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
+ 				}
 				else if (sys == SYS_GAL)
 				{
 					*p += sprintf(*p, "3,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f;", prn, azel[0], azel[1], CN0[0], CN0[1], CN0[2], CN0[3], CN0[4], CN0[5]);
@@ -429,12 +475,13 @@ static void* rtksvrthread(void* arg)
 			//trace(4, "k=%d base  time=%d\n", k, svr->obs[k].data[0].time.time);
 			//计算基站星空图数据
 			for (j = 0; j < svr->obs[k].n; j++) {
-				svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[0] = svr->obs[k].data[j].SNR[0];
-				svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[1] = svr->obs[k].data[j].SNR[1];
-				svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[2] = svr->obs[k].data[j].SNR[2];
-				svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[3] = svr->obs[k].data[j].SNR[3];
-				svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[4] = svr->obs[k].data[j].SNR[4];
-				svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[5] = svr->obs[k].data[j].SNR[5];
+                obs2ssat(svr->rtk.ssat+svr->obs[k].data[j].sat - 1,svr->obs[k].data+j);
+				// svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[0] = svr->obs[k].data[j].SNR[0];
+				// svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[1] = svr->obs[k].data[j].SNR[1];
+				// svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[2] = svr->obs[k].data[j].SNR[2];
+				// svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[3] = svr->obs[k].data[j].SNR[3];
+				// svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[4] = svr->obs[k].data[j].SNR[4];
+				// svr->rtk.ssat[svr->obs[k].data[j].sat - 1].SNR[5] = svr->obs[k].data[j].SNR[5];
 			}
 			if (!pntpos(1, svr->obs[k].data, svr->obs[k].n, &svr->rtk.sol, NULL, svr->rtk.ssat, &svr->rtk.opt, 0)) {
 				memset(buff, 0, DEBUG_BUFF_LEN);
@@ -573,4 +620,3 @@ int main(int argc, char** argv)
 	printf("rtk thread return\n");
 	return 1;
 	}
-

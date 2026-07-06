@@ -35,7 +35,7 @@ typedef struct
     int    jumpflag[NSIZE];
 } wind_t;  // data filter windows
 
-extern int    init_data(data_t* poss, char* posdatpath);
+extern int    init_data(data_t* poss, char* posdatpath,double *enu);
 extern int    free_data(data_t* poss);
 extern int    update_data(data_t* poss, double* newdata);
 extern int    update_wind(wind_t* wind, data_t* data);

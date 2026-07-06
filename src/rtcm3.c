@@ -1567,11 +1567,11 @@ static void saveMsmObs(
             // else if (freq[i] == 6) freq[i] = 6; /* B2b */
             if (freq[i] == 5)
             {
-                freq[i] = 2; /* B2 */
+                freq[i] = 6; /* B2 */
             }
             else if (freq[i] == 4)
             {
-                freq[i] = 6; /* B3 */
+                freq[i] = 2; /* B3 */
             }
             else if (freq[i] == 2)
             {
@@ -2159,12 +2159,54 @@ static int decode_msm7(rtcm_t* rtcm, int sys)
     rtcm->obsflag = !sync;
     return sync ? 0 : 1;
 }
+/* decode type 4070: proprietary message MengXing Corp  -----------------*/
+static int decode_type4070(rtcm_t *rtcm)
+{
+    int i=24+12,subtype=0, typelen=0;
+    union {
+        int32_t i;
+        float f;
+    } acc_x,acc_y,acc_z;    
 
+    for(int k=0;k<3;k++){
+        rtcm->obs.acc_warn[k]=0;
+    }
+    int week=0;double tow=0.0;
+    tow=time2gpst(rtcm->time,&week);
+    i+=4; // skip 4 bit reserved 
+
+    subtype=getbitu(rtcm->buff,i,32); i+=32;
+    if(subtype == 0x00000ACC){
+
+        typelen=getbitu(rtcm->buff,i,32); i+=32;
+
+        for (int k=0;k<(int)typelen/16;k++){
+            uint32_t ms = getbitu(rtcm->buff,i,32); i+=32;
+
+            acc_x.i = getbits(rtcm->buff,i,32); i+=32;
+            acc_y.i = getbits(rtcm->buff,i,32); i+=32;
+            acc_z.i = getbits(rtcm->buff,i,32); i+=32;
+
+            gtime_t tt = gpst2time(week,ms/1000.0);
+            trace(2,"decode_type4070, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
+                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
+                    acc_x.f, acc_y.f, acc_z.f);
+            if(fabs(acc_x.f) > 20 || fabs(acc_y.f) >20){
+                rtcm->obs.acc_warn[0] =1;
+                rtcm->obs.acc_warn[1] =1;
+            }
+            if(fabs(acc_z.f) > 20){
+                rtcm->obs.acc_warn[2] =1;
+            }
+        }
+    }
+    
+    return 0;
+}
 extern int decode_rtcm3(rtcm_t* rtcm)
 {
     int     ret = 0, type = getbitu(rtcm->buff, 24, 12);
-    gtime_t time;
-    time = timeget();
+
     trace(0x04, "decode_rtcm3:rcv=%d len=%3d type=%d\n", rtcm->rcv, rtcm->len, type);
 
     switch (type)
@@ -2255,6 +2297,9 @@ extern int decode_rtcm3(rtcm_t* rtcm)
             break;
         case 1127:
             ret = decode_msm7(rtcm, SYS_BDS);
+            break;
+        case 4070:
+            ret = decode_type4070(rtcm);
             break;
     }
     // if(type!=1019 && type != 1019&& type != 1020 && type != 1042 && type != 1046 && type != 1044

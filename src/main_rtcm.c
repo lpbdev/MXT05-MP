@@ -55,8 +55,8 @@ unsigned char g_baseObsBuffFull          = 0;
 
 double g_gpsLam[NFREQ] = {CLIGHT / FREQ1, CLIGHT / FREQ2, CLIGHT / FREQ5};
 double g_galLam[NFREQ] = {CLIGHT / FREQ1, CLIGHT / FREQ7, CLIGHT / FREQ5};
-double g_bdsLam[NFREQ] = {CLIGHT / FREQ1_CMP,   CLIGHT / FREQ2_CMP,   CLIGHT / FREQB2a_CMP,
-                          CLIGHT / FREQB2b_CMP, CLIGHT / FREQB1C_CMP, CLIGHT / FREQ3_CMP};
+double g_bdsLam[NFREQ] = {CLIGHT / FREQ1_CMP,   CLIGHT / FREQ3_CMP,   CLIGHT / FREQB2a_CMP,
+                          CLIGHT / FREQB2b_CMP, CLIGHT / FREQB1C_CMP, CLIGHT / FREQ2_CMP};
 
 double        g_gloLam[MAXPRNGLO][NFREQ] = {0.0};
 obsd_t        g_preBaseObsRtk[MAXOBS];
@@ -297,6 +297,20 @@ extern int decoderaw(rtksvr_t* svr, int index)
         if (ret > 0)
         {
             updatesvr(svr, ret, obs, index, fobs);
+            if (index == 0)
+            {
+                trace(
+                    2, "decoderaw: index,%d,ret,%d,nobs,%d,time,%d,%d,%d,%d\n", index, ret, obs->n,
+                    obs->data[0].time.time, obs->acc_warn[0], obs->acc_warn[1], obs->acc_warn[2]
+                );
+                for (int k = 0; k < 3; k++)
+                {
+                    if (obs->acc_warn[k] == 1)
+                    {
+                        svr->rtk.sol.acc_warn_time[k] = obs->data[0].time;
+                    }
+                }
+            }
             // char id[4];
             // satno2id(obs->data[0].sat, id);
             // trace(2,"decoderaw: %d, %s, %d\n", obs->n,id,obs->data[0].sat);
@@ -1064,12 +1078,19 @@ static void* rtksvrthread(void* arg)
             }
             for (j = 0; j < n; j++)
             {
-                svr->rtk.ssat[obs[j].sat - 1].SNR[0] = obs[j].SNR[0];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[1] = obs[j].SNR[1];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[2] = obs[j].SNR[2];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[3] = obs[j].SNR[3];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[4] = obs[j].SNR[4];
-                svr->rtk.ssat[obs[j].sat - 1].SNR[5] = obs[j].SNR[5];
+
+                obs2ssat(svr->rtk.ssat+obs[j].sat - 1, obs+j);
+
+                // trace(2,"SKYSAT:%d,obs[%d],%d,%d,%d,%d,%d,%d\n",obs[j].sat,j,
+                //     svr->rtk.ssat[obs[j].sat - 1].SNR[0],
+                //     svr->rtk.ssat[obs[j].sat - 1].SNR[1],
+                //     svr->rtk.ssat[obs[j].sat - 1].SNR[2],
+                //     svr->rtk.ssat[obs[j].sat - 1].SNR[3],
+                //     svr->rtk.ssat[obs[j].sat - 1].SNR[4],
+                //     svr->rtk.ssat[obs[j].sat - 1].SNR[5]);
+
+                // trace(2,"SKYSNR:%d,obs[%d],%d,%d,%d,%d,%d,%d\n",obs[j].sat,j,obs[j].SNR[0],obs[j].SNR[1],obs[j].SNR[2],obs[j].SNR[3],obs[j].SNR[4],obs[j].SNR[5]);
+                // trace(2,"SKYCOD:%d,obs[%d],%d,%d,%d,%d,%d,%d\n",obs[j].sat,j,obs[j].code[0],obs[j].code[1],obs[j].code[2],obs[j].code[3],obs[j].code[4],obs[j].code[5]);
             }
         }
         qobs.n = 0;
@@ -1085,13 +1106,7 @@ static void* rtksvrthread(void* arg)
             for (i = 0; i < qobs.n; i++)
             {
                 obs[n]                               = qobs.data[i];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[0] = obs[n].SNR[0];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[1] = obs[n].SNR[1];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[2] = obs[n].SNR[2];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[3] = obs[n].SNR[3];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[4] = obs[n].SNR[4];
-                svr->rtk.ssat[obs[n].sat - 1].SNR[5] = obs[n].SNR[5];
-
+                obs2ssat(svr->rtk.ssat+obs[n].sat - 1, obs+n);
                 n++;
             }
 
@@ -1144,8 +1159,6 @@ static void* rtksvrthread(void* arg)
                     obsPre[k] = obs[k];
                 }
             }
-
-            // printf("mak%ld, %.0f;\n", obs[0].time.time, svr->rtk.opt.timeInterval);
 
             if (svr->rtk.te.time != 0.0 && timediff(obs[0].time, svr->rtk.te) > 0)
             {
@@ -1582,7 +1595,8 @@ int main(int argc, char** argv)
 
     char wpospath[256];
     sprintf(wpospath, "%s/wpos.dat", svr.rtk.path);
-    init_data(&svr.rtk.sol.wdata, wpospath);
+    double enu[3]={0.0};
+    init_data(&svr.rtk.sol.wdata, wpospath,enu);
 
     for (i = 0; i < 2; i++)
     {

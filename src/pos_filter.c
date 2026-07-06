@@ -18,6 +18,7 @@ static int getDat(FILE* fp, int offset, double* value, int n)
     }
     fseek(fp, sizeof(double) * offset, SEEK_SET);
     fread(value, sizeof(double), n, fp);
+    //trace(2,"getdata,%.4f,%.4f,%.4f\n",value[0],value[1],value[2]);
     return 0;
 }
 static int writeDat(FILE* fp, int offset, double* value, int n)
@@ -32,9 +33,10 @@ static int writeDat(FILE* fp, int offset, double* value, int n)
     return 0;
 }
 
-extern int init_data(data_t* poss, char* posdatpath)
+extern int init_data(data_t* poss, char* posdatpath,double *enu)
 {
-    if (poss->nmax == 0)
+    int i=0,j=0;
+    if (poss->nmax == 0|| enu==NULL)
     {
         printf("Failed to init poss_t! \n");
         return 1;
@@ -42,19 +44,30 @@ extern int init_data(data_t* poss, char* posdatpath)
 
     poss->n = 0;
 
-    if (!(poss->data = (double*)calloc(sizeof(double), poss->nmax * NSIZE)))
+    if (poss->data == NULL)
     {
-        return 1;
+        if (!(poss->data = (double*)calloc(sizeof(double), poss->nmax * NSIZE)))
+        {
+            return 1;
+        }
     }
-
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < poss->nmax; j++)
+        {
+            poss->data[i + j * 3] = enu[i];
+        }
+    }
+    //trace(2,"init_data,%d,%.4f,%.4f,%.4f\n",poss->nmax,poss->data[2875],poss->data[2876],poss->data[poss->nmax*3-3]);
     if (poss->mode == FIL && posdatpath != NULL)
     {
         if (!(poss->fp = fopen(posdatpath, "wb+")))
         {
             return 1;
         }
-
+        //trace(2,"init_data2,%d,%.4f,%.4f,%.4f\n",poss->nmax,poss->data[poss->nmax*3-1],poss->data[poss->nmax*3-2],poss->data[poss->nmax*3-3]);
         fwrite(poss->data, sizeof(double), poss->nmax * NSIZE, poss->fp);
+        fflush(poss->fp);
         free(poss->data);
         poss->data = NULL;
     }
@@ -109,6 +122,7 @@ static int updatewind(wind_t* wind, double* olddata, double* newdata, int n)
 {
     int n1 = 0, n2 = 0, i = 0;
 
+    //trace(2,"updatewind,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",olddata[0],olddata[1],olddata[2],newdata[0],newdata[1],newdata[2]);
     /* update pos statics */
     for (i = 0; i < n; i++)
     {
@@ -178,6 +192,7 @@ extern int update_wind_fp(wind_t* wind, int n, int nmax, FILE* fp)
         }
     }
 
+    //trace(2,"update_wind_fp,%d,%d\n",indold,indnew);
     // for (i = 0; i < NSIZE; i++) {
     //     newdata[i] = newdata[i] - wind->jump[i];
     //     if (n - wind->nmax - wind->dely - 1 > wind->jn[i]) {
@@ -251,6 +266,8 @@ extern int update_wind(wind_t* wind, data_t* data)
         return 0;
     }
 
+    
+    //trace(2,"update_wind,%d,%d\n",indold,indnew);
     /* update pos statics */
     if (data->mode == MEM)
     {

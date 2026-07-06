@@ -167,7 +167,6 @@ static const char frqcodes[] = "1256789"; /* frequency codes */
 #define FREQB1C_CMP 1.57542E9
 #define FREQB2a_CMP 1.17645E9
 #define FREQB2b_CMP 1.20714E9
-#define LAM1 CLIGHT / FREQ1
 
 /* solution */
 // #define ENCODER
@@ -616,6 +615,7 @@ typedef struct
 {
     int     n, nmax;  // number of observation data/allocated
     obsd_t* data;     /* observation data records */
+    int            acc_warn[3];
 } obs_t;
 typedef struct
 {
@@ -936,6 +936,8 @@ typedef struct
     double jump[3];
     double tmpjump[3];
     data_t wdata;
+    gtime_t acc_warn_time[3];
+    gtime_t enu_warn_time[3];
 } sol_t;
 
 typedef struct
@@ -1323,6 +1325,7 @@ extern int     adjgpsweek(int week);
 extern gtime_t bdt2time(int week, double sec);
 extern gtime_t bdt2gpst(gtime_t t);
 
+extern int obs2ssat(ssat_t *ssat, obsd_t *obs);
 extern void generateSatBuf(rtk_t* rtk, char** p);
 extern void initCfgOpt(cfgopt_t* opt);
 extern void loadCfgOpt(cfgopt_t* cfgOpt, char** argv, int i);
