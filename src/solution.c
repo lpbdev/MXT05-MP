@@ -704,6 +704,11 @@ static int outenu_dynamic(
     //         trace(2, "reset thresCnt\n");
     //     }
     // }
+    if(sol->window[2].n[0]< 600){
+        sol->window[0].jumpflag[0]=0;
+        sol->window[0].jumpflag[1]=0;
+        sol->window[0].jumpflag[2]=0;
+    }
     if (rtk->mvflag == 1)
     {
         for (i = 0; i < 3; i++)
@@ -754,7 +759,25 @@ static int outenu_dynamic(
             sol->window[2].ave[1], sol->window[2].ave[2], sol->window[2].std[0],
             sol->window[2].std[1], sol->window[2].std[2],sol->window[2].n[0],sol->window[2].n[1],sol->window[2].n[2]
         );
-
+        for(int k=0;k<3;k++){
+            trace(2, "acc_warn_time%d, %s, %.4f\n",k,s, timediff(sol->time,sol->acc_warn_time[k]));
+            double maxtime=0.0;
+            if(rtk->opt.timeInterval < 5){
+                maxtime = 30.0;
+            }else if(rtk->opt.timeInterval < 15)
+            {
+                maxtime = 60.0;
+            }else if(rtk->opt.timeInterval ==15)
+            {
+                maxtime = 300.0;
+            }
+            double difftime = fabs(timediff(sol->time, sol->acc_warn_time[k])) ;
+            if (difftime <= maxtime && difftime > maxtime/2.0 && fabs(enu2[k]-sol->window[2].ave[k])>0.015) 
+            {
+                sol->window[0].jumpflag[k] = 2;
+            }
+            trace(2,"jump%d, %s, %.4f, %.4f, %.4f,\n",k,s, sol->jump[k], sol->tmpjump[k], sol->window[2].ave[k]);
+        }        
         // logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,%.4f, %.4f,
         // %.4f,\n", s,
         //        //
