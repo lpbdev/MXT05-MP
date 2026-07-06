@@ -512,7 +512,7 @@ static int outenu_dynamic(
 
     if (rtk->opt.timeInterval < 5)
     {
-        shiftCnt  = 180;
+        shiftCnt  = 60;
         precent   = 0.95;
         dynWinCnt = 60;
     }
@@ -548,7 +548,8 @@ static int outenu_dynamic(
         4, "rr:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1],
         sol->rr[2], enu2[0], enu2[1], enu2[2]
     );
-
+    
+    trace(2,"minFixSat=%d,%f\n",rtk->opt.minFixSat,rtk->opt.maxgdop);
     if (sol->stat != SOLQ_FIX || rtk->sol.ns[1] < rtk->opt.minFixSat)
     {
         trace(

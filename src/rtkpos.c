@@ -206,6 +206,14 @@ static void udpos(rtk_t* rtk, double tt)
     double *F, *P, *FP, *x, *xp, pos[3], Q[9 * 9] = {0}, Qv[9], var = 0.0, xcc;
     /* initialize position for first epoch */
 
+    if (rtk->sol.fixxyz[0] != 0.0 && rtk->sol.rr_smooth_cnt > 10)
+    {
+        var = SQR(0.1);
+    }
+    else
+    {
+        var = 900;
+    }
     if (rtk->opt.mode == PMODE_DGPS)
     {
         for (i = 0; i < 3; i++)
@@ -288,7 +296,7 @@ static void udpos(rtk_t* rtk, double tt)
             for (i = 0; i < 3; i++)  rtk->sol.rr[i] = rtk->xp[i];*/
         for (i = 0; i < 3; i++)
         {
-            initx(rtk, rtk->sol.rr[i], VAR_POS, i);
+            initx(rtk, rtk->sol.rr[i], var, i);
         }
         return;
     }
@@ -1253,9 +1261,9 @@ static void restamb(rtk_t* rtk, const double* bias, int nb)
                     continue;
                 }
                 indexb = i;
-                //trace(
-                //    2, "restamb, nxRecord, indexb, %d, xIndex, %d\n", indexb,
-                //    rtk->ssat[sati - 1].xIndex[frqi]
+                // trace(
+                //     2, "restamb, nxRecord, indexb, %d, xIndex, %d\n", indexb,
+                //     rtk->ssat[sati - 1].xIndex[frqi]
                 //);
                 break;
             }
@@ -2733,7 +2741,7 @@ static int check_res(
                     sortVsat[vi] = sat[j];
                     vi++;
                 }
-                if (fabs(rtk->v[nv]) > 0.05)
+                if (fabs(rtk->v[nv]) > 0.09)
                 {
                     rtk->ssat[sortVsat[i] - 1].vs = 0;
                     trace(
@@ -4304,13 +4312,13 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     dts = zeros(2 * SELETE_SAT_NUM * 2, 1);
     var = zeros(SELETE_SAT_NUM * 2, 1);
 
-    char ts1[32],ts2[32];
-    time2str(obs[  0].time, ts1, 3);
-    time2str(obs[n-1].time, ts2, 3);
+    char ts1[32], ts2[32];
+    time2str(obs[0].time, ts1, 3);
+    time2str(obs[n - 1].time, ts2, 3);
 
-    printf( "t1,%s\nt2,%s\n", ts1,ts2);
+    printf("t1,%s\nt2,%s\n", ts1, ts2);
 
-    trace(2,"t1,%s\nt2,%s\n", ts1,ts2);
+    trace(2, "t1,%s\nt2,%s\n", ts1, ts2);
 
     for (i = 0; i < MAXSAT; i++)
     {
