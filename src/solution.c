@@ -972,10 +972,11 @@ static int outenu_dynamic(
                     sol->thresCnt2[k] = 0;
                 }
             }
-            if ((sol->thresCnt2[k] - sol->thresCnt1[k]) * rtk->opt.timeInterval >= 60 ){
+            if ((sol->thresCnt2[k] - sol->thresCnt1[k] >= 15) && (sol->thresCnt1[k] <= 5))
+            {
                 sol->thresCnt1[k] = 0;
                 sol->thresCnt2[k] = 0;
-                sol->enu_sum[k]   = 0.0;
+                sol->enu_sum[k] = 0.0;
             }
             if (sol->thresCnt1[k] + sol->thresCnt2[k] >= shiftCnt)
             {
@@ -1110,6 +1111,7 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
+            rtk->enuWindwoIndex[i]=sol->window[2].n[i];
             // enu2[i] = rtk->aveEnu[i];
             // enu2[i] = enu2[i] - (sol->window[2].ave[i] - rtk->sol.ori_ave[i]);
             enu2[i] = sol->window[2].ave[i];
