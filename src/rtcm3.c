@@ -2159,6 +2159,17 @@ static int decode_msm7(rtcm_t* rtcm, int sys)
     rtcm->obsflag = !sync;
     return sync ? 0 : 1;
 }
+static int datrange(double a, double b1, double b2)
+{
+    if (a <= b2 && a >= b1)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
 /* decode type 4070: proprietary message MengXing Corp  -----------------*/
 static int decode_type4070(rtcm_t *rtcm)
 {
@@ -2191,11 +2202,11 @@ static int decode_type4070(rtcm_t *rtcm)
             trace(2,"decode_type4070, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
                     time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
                     acc_x.f, acc_y.f, acc_z.f);
-            if(fabs(acc_x.f) > 20 || fabs(acc_y.f) >20){
+            if((fabs(acc_x.f) >20&&fabs(acc_x.f) < 150)|| (fabs(acc_y.f) >20&&fabs(acc_y.f) < 150)){
                 rtcm->obs.acc_warn[0] =1;
                 rtcm->obs.acc_warn[1] =1;
             }
-            if(fabs(acc_z.f) > 20){
+            if(fabs(acc_z.f) > 30&&fabs(acc_z.f) < 150){
                 rtcm->obs.acc_warn[2] =1;
             }
         }

@@ -1087,6 +1087,7 @@ typedef struct
     // gtime_t enuShiftEpochTime;
     int     delpoint[3];
     int     iniCnt;
+    int     initmax;
     // double  enuDelay[60][3];
     double  dr[3];
     double  masterEnu[3];

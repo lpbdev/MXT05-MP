@@ -14,7 +14,7 @@ endif
 
 
 # for gprof
-#CFLAGS  = -Wall -O3 -std=c11 -pedantic -I$(SRC) -DLAPACK $(OPTS) -pg
+CFLAGS  = -Wall -O0 -std=c11 -pedantic -I$(SRC)  $(OPTS) -g
 #LDLIBS  = -lm -lrt -llapack -lblas -pg
 
 # for mkl
@@ -47,7 +47,7 @@ TARGET = main_rtcm
 # ============================================================================
 
 # Debug版本
-CFLAGS_DEBUG = -Wall -O0 -g -std=c11 -pedantic -I$(SRC_DIR) -DLAPACK $(OPTS)
+CFLAGS_DEBUG = -Wall -O0 -g -std=c11 -pedantic -I$(SRC_DIR) $(OPTS)
 BUILD_DIR_DEBUG = $(BUILD_DIR)/debug
 OBJS_DEBUG = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR_DEBUG)/%.o)
 DEPS_DEBUG = $(OBJS_DEBUG:.o=.d)

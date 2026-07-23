@@ -1204,13 +1204,7 @@ static void* rtksvrthread(void* arg)
 
                 if (svr->rtk.tt != 0.0)
                 {
-                    if (svr->rtk.enuWindwoIndex[0] * (double)svr->rtk.opt.timeInterval >=
-                            (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        svr->rtk.enuWindwoIndex[1] * (double)svr->rtk.opt.timeInterval >=
-                            (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        svr->rtk.enuWindwoIndex[2] * (double)svr->rtk.opt.timeInterval >=
-                            (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        iniEnuFlag == 0)
+                    if (svr->rtk.iniCnt> svr->rtk.initmax&& iniEnuFlag == 0)
                     {
                         iniEnuFlag = 1;
                     }
@@ -1219,6 +1213,7 @@ static void* rtksvrthread(void* arg)
                 memset(buff, 0, DEBUG_BUFF_LEN);
                 pbuff = buff;
                 outDnyResult(svr, &pbuff, s1, iniEnuFlag);
+                trace(2,"%s\n", buff);
                 if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0)
                 {
                     strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));

@@ -704,11 +704,11 @@ static int outenu_dynamic(
     //         trace(2, "reset thresCnt\n");
     //     }
     // }
-    if(sol->window[2].n[0]< 600){
-        sol->window[0].jumpflag[0]=0;
-        sol->window[0].jumpflag[1]=0;
-        sol->window[0].jumpflag[2]=0;
-    }
+    // if(sol->window[2].n[0]< 600){
+    //     sol->window[0].jumpflag[0]=0;
+    //     sol->window[0].jumpflag[1]=0;
+    //     sol->window[0].jumpflag[2]=0;
+    // }
     if (rtk->mvflag == 1)
     {
         for (i = 0; i < 3; i++)
@@ -760,7 +760,7 @@ static int outenu_dynamic(
             sol->window[2].std[1], sol->window[2].std[2],sol->window[2].n[0],sol->window[2].n[1],sol->window[2].n[2]
         );
         for(int k=0;k<3;k++){
-            trace(2, "acc_warn_time%d, %s, %.4f\n",k,s, timediff(sol->time,sol->acc_warn_time[k]));
+            trace(2, "acc_warn_time%d, %s, %.4f,%.2f\n",k,s, timediff(sol->time,sol->acc_warn_time[k]));
             double maxtime=0.0;
             if(rtk->opt.timeInterval < 5){
                 maxtime = 30.0;
@@ -774,9 +774,10 @@ static int outenu_dynamic(
             double difftime = fabs(timediff(sol->time, sol->acc_warn_time[k])) ;
             if (difftime <= maxtime && difftime > maxtime/2.0 && fabs(enu2[k]-sol->window[2].ave[k])>0.015) 
             {
+                trace(2, "difftime, %.2f,%.2f\n",difftime,maxtime);
                 sol->window[0].jumpflag[k] = 2;
             }
-            trace(2,"jump%d, %s, %.4f, %.4f, %.4f,\n",k,s, sol->jump[k], sol->tmpjump[k], sol->window[2].ave[k]);
+            trace(2,"Acc jump%d, %s, %.4f, %.4f, %.4f,%d\n",k,s, sol->jump[k], sol->tmpjump[k], sol->window[2].ave[k],sol->window[0].jumpflag[k]);
         }        
         // logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,%.4f, %.4f,
         // %.4f,\n", s,
@@ -804,8 +805,8 @@ static int outenu_dynamic(
     }
     rtk->sol.nsFixPre = rtk->sol.ns[1];
 
-    trace(2, "iniCnt:%d shiftCnt=%d, %.4f\n", rtk->iniCnt, shiftCnt);
-    if (rtk->iniCnt < rtk->maxSmoothPoint)
+    trace(2, "iniCnt:%d shiftCnt=%d\n", rtk->iniCnt, shiftCnt);
+    if (rtk->iniCnt < rtk->initmax+1)
     {
         rtk->iniCnt++;
     }

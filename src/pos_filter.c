@@ -372,7 +372,7 @@ extern int calcjump(wind_t* windows, double* jump, double* tmpjump, int nj)
             wa->jumpflag[i] = 1;
         }
 
-        if (wa->jumpflag[i] == 1 && fabs(wa->ave[i] - wc->ave[i]) > wb->thres[i] / 2 &&
+        if (wa->jumpflag[i] == 1 && fabs(wa->ave[i] - wc->ave[i]) > wb->thres[i] *0.8 &&
             wa->std[i] < stdthres)
         {
             wa->jumpflag[i] = 2;

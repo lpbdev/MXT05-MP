@@ -1952,7 +1952,7 @@ extern int obs2ssat(ssat_t *ssat, obsd_t *obs){
 
     if (sys == SYS_BDS)
     {
-        trace(2,"SKYSYS,%d\n",SYS_BDS);
+       // trace(2,"SKYSYS,%d\n",SYS_BDS);
         for (k = 0; k < NFREQ; k++)
         {
             switch (obs->code[k])

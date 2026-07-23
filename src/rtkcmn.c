@@ -399,6 +399,7 @@ extern int* imat(int n, int m)
  *          double *C        IO matrix C (n x k)
  * return : none
  *-----------------------------------------------------------------------------*/
+#ifndef LAPACK 
 extern void matmul(
     const char* tr, int n, int k, int m, double alpha, const double* A, const double* B,
     double beta, double* C
@@ -450,6 +451,16 @@ extern void matmul(
         }
     }
 }
+#else
+extern void matmul(const char *tr, int n, int k, int m, double alpha,
+                   const double *A, const double *B, double beta, double *C)
+{
+    int lda=tr[0]=='T'?m:n,ldb=tr[1]=='T'?k:m;
+
+    dgemm_((char *)tr,(char *)tr+1,&n,&k,&m,&alpha,(double *)A,&lda,(double *)B,
+           &ldb,&beta,C,&n);
+}
+#endif
 extern void matmul33(
     const char* tr, const double* A, const double* B, const double* C, int n, int p, int q, int m,
     double* D

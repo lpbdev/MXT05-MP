@@ -603,8 +603,8 @@ static void outDnyResult(
             *pbuff += sprintf(
                 *pbuff, "cof,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%d;", svr->rtk.rb[0],
                 svr->rtk.rb[1], svr->rtk.rb[2], svr->rtk.sol.enu[0], svr->rtk.sol.enu[1],
-                svr->rtk.sol.enu[2], svr->rtk.enuWindwoIndex[0], svr->rtk.enuWindwoIndex[1],
-                svr->rtk.enuWindwoIndex[2]
+                svr->rtk.sol.enu[2], svr->rtk.iniCnt, svr->rtk.iniCnt,
+                svr->rtk.iniCnt
             );
         }
     }
@@ -1700,10 +1700,12 @@ static void* rtksvrthread(void* arg)
         trace(2, "systime,%s\n", s1);
 
         ouInterval = svr->rtk.opt.timeIntervalSolution * 3600;
-        if (g_cfgOpt.initEnuTime > g_cfgOpt.smoothWindowsTime)
-        {
-            svr->rtk.opt.initEnuTime = g_cfgOpt.initEnuTime = g_cfgOpt.smoothWindowsTime;
-        }
+        // if (g_cfgOpt.initEnuTime > g_cfgOpt.smoothWindowsTime)
+        // {
+        //     svr->rtk.opt.initEnuTime = g_cfgOpt.initEnuTime = g_cfgOpt.smoothWindowsTime;
+        // }
+    
+
         if (ouInterval != 0)
         {
             if (time.time % ouInterval == 0)
@@ -1716,13 +1718,13 @@ static void* rtksvrthread(void* arg)
                     {
                         outDnyResult(svr, &pbuff, s1, iniEnuFlag, fixCnt);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        //trace(2,"%s\n", buff);
+                        trace(2,"%s\n", buff);
                     }
                     else
                     {
                         outDnyResult(svr, &pbuff, s1, iniEnuFlag, fixCnt);
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
-                        //trace(2,"%s\n", buff);
+                        trace(2,"%s\n", buff);
                     }
                     fixCnt = 0;
                 }
@@ -1853,6 +1855,11 @@ static void* rtksvrthread(void* arg)
             {
                 decodeConfig(svr, &g_cfgOpt, buff2);
                 traceconfig();
+
+                svr->rtk.initmax =(int) (svr->rtk.opt.initEnuTime * 3600.0 /svr->rtk.opt.timeInterval);
+                if(svr->rtk.iniCnt > svr->rtk.initmax+1||rebootFlag==1) svr->rtk.iniCnt = svr->rtk.initmax+1;
+                //printf("iniCnt, %d, %d,%d\n",svr->rtk.iniCnt, rebootFlag,svr->rtk.initmax);
+
                 memset(buff, 0, DEBUG_BUFF_LEN);
                 free(buff2);
                 // if (g_cfgOpt.param > 0 && g_cfgOpt.param<=24) {
@@ -2255,13 +2262,7 @@ static void* rtksvrthread(void* arg)
                     }
 
                     // if (svr->rtk.tt != 0.0) {
-                    if (svr->rtk.enuWindwoIndex[0] * (double)svr->rtk.opt.timeInterval >=
-                            (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        svr->rtk.enuWindwoIndex[1] * (double)svr->rtk.opt.timeInterval >=
-                            (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        svr->rtk.enuWindwoIndex[2] * (double)svr->rtk.opt.timeInterval >=
-                            (svr->rtk.opt.initEnuTime * 3600.0) &&
-                        iniEnuFlag == 0)
+                    if (svr->rtk.iniCnt >= svr->rtk.initmax &&   iniEnuFlag == 0)
                     {
                         iniEnuFlag = 1;
                     }
@@ -2270,6 +2271,7 @@ static void* rtksvrthread(void* arg)
                     memset(buff, 0, DEBUG_BUFF_LEN);
                     pbuff = buff;
                     outDnyResult(svr, &pbuff, s1, iniEnuFlag, 0);
+                    trace(2,"%s\n", buff);
                     if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0)
                     {
                         strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
@@ -2641,7 +2643,7 @@ int main(int argc, char** argv)
     sprintf(logfile, "./rtkLog/rtk-%s-%s.log", buffport1[2], buffport2[2]);
 
     char tracefile[1024] = "";
-    sprintf(tracefile, "%s.trace", logfile);
+    sprintf(tracefile, "%s", logfile);
     traceopen(tracefile);
     printf("TRACE LEVEL: %d\n", 4);
     tracelevel(4);
@@ -2793,6 +2795,10 @@ int main(int argc, char** argv)
     enuAveCnt[1] = svr.rtk.opt.enuWindowIndex[1];
     enuAveCnt[2] = svr.rtk.opt.enuWindowIndex[2];
 
+    svr.rtk.iniCnt = 0;
+    svr.rtk.iniCnt = enuAveCnt[0];
+    printf("iniCnt, %d, %d,%d\n",svr.rtk.iniCnt, rebootFlag,svr.rtk.initmax);
+
     svr.rtk.sol.ori_ave[0] = enuAve[0];
     svr.rtk.sol.ori_ave[1] = enuAve[1];
     svr.rtk.sol.ori_ave[2] = enuAve[2];
@@ -2850,13 +2856,14 @@ int main(int argc, char** argv)
     if (enuAveCnt[0] == svr.rtk.maxSmoothPoint)
     {
         rebootFlag = 1;
+        if( svr.rtk.iniCnt <=svr.rtk.initmax)
+            svr.rtk.iniCnt = svr.rtk.initmax+1;
     }
     else
     {
         rebootFlag = 0;
     }
 
-    svr.rtk.iniCnt = 0;
 
     sopt.posf    = 2;  // 0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
     sopt.times   = 3;  // 0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
