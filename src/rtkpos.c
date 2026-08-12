@@ -39,6 +39,9 @@ static void initx(rtk_t* rtk, double xi, double var, int i)
 {
     int j;
     rtk->x[i] = xi;
+    if(i<3){
+        trace(2, "initx: i=%d, xi=%lf, var=%lf\n", i, xi, var);
+    }
     for (j = 0; j < rtk->nx; j++)
     {
         rtk->P[i + j * rtk->nx] = rtk->P[j + i * rtk->nx] = ((i == j) ? var : 0.0);
@@ -48,6 +51,9 @@ static void initxp(rtk_t* rtk, double xi, double var, int i)
 {
     int j;
     rtk->xp[i] = xi;
+    if(i<3){
+        trace(2, "initxp: i=%d, xi=%lf, var=%lf\n", i, xi, var);
+    }
     for (j = 0; j < rtk->nx; j++)
     {
         rtk->Pp[i + j * rtk->nx] = rtk->Pp[j + i * rtk->nx] = ((i == j) ? var : 0.0);
@@ -227,6 +233,7 @@ static void udpos(rtk_t* rtk, double tt)
         return;
     }
 
+    trace(2, "udpos,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
     if ((norm(rtk->x, 3) <= 0.0))
     {
         for (i = 0; i < 3; i++)
@@ -3623,19 +3630,20 @@ extern int relpos(
         }
     }
     ns = nu;
+    
+    trace(2, "relpos,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
+    // for (i = 0; i < nu; i++)
+    // {
+    //     // if(obs[i].sat!=6) continue;
+    //     // printf("sat,%d,%d,%.3f, %.3f, %.3d\n",obs[i].rcv, obs[i].sat,obs[i].L[0],
+    //     // obs[i].P[0], obs[i].SNR[0]);
+    //     sat_ts_update(&obs[i], &rtk->rsat[obs[i].sat - 1], rtk->opt.timeInterval);
+    // }
 
-    for (i = 0; i < nu; i++)
-    {
-        // if(obs[i].sat!=6) continue;
-        // printf("sat,%d,%d,%.3f, %.3f, %.3d\n",obs[i].rcv, obs[i].sat,obs[i].L[0],
-        // obs[i].P[0], obs[i].SNR[0]);
-        sat_ts_update(&obs[i], &rtk->rsat[obs[i].sat - 1], rtk->opt.timeInterval);
-    }
-
-    for (i = nu; i < n; i++)
-    {
-        sat_ts_update(&obs[i], &rtk->bsat[obs[i].sat - 1], rtk->opt.timeInterval);
-    }
+    // for (i = nu; i < n; i++)
+    // {
+    //     sat_ts_update(&obs[i], &rtk->bsat[obs[i].sat - 1], rtk->opt.timeInterval);
+    // }
 
     /* undifferenced residuals for base station */
     if (zdres(
@@ -3667,6 +3675,7 @@ extern int relpos(
     {
         robust[i] = 0;
     }
+    trace(2, "udstate,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
     /* temporal update of states */
     udstate(rtk, obs, sat, iu, ir, ns, r);
 
@@ -3749,7 +3758,7 @@ extern int relpos(
         }
 
         trace(2, "relpos, nv,%d, ns,%d, \n", nv, ns);
-        trace(2, "relpos rtk->v\n");
+        trace(2, "relpos rtk->v,");
         tracemat(2, rtk->v, 1, nv, 8, 4);
         /* kalman filter measurement update */
         if (rtk->opt.mode == PMODE_DGPS)
@@ -3995,12 +4004,12 @@ extern void resetRtk(rtk_t* rtk, int stat)
     rtk->nxFixNx   = 0;
     rtk->nfix      = 0;
     rtk->opt.std   = 0.01;
-    for (i = 1; i <= MAXSAT; i++)
+    for (i = 0; i < MAXSAT; i++)
     {
-        rtk->ssat[i - 1].rejRes    = 0;
-        rtk->ssat[i - 1].resCnt    = 0;
-        rtk->ssat[i - 1].timeCout  = 0;
-        rtk->ssat[i - 1].resMaxCnt = 0;
+        rtk->ssat[i].rejRes    = 0;
+        rtk->ssat[i].resCnt    = 0;
+        rtk->ssat[i].timeCout  = 0;
+        rtk->ssat[i].resMaxCnt = 0;
     }
     memset(rtk->xp, 0, sizeof(double) * NX);
     memset(rtk->Pp, 0, sizeof(double) * NX * NX);
@@ -4316,10 +4325,30 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     time2str(obs[0].time, ts1, 3);
     time2str(obs[n - 1].time, ts2, 3);
 
-    printf("t1,%s\nt2,%s\n", ts1, ts2);
+    
+    // double  ep[6] = {2026, 7, 30, 1, 24, 45};
+    // gtime_t ts    = epoch2time(ep);
+
+    // for (int k = 0; k < 3; k++)
+    // {
+    //     double difftime = fabs(timediff(rtk->sol.time, rtk->sol.acc_warn_time[k]));
+    //     //trace(2, "difftime, %.2f,%.2f, %ld,%ld\n", difftime, maxtime,rtk->sol.time.time, rtk->sol.acc_warn_time[0].time);
+    //     if (rtk->sol.acc_warn[k]==1)
+    //     {
+    //         resetRtk(rtk, SOLQ_NONE);
+    //         rtk->sol.rr[0] = rtk->sol.rr[1] = rtk->sol.rr[2] = 0.0;
+    //         rtk->sol.fixxyz[0] = rtk->sol.fixxyz[1] = rtk->sol.fixxyz[2] = 0.0;
+            
+    //         rtk->sol.rr_smooth_cnt = 0;
+            
+    //         trace(2, "reset rtk,%d,%d,%d\n",rtk->sol.window[0].jumpflag[0],rtk->sol.window[0].jumpflag[1],rtk->sol.window[0].jumpflag[2]);
+    //     }
+    //     trace(2, "Acc jump%d, %s, %.4f, %.4f, %.4f,%d, %d\n", k, ts1, rtk->sol.jump[k], rtk->sol.tmpjump[k],
+    //         rtk->sol.window[2].ave[k], rtk->sol.window[0].jumpflag[k], rtk->sol.acc_warn[k]);
+    // }
+
 
     trace(2, "t1,%s\nt2,%s\n", ts1, ts2);
-
     for (i = 0; i < MAXSAT; i++)
     {
         rtk->ssat[i].vs             = 0;
@@ -4419,10 +4448,12 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             }
         }
     }
+    
+    trace(2, "solrr00,%s,%14.4f,%14.4f,%14.4f,\n", ts1, rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
     if (pntpos(0, obs, nu, &rtk->sol, NULL, rtk->ssat, &rtk->opt, rtk->tt))
     {  // 0:is ok  -1 eoror
         resetRtk(rtk, SOLQ_NONE);
-        trace(0x02, "rover position error\n");
+        trace(2, "rover position error\n");
         for (i = 0; i < 6; i++)
         {
             rtk->sol.rr[i] = 0.0;
@@ -4432,19 +4463,20 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         free(var);
         return 2;
     }
-    trace(
-        0x04, "%-23s:%14.4f %14.4f %14.4f\n", "rover spp", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]
-    );
-    trace(2, "kalman rtk->x, 00, ");
+    trace(2, "solrr01,%s,%14.4f,%14.4f,%14.4f,\n", ts1, rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
+
+    trace(2, "kalman rtk->x 00, %s\n",ts1);
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
     if (rtk->opt.mode == PMODE_MOVEB || rtk->opt.mode == PMODE_KINEMA ||
         rtk->opt.mode == PMODE_STATIC)
     { /*  moving baseline */
         /* estimate position/velocity of base station */
+        trace(2, "solrr03,%s,%14.4f,%14.4f,%14.4f,\n", ts1, rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
+
         if (pntpos(1, obs + nu, nr, &rtk->solb, NULL, rtk->ssat, &rtk->opt, rtk->tt))
         {  // 0:is ok  -1 eoror
-            trace(0x02, "base station position error\n");
+            trace(2, "base station position error\n");
             preBaseObsRTK(rtk, obs, &nu, &nr, &n, 1);
             if (nr <= 4 || rtk->opt.mode == PMODE_MOVEB)
             {
@@ -4462,7 +4494,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             {
                 if (pntpos(1, obs + nu, nr, &rtk->solb, NULL, rtk->ssat, &rtk->opt, rtk->tt))
                 {  // 0:is ok  -1 eoror
-                    trace(0x02, "base station position error2\n");
+                    trace(2, "base station position error2\n");
                     rtk->sol.stat = SOLQ_SINGLE;
                     for (i = 0; i < 6; i++)
                     {
@@ -4475,11 +4507,13 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
                 }
             }
         }
+        trace(2, "solrr02,%s,%14.4f,%14.4f,%14.4f,\n", ts1, rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
+
         // smooth base position
         trace(
-            0x02,
-            "base  pntpos:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf "
-            "baseXyzError=%d\n",
+            2,
+            "base  pntpos,%s,%14.4lf,%14.4lf,%14.4lf,%14.4lf,%14.4lf,%14.4lf "
+            "baseXyzError=%d\n",ts1,
             rtk->rb[0], rtk->rb[1], rtk->rb[2], rtk->solb.rr[0], rtk->solb.rr[1], rtk->solb.rr[2],
             baseXyzError
         );
@@ -4626,6 +4660,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
 
     trace(2, "kalman rtk->x, in while, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
+    
 
     rtk->sol.stat = SOLQ_FLOAT;
     relpos(rtk, obs, nu, nr, sat, iu, ir, rs, dts, var, svh);

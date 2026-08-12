@@ -542,7 +542,10 @@ static int outenu_dynamic(
     ecef2enu(pos, rr, enu2);  // 大地坐标转站心坐标
     ecef2enu(pos, rr, enu);   // 大地坐标转站心坐标
 
-    trace(2, "ENU2 :  %14.4lf, %14.4lf,%14.4lf,\n", enu2[0], enu2[1], enu2[2]);
+    trace(2, "ENU2 ,%s,%14.4lf, %14.4lf,%14.4lf,%d,%14.4lf,%14.4lf,%14.4lf\n", s, enu2[0], enu2[1], enu2[2],sol->stat,
+        rtk->sol.fixxyz[0], rtk->sol.fixxyz[1],rtk->sol.fixxyz[2]
+    
+    );
 
     trace(
         4, "rr:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1],
@@ -687,23 +690,7 @@ static int outenu_dynamic(
         }
         sol->rr_smooth_cnt++;
     }
-    // if (sol->aveFixSatCnt > (int)((12 * 3600.0 - 1) / rtk->opt.timeInterval))
-    // {
-    //     sol->aveFixSatCnt = (int)((12 * 3600.0 - 1) / rtk->opt.timeInterval);
-    // }
-    // rtk->sol.aveFixSat = (sol->aveFixSat * sol->aveFixSatCnt + rtk->sol.ns[1]) /
-    // (sol->aveFixSatCnt + 1); sol->aveFixSatCnt++;
 
-    // if (fabs(rtk->sol.nsFixPre - rtk->sol.ns[1]) > 2 && rtk->sol.ns[1] <= 15)
-    // {
-    //     for (i = 0; i < 3; i++)
-    //     {
-    //         sol->thresCnt1[i] = 0;
-    //         sol->thresCnt2[i] = 0;
-    //         sol->enu_sum[i]   = 0.0;
-    //         trace(2, "reset thresCnt\n");
-    //     }
-    // }
     if (rtk->mvflag == 1)
     {
         for (i = 0; i < 3; i++)
@@ -720,14 +707,7 @@ static int outenu_dynamic(
             }
         }
     }
-    // if(sol->window[2].jn[i]!=0){
-    //     if(wind12.n - wind12.jn[i] > wind12.nmax ){
-    //         wind12.ave[i] = wind12.ave[i] +wind12.jump[i];
-    //         wind12.jump[i]=0.0;
-    //         wind12.jn[i]=0;
-    //     }
-    //     wind12.jump[i] += sol->jump[i];
-    // }
+
     if (rtk->mvflag == 1)
     {
         update_data(&rtk->sol.wdata, enu2);
@@ -781,8 +761,8 @@ static int outenu_dynamic(
     }
     rtk->sol.nsFixPre = rtk->sol.ns[1];
 
-    trace(2, "iniCnt:%d shiftCnt=%d, %.4f\n", rtk->iniCnt, shiftCnt);
-    if (rtk->iniCnt < rtk->maxSmoothPoint)
+    trace(2, "iniCnt:%d shiftCnt=%d\n", rtk->iniCnt, shiftCnt);
+    if (rtk->iniCnt < rtk->initmax+1)
     {
         rtk->iniCnt++;
     }
@@ -1087,6 +1067,7 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
+            rtk->enuWindwoIndex[i]=sol->window[2].n[i];
             // enu2[i] = rtk->aveEnu[i];
             // enu2[i] = enu2[i] - (sol->window[2].ave[i] - rtk->sol.ori_ave[i]);
             enu2[i] = sol->window[2].ave[i];

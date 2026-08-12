@@ -603,7 +603,7 @@ extern int rtkLsq(
                 free(nvSatMask);
                 return -2;
             }
-            trace(0x02, "rtk lsq pos:%14.4lf %14.4lf %14.4lf\n", x[0], x[1], x[2]);
+            trace(0x02, "rtk lsq pos, %s, %14.4lf,%14.4lf,%14.4lf\n", time_str(rtk->sol.time,2), x[0], x[1], x[2]);
             rtk->sol.ns[1] = nsobs + nbase;
             for (j = 0; j < 3; j++)
             {

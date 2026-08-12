@@ -888,7 +888,7 @@ typedef struct
     float   qv[6];  /* velocity variance/covariance (m^2/s^2) */
     double  rr[9];  // pos/vel (m,m/s)
     double  rr_lsq[3];
-    // double  rr_ref[3];
+    double  rr_ref[3];
     double  rr_original[3];
     double  enu_original_window[60][3];
     double  rr_filer[3];
@@ -900,7 +900,7 @@ typedef struct
     double  enu[3];
     double  enu_original[3];
     double  fixxyz[3];
-    // double  rr_smooth[3];
+    double  rr_smooth[3];
     double  rr_smooth_cnt;
     /* {c_xx,c_yy,c_zz,c_xy,c_yz,c_zx} or */
     /* {c_ee,c_nn,c_uu,c_en,c_nu,c_ue} */
@@ -936,6 +936,7 @@ typedef struct
     double jump[3];
     double tmpjump[3];
     data_t wdata;
+    int acc_warn[3];
     gtime_t acc_warn_time[3];
     gtime_t enu_warn_time[3];
 } sol_t;
@@ -1087,6 +1088,7 @@ typedef struct
     // gtime_t enuShiftEpochTime;
     int     delpoint[3];
     int     iniCnt;
+    int     initmax;
     // double  enuDelay[60][3];
     double  dr[3];
     double  masterEnu[3];
@@ -1456,4 +1458,5 @@ extern int    test_sysWL(int sys, unsigned char prn, int m);
 extern int    test_sysNL(int sys, unsigned char prn, int m);
 extern double varrL(const obsd_t* obs, double el, double bl, int f, const prcopt_t* opt);
 extern int    sys2str(uint8_t navsys, char* str);
+extern void resetRtk(rtk_t* rtk, int stat);
 #endif

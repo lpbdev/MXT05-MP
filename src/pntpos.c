@@ -219,6 +219,7 @@ static int rescode(
     {
         rr[i] = x[i];
     }
+    trace(2,"rescode, %s, %14.4lf,%14.4lf,%14.4lf\n", time_str(obs[0].time,2), x[0], x[1], x[2]);
     ecef2pos(rr, pos);
     lsqraim[1] = 0.0;
     lsqraim[2] = 0.0;
@@ -458,6 +459,7 @@ static int estpos(
     {
         x[i] = sol->rr[i];
     }
+    trace(2,"estpos, %s, %14.4lf,%14.4lf,%14.4lf\n", time_str(obs[0].time,2), x[0], x[1], x[2]);
     if (tt < 2.0)
     {
         for (j = 0; j < NSYS; j++)
@@ -914,6 +916,7 @@ extern int pntpos(
     double        lsqraim[3]     = {0};
     double        respMax        = 0;
     unsigned char robust[MAXSAT] = {0};
+    trace(2, "solrr--,%d,%14.4f,%14.4f,%14.4f,\n",base, sol->rr[0], sol->rr[1], sol->rr[2]);
 
     SysCnt = 0;
 
@@ -984,6 +987,7 @@ extern int pntpos(
         free(resp);
         return -1;
     }
+
     while (1)
     {
         stat =
