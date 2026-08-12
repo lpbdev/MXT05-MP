@@ -2203,12 +2203,18 @@ static int decode_type4070(rtcm_t *rtcm)
             trace(2,"decode_type4070, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
                     time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
                     acc_x.f, acc_y.f, acc_z.f);
-            if(fabs(acc_x.f) > 20 || fabs(acc_y.f) >20){
+            if((fabs(acc_x.f) >20&&fabs(acc_x.f) < 400)|| (fabs(acc_y.f) >20&&fabs(acc_y.f) < 400)){
                 rtcm->obs.acc_warn[0] =1;
                 rtcm->obs.acc_warn[1] =1;
+                trace(2,"acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
+                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
+                    acc_x.f, acc_y.f, acc_z.f);
             }
-            if(fabs(acc_z.f) > 20){
-                rtcm->obs.acc_warn[2] =1;
+            if(fabs(acc_z.f) > 30&&fabs(acc_z.f) < 400){
+                rtcm->obs.acc_warn[2] = 1;
+                trace(2,"acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
+                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
+                    acc_x.f, acc_y.f, acc_z.f);
             }
         }
     }

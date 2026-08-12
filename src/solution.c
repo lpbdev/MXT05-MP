@@ -1067,7 +1067,7 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
-            rtk->enuWindwoIndex[i]=sol->window[2].n[i];
+            //rtk->enuWindwoIndex[i]=sol->window[2].n[i];
             // enu2[i] = rtk->aveEnu[i];
             // enu2[i] = enu2[i] - (sol->window[2].ave[i] - rtk->sol.ori_ave[i]);
             enu2[i] = sol->window[2].ave[i];
