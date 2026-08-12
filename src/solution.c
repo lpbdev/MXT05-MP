@@ -929,10 +929,10 @@ static int outenu_dynamic(
                     sol->thresCnt2[k] = 0;
                 }
             }
-            if ((sol->thresCnt2[k] - sol->thresCnt1[k]) * rtk->opt.timeInterval >= 60 ){
+            if ((sol->thresCnt2[k] - sol->thresCnt1[k] >= 15) && (sol->thresCnt1[k] <= 5))
+            {
                 sol->thresCnt1[k] = 0;
-                sol->thresCnt2[k] = 0;
-                sol->enu_sum[k]   = 0.0;
+                sol->enu_sum[k] = 0.0;
             }
             if (sol->thresCnt1[k] + sol->thresCnt2[k] >= shiftCnt)
             {
