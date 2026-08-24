@@ -297,7 +297,7 @@ extern int decoderaw(rtksvr_t* svr, int index)
         if (ret > 0)
         {
             updatesvr(svr, ret, obs, index, fobs);
-            if (index == 1)
+            if (index == 0)
             {
                 trace(
                     2, "decoderaw: index,%d,ret,%d,nobs,%d,time,%d,%d,%d,%d\n", index, ret, obs->n,

@@ -2173,6 +2173,8 @@ static int datrange(double a, double b1, double b2)
 /* decode type 4070: proprietary message MengXing Corp  -----------------*/
 static int decode_type4070(rtcm_t *rtcm)
 {
+
+    if(rtcm->rcv==1) return 0;
     int i=24+12,subtype=0, typelen=0;
     union {
         int32_t i;
@@ -2203,19 +2205,25 @@ static int decode_type4070(rtcm_t *rtcm)
             trace(2,"decode_type4070, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
                     time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
                     acc_x.f, acc_y.f, acc_z.f);
-            if((fabs(acc_x.f) >20&&fabs(acc_x.f) < 400)|| (fabs(acc_y.f) >20&&fabs(acc_y.f) < 400)){
+            if(fabs(acc_x.f) >20&&fabs(acc_x.f) < 400){
                 rtcm->obs.acc_warn[0] =1;
+            }else{
+                rtcm->obs.acc_warn[0] =0;
+            }
+            if((fabs(acc_y.f) >20&&fabs(acc_y.f) < 400)){
                 rtcm->obs.acc_warn[1] =1;
-                trace(2,"acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
-                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
-                    acc_x.f, acc_y.f, acc_z.f);
+            }else{
+                rtcm->obs.acc_warn[1] =0;
             }
+    
             if(fabs(acc_z.f) > 30&&fabs(acc_z.f) < 400){
-                rtcm->obs.acc_warn[2] = 1;
-                trace(2,"acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
-                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
-                    acc_x.f, acc_y.f, acc_z.f);
+                rtcm->obs.acc_warn[2] =1;
+            }else{
+                rtcm->obs.acc_warn[2]=0;
             }
+            trace(2,"acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%d,%d,%d\n",
+                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
+                     rtcm->obs.acc_warn[0], rtcm->obs.acc_warn[1], rtcm->obs.acc_warn[2]);
         }
     }
     
@@ -2225,7 +2233,7 @@ extern int decode_rtcm3(rtcm_t* rtcm)
 {
     int     ret = 0, type = getbitu(rtcm->buff, 24, 12);
 
-    trace(0x04, "decode_rtcm3:rcv=%d len=%3d type=%d\n", rtcm->rcv, rtcm->len, type);
+    trace(2, "decode_rtcm3:rcv=%d len=%3d type=%d,staid,%d\n", rtcm->rcv, rtcm->len, type,rtcm->staid);
 
     switch (type)
     {

@@ -556,9 +556,8 @@ static int outenu_dynamic(
     if (sol->stat != SOLQ_FIX || rtk->sol.ns[1] < rtk->opt.minFixSat)
     {
         trace(
-            2, "warnning:stat=%d nfix=%d ns[0]=%d ns[1]=%d sumPostCarV=%.2f\n", sol->stat,
-            rtk->nfix, rtk->sol.ns[0], rtk->sol.ns[1], rtk->sumPostCarV
-        );
+            2, "warnning:stat=%d nfix=%d ns[0]=%d ns[1]=%d sumPostCarV=%.2f,stat,%d,ns1,%d\n", sol->stat,
+            rtk->nfix, rtk->sol.ns[0], rtk->sol.ns[1], rtk->sumPostCarV,sol->stat,rtk->sol.ns[1]);
         trace(
             2,
             "warnning:%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%"
@@ -579,23 +578,23 @@ static int outenu_dynamic(
         }
         return 0;
     }
-    if (fixEnuErrorCheck <= 3 && rtk->enuWindwoIndex[0] > 0)
-    {
-        if (fabs(rtk->enuWindow[0][rtk->enuWindwoIndex[0] - 1] - enu[0]) > 0.5 ||
-            fabs(rtk->enuWindow[1][rtk->enuWindwoIndex[1] - 1] - enu[1]) > 0.5 ||
-            fabs(rtk->enuWindow[2][rtk->enuWindwoIndex[2] - 1] - enu[2]) > 0.5)
-        {
-            sol->stat  = 0;
-            sol->ratio = 0.0;
-            fixEnuErrorCheck++;
-            trace(2, "fixEnuErrorCheck:%d\n", fixEnuErrorCheck);
-            return 0;
-        }
-        else
-        {
-            fixEnuErrorCheck = 0;
-        }
-    }
+    // if (fixEnuErrorCheck <= 3 && rtk->enuWindwoIndex[0] > 0)
+    // {
+    //     if (fabs(rtk->enuWindow[0][rtk->enuWindwoIndex[0] - 1] - enu[0]) > 0.5 ||
+    //         fabs(rtk->enuWindow[1][rtk->enuWindwoIndex[1] - 1] - enu[1]) > 0.5 ||
+    //         fabs(rtk->enuWindow[2][rtk->enuWindwoIndex[2] - 1] - enu[2]) > 0.5)
+    //     {
+    //         sol->stat  = 0;
+    //         sol->ratio = 0.0;
+    //         fixEnuErrorCheck++;
+    //         trace(2, "fixEnuErrorCheck:%d\n", fixEnuErrorCheck);
+    //         return 0;
+    //     }
+    //     else
+    //     {
+    //         fixEnuErrorCheck = 0;
+    //     }
+    // }
     if (rtk->opt.detectSensitivity == 1)
     {
         /*
@@ -695,7 +694,7 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
-            if (sol->window[0].jumpflag[i] == 2)
+            if (sol->window[0].jumpflag[i] == 2 || sol->acc_warn[i]==1)
             {
                 sol->window[2].n[i] = 0;  // sol->window[0].n;
 
@@ -2474,12 +2473,9 @@ extern int outsol(FILE* fp, rtk_t* rtk, sol_t* sol, const double* rb, const solo
         trace(
             4, "timeInterval=%.2f initEnuTime=%.2f\n", rtk->opt.timeInterval, rtk->opt.initEnuTime
         );
-        if (rtk->enuWindwoIndex[0] * (double)rtk->opt.timeInterval <=
-                (rtk->opt.initEnuTime * 3600.0 - 1) &&
-            rtk->enuWindwoIndex[1] * (double)rtk->opt.timeInterval <=
-                (rtk->opt.initEnuTime * 3600.0 - 1) &&
-            rtk->enuWindwoIndex[2] * (double)rtk->opt.timeInterval <=
-                (rtk->opt.initEnuTime * 3600.0 - 1))
+        if (rtk->enuWindwoIndex[0] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
+            rtk->enuWindwoIndex[1] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
+            rtk->enuWindwoIndex[2] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1))
         {
             return n;
         }

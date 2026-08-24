@@ -937,6 +937,7 @@ typedef struct
     double tmpjump[3];
     data_t wdata;
     int acc_warn[3];
+    int acc_warn_pre[3];
     gtime_t acc_warn_time[3];
     gtime_t enu_warn_time[3];
 } sol_t;

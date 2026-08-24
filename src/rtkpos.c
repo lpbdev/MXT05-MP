@@ -4326,15 +4326,42 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     time2str(obs[n - 1].time, ts2, 3);
 
     
-    double  ep[6] = {2026, 7, 30, 1, 24, 45};
-    gtime_t ts    = epoch2time(ep);
+    double  tsep[6] = {2026, 8, 12, 8, 0, 0};
+    gtime_t ts    = epoch2time(tsep);
+    double  teep[6] = {2026, 8, 12, 14, 0, 0};
+    gtime_t te    = epoch2time(teep);
+    // if(timediff(obs[0].time,te)<0 && timediff(obs[0].time,ts)>0)
+    // {
+    //     return 0;
+    // }
 
+#if 1
+    int acc_warn[3]={0};
+    for (int k = 0; k < 3; k++)
+    {
+        acc_warn[k] = rtk->sol.acc_warn[k];
+    }
+
+    if(rtk->sol.acc_warn_pre[0]*rtk->sol.acc_warn_pre[1]*rtk->sol.acc_warn_pre[2]!=0){
+        rtk->sol.acc_warn[0]=1;
+        rtk->sol.acc_warn[1]=1;
+        rtk->sol.acc_warn[2]=1;
+    }
+
+    if(acc_warn[0]*acc_warn[1]*acc_warn[2]!=0 ){
+        rtk->sol.acc_warn[0]=1;
+        rtk->sol.acc_warn[1]=1;
+        rtk->sol.acc_warn[2]=1;
+    }
     for (int k = 0; k < 3; k++)
     {
         double difftime = fabs(timediff(rtk->sol.time, rtk->sol.acc_warn_time[k]));
-        trace(2, "difftime, %.2f, %ld,%ld\n", difftime,rtk->sol.time.time, rtk->sol.acc_warn_time[0].time);
-        if (rtk->sol.acc_warn[k]==1||rtk->sol.window[0].jumpflag[k]!=0 && fabs(timediff(rtk->sol.time,rtk->sol.acc_warn_time[k]))<100)
-        //if(fabs(timediff(rtk->sol.time,ts))<300)
+        trace(2, "difftime, %s,%.2f, %d,%d,%d\n",time_str(rtk->sol.time,2), difftime,rtk->sol.acc_warn[k],rtk->sol.window[0].jumpflag[k],k);
+        // if (rtk->sol.acc_warn[k]==1){
+            
+        //     rtk->sol.window[0].jumpflag[k] =1;
+        // }
+        if (rtk->sol.acc_warn[k]==1||rtk->sol.window[0].jumpflag[k]!=0 )
         {
             resetRtk(rtk, SOLQ_NONE);
             rtk->sol.rr[0] = rtk->sol.rr[1] = rtk->sol.rr[2] = 0.0;
@@ -4347,6 +4374,11 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         trace(2, "Acc jump%d, %s, %.4f, %.4f, %.4f,%d, %d\n", k, ts1, rtk->sol.jump[k], rtk->sol.tmpjump[k],
             rtk->sol.window[2].ave[k], rtk->sol.window[0].jumpflag[k], rtk->sol.acc_warn[k]);
     }
+    for (int k = 0; k < 3; k++)
+    {
+        rtk->sol.acc_warn_pre[k]=acc_warn[k];
+    }
+#endif
 
 
     trace(2, "t1,%s\nt2,%s\n", ts1, ts2);
