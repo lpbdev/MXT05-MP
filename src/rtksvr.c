@@ -373,6 +373,7 @@ extern int decoderaw(rtksvr_t* svr, int index)
                     if(obs->acc_warn[k] == 1){
                         svr->rtk.sol.acc_warn_time[k] = obs->data[0].time;
                     }
+                    svr->rtk.sol.acc_warn[k] = obs->acc_warn[k];
                 }
             }
         }

@@ -5,11 +5,11 @@ INC_DIR = ../src/
 BUILD_DIR = ./
 
 ifeq ($(OS), Windows_NT)
-	OPTS    = -DENACMP -DWIN32
-	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32
+	OPTS    = -DENACMP -DWIN32 -DLAPACK
+	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32 -lopenblas
 else
 	LDFLAGS = -lm -lpthread
-	OPTS    = -DENACMP
+	OPTS    = -DENACMP -DLAPACK
 endif
 
 
@@ -47,7 +47,7 @@ TARGET = main_rtcm
 # ============================================================================
 
 # Debug版本
-CFLAGS_DEBUG = -Wall -O0  -I$(SRC_DIR) $(OPTS)
+CFLAGS_DEBUG = -Wall -O0  -I$(SRC_DIR) $(OPTS) -DLAPACK
 BUILD_DIR_DEBUG = $(BUILD_DIR)/debug
 OBJS_DEBUG = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR_DEBUG)/%.o)
 DEPS_DEBUG = $(OBJS_DEBUG:.o=.d)

@@ -6,6 +6,14 @@ extern FILE* test;
 
 #define AU 149597870691.0   /* 1 AU (m) */
 #define AS2R (D2R / 3600.0) /* arc sec to radian */
+#ifdef LAPACK
+extern void dgemm_(char *, char *, int *, int *, int *, double *, double *,
+                   int *, double *, int *, double *, double *, int *);
+extern void dgetrf_(int *, int *, double *, int *, int *, int *);
+extern void dgetri_(int *, double *, int *, int *, double *, int *, int *);
+extern void dgetrs_(char *, int *, int *, double *, int *, int *, double *,
+                    int *, int *);
+#endif
 
 /* time system: gps time */
 const solopt_t solopt_default = {
