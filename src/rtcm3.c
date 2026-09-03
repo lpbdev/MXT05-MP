@@ -2180,6 +2180,7 @@ static int decode_type4070(rtcm_t *rtcm)
         int32_t i;
         float f;
     } acc_x,acc_y,acc_z;    
+    int acc_cnt[3]={0,0,0};
 
     trace(2,"start4070\n");
     for(int k=0;k<3;k++){
@@ -2205,21 +2206,18 @@ static int decode_type4070(rtcm_t *rtcm)
             trace(2,"decode_type4070, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
                     time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
                     acc_x.f, acc_y.f, acc_z.f);
-            if(fabs(acc_x.f) >20&&fabs(acc_x.f) < 400){
-                rtcm->obs.acc_warn[0] =1;
+            if(fabs(acc_x.f)  >100&&fabs(acc_x.f) < 400){
+                acc_cnt[0]++;
             }else{
-                rtcm->obs.acc_warn[0] =0;
             }
-            if((fabs(acc_y.f) >20&&fabs(acc_y.f) < 400)){
-                rtcm->obs.acc_warn[1] =1;
+            if((fabs(acc_y.f) >100&&fabs(acc_y.f) < 400)){
+                acc_cnt[1]++;
             }else{
-                rtcm->obs.acc_warn[1] =0;
             }
     
-            if(fabs(acc_z.f) > 30&&fabs(acc_z.f) < 400){
-                rtcm->obs.acc_warn[2] =1;
+            if(fabs(acc_z.f) > 100&&fabs(acc_z.f) < 400){
+                acc_cnt[2]++;
             }else{
-                rtcm->obs.acc_warn[2]=0;
             }
             trace(2,"acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%d,%d,%d\n",
                     time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
@@ -2227,6 +2225,14 @@ static int decode_type4070(rtcm_t *rtcm)
         }
     }
     
+    if(acc_cnt[0]>2 && acc_cnt[1]>2){
+        rtcm->obs.acc_warn[0]=1;
+        rtcm->obs.acc_warn[1]=1;
+    }
+    if(acc_cnt[2]>2){
+        rtcm->obs.acc_warn[2]=1;
+    }
+
     return 0;
 }
 extern int decode_rtcm3(rtcm_t* rtcm)
