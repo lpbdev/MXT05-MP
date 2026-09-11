@@ -2171,75 +2171,103 @@ static int datrange(double a, double b1, double b2)
     }
 }
 /* decode type 4070: proprietary message MengXing Corp  -----------------*/
-static int decode_type4070(rtcm_t *rtcm)
+static int decode_type4070(rtcm_t* rtcm)
 {
-
-    if(rtcm->rcv==1) return 0;
-    int i=24+12,subtype=0, typelen=0;
-    union {
-        int32_t i;
-        float f;
-    } acc_x,acc_y,acc_z;    
-    int acc_cnt[3]={0,0,0};
-
-    trace(2,"start4070\n");
-    for(int k=0;k<3;k++){
-        rtcm->obs.acc_warn[k]=0;
+    if (rtcm->rcv == 1)
+    {
+        return 0;
     }
-    int week=0;double tow=0.0;
-    tow=time2gpst(rtcm->time,&week);
-    i+=4; // skip 4 bit reserved 
+    int i = 24 + 12, subtype = 0, typelen = 0;
+    union
+    {
+        int32_t i;
+        float   f;
+    } acc_x, acc_y, acc_z;
+    int acc_cnt[3] = {0, 0, 0};
 
-    subtype=getbitu(rtcm->buff,i,32); i+=32;
-    if(subtype == 0x00000ACC){
+    trace(2, "start4070\n");
+    for (int k = 0; k < 3; k++)
+    {
+        rtcm->obs.acc_warn[k] = 0;
+    }
+    int    week = 0;
+    double tow  = 0.0;
+    tow         = time2gpst(rtcm->time, &week);
+    i += 4;  // skip 4 bit reserved
 
-        typelen=getbitu(rtcm->buff,i,32); i+=32;
+    subtype = getbitu(rtcm->buff, i, 32);
+    i += 32;
+    if (subtype == 0x00000ACC)
+    {
+        typelen = getbitu(rtcm->buff, i, 32);
+        i += 32;
 
-        for (int k=0;k<(int)typelen/16;k++){
-            uint32_t ms = getbitu(rtcm->buff,i,32); i+=32;
+        for (int k = 0; k < (int)typelen / 16; k++)
+        {
+            uint32_t ms = getbitu(rtcm->buff, i, 32);
+            i += 32;
 
-            acc_x.i = getbits(rtcm->buff,i,32); i+=32;
-            acc_y.i = getbits(rtcm->buff,i,32); i+=32;
-            acc_z.i = getbits(rtcm->buff,i,32); i+=32;
+            acc_x.i = getbits(rtcm->buff, i, 32);
+            i += 32;
+            acc_y.i = getbits(rtcm->buff, i, 32);
+            i += 32;
+            acc_z.i = getbits(rtcm->buff, i, 32);
+            i += 32;
 
-            gtime_t tt = gpst2time(week,ms/1000.0);
-            trace(2,"decode_type4070, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n",
-                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
-                    acc_x.f, acc_y.f, acc_z.f);
-            if(fabs(acc_x.f)  >100&&fabs(acc_x.f) < 400){
+            gtime_t tt = gpst2time(week, ms / 1000.0);
+            trace(
+                2, "decode_type4070, %s,%d,%d,k,%d,%d,ms,%.2f,%.4f,%.4f,%.4f\n", time_str(tt, 3),
+                subtype, typelen, k, week, ms / 1000.0, acc_x.f, acc_y.f, acc_z.f
+            );
+            if (fabs(acc_x.f) > 50 && fabs(acc_x.f) < 400)
+            {
                 acc_cnt[0]++;
-            }else{
             }
-            if((fabs(acc_y.f) >100&&fabs(acc_y.f) < 400)){
+            else
+            {
+            }
+            if ((fabs(acc_y.f) > 50 && fabs(acc_y.f) < 400))
+            {
                 acc_cnt[1]++;
-            }else{
             }
-    
-            if(fabs(acc_z.f) > 100&&fabs(acc_z.f) < 400){
+            else
+            {
+            }
+
+            if (fabs(acc_z.f) > 50 && fabs(acc_z.f) < 400)
+            {
                 acc_cnt[2]++;
-            }else{
             }
-            trace(2,"acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%d,%d,%d\n",
-                    time_str(tt,3),subtype,typelen,k,week,ms/1000.0,
-                     rtcm->obs.acc_warn[0], rtcm->obs.acc_warn[1], rtcm->obs.acc_warn[2]);
+            else
+            {
+            }
+            trace(
+                2, "acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%d,%d,%d\n", time_str(tt, 3), subtype,
+                typelen, k, week, ms / 1000.0, rtcm->obs.acc_warn[0], rtcm->obs.acc_warn[1],
+                rtcm->obs.acc_warn[2]
+            );
         }
     }
-    
-    if(acc_cnt[0]>2 && acc_cnt[1]>2){
-        rtcm->obs.acc_warn[0]=1;
-        rtcm->obs.acc_warn[1]=1;
+
+    if (acc_cnt[0] > 2 && acc_cnt[1] > 2)
+    {
+        rtcm->obs.acc_warn[0] = 1;
+        rtcm->obs.acc_warn[1] = 1;
     }
-    if(acc_cnt[2]>2){
-        rtcm->obs.acc_warn[2]=1;
+    if (acc_cnt[2] > 2)
+    {
+        rtcm->obs.acc_warn[2] = 1;
     }
 
     return 0;
 }
 extern int decode_rtcm3(rtcm_t* rtcm)
 {
-    int     ret = 0, type = getbitu(rtcm->buff, 24, 12);
+    int ret = 0, type = getbitu(rtcm->buff, 24, 12);
 
-    trace(2, "decode_rtcm3:rcv=%d len=%3d type=%d,staid,%d\n", rtcm->rcv, rtcm->len, type,rtcm->staid);
+    trace(
+        4, "decode_rtcm3:rcv=%d len=%3d type=%d,staid,%d\n", rtcm->rcv, rtcm->len, type, rtcm->staid
+    );
 
     switch (type)
     {

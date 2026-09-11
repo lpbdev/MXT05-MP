@@ -308,7 +308,6 @@ extern int decoderaw(rtksvr_t* svr, int index)
                     if (obs->acc_warn[k] == 1)
                     {
                         svr->rtk.sol.acc_warn_time[k] = obs->data[0].time;
-                        
                     }
                     svr->rtk.sol.acc_warn[k] = obs->acc_warn[k];
                 }
@@ -1080,8 +1079,7 @@ static void* rtksvrthread(void* arg)
             }
             for (j = 0; j < n; j++)
             {
-
-                obs2ssat(svr->rtk.ssat+obs[j].sat - 1, obs+j);
+                obs2ssat(svr->rtk.ssat + obs[j].sat - 1, obs + j);
 
                 // trace(2,"SKYSAT:%d,obs[%d],%d,%d,%d,%d,%d,%d\n",obs[j].sat,j,
                 //     svr->rtk.ssat[obs[j].sat - 1].SNR[0],
@@ -1107,8 +1105,8 @@ static void* rtksvrthread(void* arg)
             n = 0;
             for (i = 0; i < qobs.n; i++)
             {
-                obs[n]                               = qobs.data[i];
-                obs2ssat(svr->rtk.ssat+obs[n].sat - 1, obs+n);
+                obs[n] = qobs.data[i];
+                obs2ssat(svr->rtk.ssat + obs[n].sat - 1, obs + n);
                 n++;
             }
 
@@ -1174,12 +1172,12 @@ static void* rtksvrthread(void* arg)
             }
             trace(0xff, "------------rtk dynamics-------------\n");
 
-            // double  ep[6] = {2026, 7, 30, 1, 24, 15};
-            // gtime_t ts    = epoch2time(ep);
-            // if (timediff(obs[0].time, ts) < 20)
-            // {
-            //     continue;
-            // }
+            double  ep[6] = {2026, 8, 28, 19, 20, 0};
+            gtime_t ts    = epoch2time(ep);
+            if (timediff(obs[0].time, ts) < 0)
+            {
+                continue;
+            }
 
             trace(2, "kalman start \n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
@@ -1213,7 +1211,7 @@ static void* rtksvrthread(void* arg)
 
                 if (svr->rtk.tt != 0.0)
                 {
-                    if (svr->rtk.iniCnt> svr->rtk.initmax&& iniEnuFlag == 0)
+                    if (svr->rtk.iniCnt > svr->rtk.initmax && iniEnuFlag == 0)
                     {
                         iniEnuFlag = 1;
                     }
@@ -1222,7 +1220,7 @@ static void* rtksvrthread(void* arg)
                 memset(buff, 0, DEBUG_BUFF_LEN);
                 pbuff = buff;
                 outDnyResult(svr, &pbuff, s1, iniEnuFlag);
-                trace(2,"%s\n", buff);
+                trace(2, "%s\n", buff);
                 if (svr->rtk.opt.typeSol == 0 && svr->rtk.opt.timeIntervalSolution == 0)
                 {
                     strwrite(&svr->stream[2], (uint8_t*)buff, strlen(buff));
@@ -1396,6 +1394,10 @@ int main(int argc, char** argv)
         {
             svr.rtk.opt.smoothWindowsTime = atof(argv[++i]);
         }
+        else if (!strcmp(argv[i], "-it") && i + 1 < argc)
+        {
+            svr.rtk.opt.initEnuTime = atof(argv[++i]);
+        }
         else if (!strcmp(argv[i], "-mp"))
         {
             svr.rtk.mpflag = 1;
@@ -1452,7 +1454,6 @@ int main(int argc, char** argv)
         svr.rtk.opt.smoothWindowsTime = 24;
     }
 
-    svr.rtk.opt.initEnuTime = 11;
     if (svr.rtk.opt.initEnuTime > svr.rtk.opt.smoothWindowsTime)
     {
         svr.rtk.opt.initEnuTime = svr.rtk.opt.smoothWindowsTime;
@@ -1520,6 +1521,8 @@ int main(int argc, char** argv)
     }
 
     svr.rtk.iniCnt = 0;
+
+    svr.rtk.initmax = svr.rtk.opt.initEnuTime * 3600.0 / ROUND(svr.rtk.opt.timeInterval);
 
     sopt.posf    = 2;  // 0:SOLF_LLH  1:SOLF_XYZ  2:SOLF_ENU  3:SOLF_NMEA 4 SOLF_ORI
     sopt.times   = 3;  // 0:GPS时间 1：UTC  2：TIMES_JST  3：北京时间
@@ -1599,8 +1602,8 @@ int main(int argc, char** argv)
 
     char wpospath[256];
     sprintf(wpospath, "%s/wpos.dat", svr.rtk.path);
-    double enu[3]={0.0};
-    init_data(&svr.rtk.sol.wdata, wpospath,enu);
+    double enu[3] = {0.0};
+    init_data(&svr.rtk.sol.wdata, wpospath, enu);
 
     for (i = 0; i < 2; i++)
     {

@@ -413,3 +413,7 @@ doxy/*
 *.o
 *.exe
 tags
+GPATH
+GRTAGS
+GTAGS
+

@@ -1,4 +1,3 @@
-
 #include "BandPassFilter.h"
 #include "fft.h"
 #include "rtk.h"
@@ -53,40 +52,46 @@ extern char configFileFath[MAXSTRPATH];
 #if 1
 void quick3WaySort(double* a, int* index, int left, int right)
 {
-    if (left > right) return;
-    int lt = left;
-    int i = left + 1;
-    int gt = right;
+    if (left > right)
+    {
+        return;
+    }
+    int    lt  = left;
+    int    i   = left + 1;
+    int    gt  = right;
     double tem = a[left], tmp;
-    int tmpIndex;
+    int    tmpIndex;
     while (i <= gt)
     {
         if (a[i] < tem)
         {
-            tmp = a[i];
-            a[i] = a[lt];
+            tmp   = a[i];
+            a[i]  = a[lt];
             a[lt] = tmp;
 
-            tmpIndex = index[i];
-            index[i] = index[lt];
+            tmpIndex  = index[i];
+            index[i]  = index[lt];
             index[lt] = tmpIndex;
 
-            lt++; i++;
+            lt++;
+            i++;
         }
         else if (a[i] > tem)
         {
-            tmp = a[i];
-            a[i] = a[gt];
+            tmp   = a[i];
+            a[i]  = a[gt];
             a[gt] = tmp;
 
-            tmpIndex = index[i];
-            index[i] = index[gt];
+            tmpIndex  = index[i];
+            index[i]  = index[gt];
             index[gt] = tmpIndex;
 
             gt--;
         }
         else
+        {
             i++;
+        }
     }
     quick3WaySort(a, index, left, lt - 1);
     quick3WaySort(a, index, gt + 1, right);
@@ -95,11 +100,11 @@ static void medianFilter(double* enu, rtk_t* rtk)
 {
     int i = 0, j = 0, k = 0, index, mid = 0, segment, symboldenu[3], leveldenu[3], pickPoint = 3;
     int maxpoint = rtk->maxMedianFilterPoint;
-    double* enuwindow[3], tmp, denu[3], sumENU[3], sumSQENU[3], stdENU[3], aveENU[3];
-    int* sortIndex = NULL;
-    index = rtk->cntEnuWind;
-    //if(rtk->opt.timeInterval!=1){
-  
+    double *enuwindow[3], tmp, denu[3], sumENU[3], sumSQENU[3], stdENU[3], aveENU[3];
+    int*    sortIndex = NULL;
+    index             = rtk->cntEnuWind;
+    // if(rtk->opt.timeInterval!=1){
+
     //}else if(rtk->opt.timeInterval==1){
     //    if(rtk->sol.time.time %15 ==0){
     //        rtk->enuWindowMedian[0][index % maxpoint] = enu[0];
@@ -107,10 +112,10 @@ static void medianFilter(double* enu, rtk_t* rtk)
     //        rtk->enuWindowMedian[2][index++ % maxpoint] = enu[2];
     //    }
     //}
-    rtk->enuWindowMedian[0][index % maxpoint] = enu[0];
-    rtk->enuWindowMedian[1][index % maxpoint] = enu[1];
+    rtk->enuWindowMedian[0][index % maxpoint]   = enu[0];
+    rtk->enuWindowMedian[1][index % maxpoint]   = enu[1];
     rtk->enuWindowMedian[2][index++ % maxpoint] = enu[2];
-    rtk->cntEnuWind = index;
+    rtk->cntEnuWind                             = index;
     if (cntdrift > 0)
     {
         cntdrift--;
@@ -126,7 +131,10 @@ static void medianFilter(double* enu, rtk_t* rtk)
     sortIndex = (int*)calloc(maxpoint, sizeof(int));
     if (!sortIndex)
     {
-        for (i = 0; i < 3; i++) free(enuwindow[i]);
+        for (i = 0; i < 3; i++)
+        {
+            free(enuwindow[i]);
+        }
         return;
     }
     if (index > (maxpoint - 1))
@@ -138,71 +146,75 @@ static void medianFilter(double* enu, rtk_t* rtk)
             enuwindow[0][i] = rtk->enuWindowMedian[0][i];
             enuwindow[1][i] = rtk->enuWindowMedian[1][i];
             enuwindow[2][i] = rtk->enuWindowMedian[2][i];
-            sumENU[0] = sumENU[0] + enuwindow[0][i];
-            sumENU[1] = sumENU[1] + enuwindow[1][i];
-            sumENU[2] = sumENU[2] + enuwindow[2][i];
-            sumSQENU[0] = sumSQENU[0] + enuwindow[0][i] * enuwindow[0][i];
-            sumSQENU[1] = sumSQENU[1] + enuwindow[1][i] * enuwindow[1][i];
-            sumSQENU[2] = sumSQENU[2] + enuwindow[2][i] * enuwindow[2][i];
+            sumENU[0]       = sumENU[0] + enuwindow[0][i];
+            sumENU[1]       = sumENU[1] + enuwindow[1][i];
+            sumENU[2]       = sumENU[2] + enuwindow[2][i];
+            sumSQENU[0]     = sumSQENU[0] + enuwindow[0][i] * enuwindow[0][i];
+            sumSQENU[1]     = sumSQENU[1] + enuwindow[1][i] * enuwindow[1][i];
+            sumSQENU[2]     = sumSQENU[2] + enuwindow[2][i] * enuwindow[2][i];
         }
-        // rtk->stdEnu[k] = sqrt((rtk->sum_sqeun[k] - SQR(rtk->sum_enu[k]) / rtk->maxSmoothPoint) / (rtk->maxSmoothPoint - 1));
+        // rtk->stdEnu[k] = sqrt((rtk->sum_sqeun[k] - SQR(rtk->sum_enu[k]) / rtk->maxSmoothPoint) /
+        // (rtk->maxSmoothPoint - 1));
         stdENU[0] = sqrt((sumSQENU[0] - sumENU[0] * sumENU[0] / maxpoint) / (maxpoint - 1));
         stdENU[1] = sqrt((sumSQENU[1] - sumENU[1] * sumENU[1] / maxpoint) / (maxpoint - 1));
         stdENU[2] = sqrt((sumSQENU[2] - sumENU[2] * sumENU[2] / maxpoint) / (maxpoint - 1));
         // trace(4, "$$medianFilter stdenu: %.4f; %.4f; %.4f;\n", stdENU[0], stdENU[1], stdENU[2]);
-        // trace(4, "$$medianFilter aveenu: %.4f; %.4f; %.4f;\n", sumENU[0] / maxpoint, sumENU[1] / maxpoint, sumENU[2] / maxpoint);
+        // trace(4, "$$medianFilter aveenu: %.4f; %.4f; %.4f;\n", sumENU[0] / maxpoint, sumENU[1] /
+        // maxpoint, sumENU[2] / maxpoint);
 
-        // trace(4, "$$big window stdenu: %.4f; %.4f; %.4f;\n", rtk->stdEnu[0], rtk->stdEnu[1], rtk->stdEnu[2]);
-        // trace(4, "$$big window aveenu: %.4f; %.4f; %.4f;\n", rtk->aveEnu[0], rtk->aveEnu[1], rtk->aveEnu[2]);
+        // trace(4, "$$big window stdenu: %.4f; %.4f; %.4f;\n", rtk->stdEnu[0], rtk->stdEnu[1],
+        // rtk->stdEnu[2]); trace(4, "$$big window aveenu: %.4f; %.4f; %.4f;\n", rtk->aveEnu[0],
+        // rtk->aveEnu[1], rtk->aveEnu[2]);
         //  用冒泡法对数组进行排序
-//#if 0
-//        for (i = 0; i < maxpoint - 1; i++)
-//        {
-//            for (j = 0; j < maxpoint - 1 - i; j++)
-//            {
-//                for (k = 0; k < 3; k++)
-//                {
-//
-//                    if (enuwindow[k][j] > enuwindow[k][j + 1])
-//                    {
-//                        // 互换
-//                        tmp = enuwindow[k][j];
-//                        enuwindow[k][j] = enuwindow[k][j + 1];
-//                        enuwindow[k][j + 1] = tmp;
-//                    }
-//                }
-//            }
-//        }
-//#endif
+        // #if 0
+        //         for (i = 0; i < maxpoint - 1; i++)
+        //         {
+        //             for (j = 0; j < maxpoint - 1 - i; j++)
+        //             {
+        //                 for (k = 0; k < 3; k++)
+        //                 {
+        //
+        //                     if (enuwindow[k][j] > enuwindow[k][j + 1])
+        //                     {
+        //                         // 互换
+        //                         tmp = enuwindow[k][j];
+        //                         enuwindow[k][j] = enuwindow[k][j + 1];
+        //                         enuwindow[k][j + 1] = tmp;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        // #endif
         for (k = 0; k < 3; k++)
         {
             // 复制数据到enuwindow
             for (i = 0; i < maxpoint; i++)
             {
                 enuwindow[k][i] = rtk->enuWindowMedian[k][i];
-                sortIndex[i] = i;
+                sortIndex[i]    = i;
             }
             quick3WaySort(enuwindow[k], sortIndex, 0, maxpoint - 1);
         }
 
-
-        mid = (maxpoint - 1) / 2;
+        mid     = (maxpoint - 1) / 2;
         segment = (maxpoint - 1) / 10;
         for (i = 0; i < 3; i++)
         {
-            denu[i] = enu[i] - rtk->aveEnu[i];
-            leveldenu[i] = (int)(fabs(denu[i]) / rtk->stdEnu[i]);
-            leveldenu[i] = leveldenu[i] > 3 ? 3 : leveldenu[i];
+            denu[i]       = enu[i] - rtk->aveEnu[i];
+            leveldenu[i]  = (int)(fabs(denu[i]) / rtk->stdEnu[i]);
+            leveldenu[i]  = leveldenu[i] > 3 ? 3 : leveldenu[i];
             symboldenu[i] = denu[i] > 0 ? -1 : 1;
             // 可能位移
             if (rtk->enuWindowMedianShiftNum[i] == 0 &&
-                (enuwindow[i][pickPoint] > rtk->aveEnu[i] || enuwindow[i][maxpoint - pickPoint] < rtk->aveEnu[i]))
+                (enuwindow[i][pickPoint] > rtk->aveEnu[i] ||
+                 enuwindow[i][maxpoint - pickPoint] < rtk->aveEnu[i]))
             {
                 rtk->enuWindowMedianShiftNum[i] = rtk->maxSmoothPoint;
             }
             else
             {
-                if ((enuwindow[i][mid - segment] <= rtk->aveEnu[i] && enuwindow[i][mid + segment] >= rtk->aveEnu[i]))
+                if ((enuwindow[i][mid - segment] <= rtk->aveEnu[i] &&
+                     enuwindow[i][mid + segment] >= rtk->aveEnu[i]))
                 {
                     rtk->enuWindowMedianShiftNum[i] = 0;
                 }
@@ -212,20 +224,28 @@ static void medianFilter(double* enu, rtk_t* rtk)
                 }
             }
             if (rtk->enuWindowMedianShiftNum[i] < 0)
+            {
                 rtk->enuWindowMedianShiftNum[i] = 0;
-            // trace(4, "%s medianFilter-%d: cnt= %5d;\n", rtk->s, i, rtk->enuWindowMedianShiftNum[i]);
+            }
+            // trace(4, "%s medianFilter-%d: cnt= %5d;\n", rtk->s, i,
+            // rtk->enuWindowMedianShiftNum[i]);
             /*if (leveldenu[i] > 1 &&
                 (enuwindow[i][3]< rtk->aveEnu[0] && enuwindow[i][maxpoint - 3] > rtk->aveEnu[0])) {
                 trace(4, "medianFilter-E:%.3f -> ", enu[0]);
                 enu[0] = enuwindow[i][mid + symboldenu[0] * leveldenu[0] * segment];
                 trace(4, "%.3f \n", enu[0]);
             }*/
-            if (fabs(denu[i]) > rtk->stdEnu[i] && (rtk->enuWindwoIndex[i] < rtk->maxSmoothPoint || rtk->enuWindowMedianShiftNum[i] == 0))
+            if (fabs(denu[i]) > rtk->stdEnu[i] && (rtk->enuWindwoIndex[i] < rtk->maxSmoothPoint ||
+                                                   rtk->enuWindowMedianShiftNum[i] == 0))
+            {
                 enu[i] = enuwindow[i][mid + symboldenu[i] * leveldenu[i] * segment];
+            }
         }
     }
     for (i = 0; i < 3; i++)
+    {
         free(enuwindow[i]);
+    }
     free(sortIndex);
 }
 #else
@@ -679,22 +699,25 @@ static int outenu_dynamic(
     ecef2enu(pos, rr, enu2);  // 大地坐标转站心坐标
     ecef2enu(pos, rr, enu);   // 大地坐标转站心坐标
 
-    trace(2, "ENU2 ,%s,%14.4lf, %14.4lf,%14.4lf,%d,%14.4lf,%14.4lf,%14.4lf\n", s, enu2[0], enu2[1], enu2[2],sol->stat,
-        rtk->sol.fixxyz[0], rtk->sol.fixxyz[1],rtk->sol.fixxyz[2]
-    
+    trace(
+        2, "ENU2 ,%s,%14.4lf, %14.4lf,%14.4lf,%d,%14.4lf,%14.4lf,%14.4lf\n", s, enu2[0], enu2[1],
+        enu2[2], sol->stat, rtk->sol.fixxyz[0], rtk->sol.fixxyz[1], rtk->sol.fixxyz[2]
+
     );
 
     trace(
         4, "rr:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1],
         sol->rr[2], enu2[0], enu2[1], enu2[2]
     );
-    
-    trace(2,"minFixSat=%d,%f\n",rtk->opt.minFixSat,rtk->opt.maxgdop);
+
+    trace(2, "minFixSat=%d,%f\n", rtk->opt.minFixSat, rtk->opt.maxgdop);
     if (sol->stat != SOLQ_FIX || rtk->sol.ns[1] < rtk->opt.minFixSat)
     {
         trace(
-            2, "warnning:stat=%d nfix=%d ns[0]=%d ns[1]=%d sumPostCarV=%.2f,stat,%d,ns1,%d\n", sol->stat,
-            rtk->nfix, rtk->sol.ns[0], rtk->sol.ns[1], rtk->sumPostCarV,sol->stat,rtk->sol.ns[1]);
+            2, "warnning:stat=%d nfix=%d ns[0]=%d ns[1]=%d sumPostCarV=%.2f,stat,%d,ns1,%d\n",
+            sol->stat, rtk->nfix, rtk->sol.ns[0], rtk->sol.ns[1], rtk->sumPostCarV, sol->stat,
+            rtk->sol.ns[1]
+        );
         trace(
             2,
             "warnning:%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%"
@@ -831,7 +854,7 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
-            if (sol->window[0].jumpflag[i] == 2 || sol->acc_warn[i]==1)
+            if (sol->window[0].jumpflag[i] == 2 || sol->acc_warn[i] == 1)
             {
                 sol->window[2].n[i] = 0;  // sol->window[0].n;
 
@@ -854,21 +877,24 @@ static int outenu_dynamic(
         calcjump(sol->window, sol->jump, sol->tmpjump, 3);
 
         trace(
-            2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s, sol->window[0].ave[0],
-            sol->window[0].ave[1], sol->window[0].ave[2], sol->window[0].std[0],
-            sol->window[0].std[1], sol->window[0].std[2],sol->window[0].n[0],sol->window[0].n[1],sol->window[0].n[2]
+            2, "window0, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s,
+            sol->window[0].ave[0], sol->window[0].ave[1], sol->window[0].ave[2],
+            sol->window[0].std[0], sol->window[0].std[1], sol->window[0].std[2],
+            sol->window[0].n[0], sol->window[0].n[1], sol->window[0].n[2]
         );
 
         trace(
-            2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s, sol->window[1].ave[0],
-            sol->window[1].ave[1], sol->window[1].ave[2], sol->window[1].std[0],
-            sol->window[1].std[1], sol->window[1].std[2],sol->window[1].n[0],sol->window[1].n[1],sol->window[1].n[2]
+            2, "window1, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s,
+            sol->window[1].ave[0], sol->window[1].ave[1], sol->window[1].ave[2],
+            sol->window[1].std[0], sol->window[1].std[1], sol->window[1].std[2],
+            sol->window[1].n[0], sol->window[1].n[1], sol->window[1].n[2]
         );
 
         trace(
-            2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s, sol->window[2].ave[0],
-            sol->window[2].ave[1], sol->window[2].ave[2], sol->window[2].std[0],
-            sol->window[2].std[1], sol->window[2].std[2],sol->window[2].n[0],sol->window[2].n[1],sol->window[2].n[2]
+            2, "window2, %s, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f,%d,%d,%d\n", s,
+            sol->window[2].ave[0], sol->window[2].ave[1], sol->window[2].ave[2],
+            sol->window[2].std[0], sol->window[2].std[1], sol->window[2].std[2],
+            sol->window[2].n[0], sol->window[2].n[1], sol->window[2].n[2]
         );
 
         // logmsg(2, "window3, %s, %d, %d, %d, %.4f, %.4f, %.4f,%.4f, %.4f,
@@ -898,7 +924,7 @@ static int outenu_dynamic(
     rtk->sol.nsFixPre = rtk->sol.ns[1];
 
     trace(2, "iniCnt:%d shiftCnt=%d\n", rtk->iniCnt, shiftCnt);
-    if (rtk->iniCnt < rtk->initmax+1)
+    if (rtk->iniCnt < rtk->initmax + 1)
     {
         rtk->iniCnt++;
     }
@@ -932,13 +958,17 @@ static int outenu_dynamic(
                     sol->thresCnt2[k] = 0;
                 }
             }
-            if ((sol->thresCnt2[k] -sol->thresCnt1[k] >=15) && (sol->thresCnt1[k]<=5) ){
+            if ((sol->thresCnt2[k] - sol->thresCnt1[k] >= 15) && (sol->thresCnt1[k] <= 5))
+            {
                 sol->thresCnt1[k] = 0;
                 sol->thresCnt2[k] = 0;
                 sol->enu_sum[k]   = 0.0;
             }
-            trace(2,"thresCnt,k=%d, %d,%d,%.4f,%.4f\n",k,sol->thresCnt1[k], sol->thresCnt2[k],fabs(enu[k] - rtk->aveEnu[k]) ,detectSensitivity * rtk->stdEnu[k]);
-            
+            trace(
+                2, "thresCnt,k=%d, %d,%d,%.4f,%.4f\n", k, sol->thresCnt1[k], sol->thresCnt2[k],
+                fabs(enu[k] - rtk->aveEnu[k]), detectSensitivity * rtk->stdEnu[k]
+            );
+
             if (sol->thresCnt1[k] + sol->thresCnt2[k] >= shiftCnt)
             {
                 rtk->sol.enu_shift[k] =
@@ -953,7 +983,7 @@ static int outenu_dynamic(
                 {
                     // rtk->sol.enu_shift[k] = sol->enu_sum[k] / (sol->thresCnt1[k] +
                     // sol->thresCnt2[k]) - rtk->aveEnu[k];
-                    trace(0x02, "warnning has detect shift:%.2f;k=%d\n", rtk->sol.enu_shift[k], k);
+                    trace(2, "warnning has detect shift:%.2f;k=%d\n", rtk->sol.enu_shift[k], k);
                     if (k == 0 || k == 1)
                     {
                         if (fabs(rtk->sol.enu_shift[k]) > 0.01)
@@ -1068,7 +1098,7 @@ static int outenu_dynamic(
             if ((sol->thresCnt2[k] - sol->thresCnt1[k] >= 15) && (sol->thresCnt1[k] <= 5))
             {
                 sol->thresCnt1[k] = 0;
-                sol->enu_sum[k] = 0.0;
+                sol->enu_sum[k]   = 0.0;
             }
             if (sol->thresCnt1[k] + sol->thresCnt2[k] >= shiftCnt)
             {
@@ -1203,9 +1233,9 @@ static int outenu_dynamic(
     {
         for (i = 0; i < 3; i++)
         {
-            //rtk->enuWindwoIndex[i]=sol->window[2].n[i];
-            // enu2[i] = rtk->aveEnu[i];
-            // enu2[i] = enu2[i] - (sol->window[2].ave[i] - rtk->sol.ori_ave[i]);
+            // rtk->enuWindwoIndex[i]=sol->window[2].n[i];
+            //  enu2[i] = rtk->aveEnu[i];
+            //  enu2[i] = enu2[i] - (sol->window[2].ave[i] - rtk->sol.ori_ave[i]);
             enu2[i] = sol->window[2].ave[i];
         }
     }
@@ -2610,9 +2640,12 @@ extern int outsol(FILE* fp, rtk_t* rtk, sol_t* sol, const double* rb, const solo
         trace(
             4, "timeInterval=%.2f initEnuTime=%.2f\n", rtk->opt.timeInterval, rtk->opt.initEnuTime
         );
-        if (rtk->enuWindwoIndex[0] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
-            rtk->enuWindwoIndex[1] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1) &&
-            rtk->enuWindwoIndex[2] * (double)rtk->opt.timeInterval <= (rtk->opt.initEnuTime * 3600.0 - 1))
+        if (rtk->enuWindwoIndex[0] * (double)rtk->opt.timeInterval <=
+                (rtk->opt.initEnuTime * 3600.0 - 1) &&
+            rtk->enuWindwoIndex[1] * (double)rtk->opt.timeInterval <=
+                (rtk->opt.initEnuTime * 3600.0 - 1) &&
+            rtk->enuWindwoIndex[2] * (double)rtk->opt.timeInterval <=
+                (rtk->opt.initEnuTime * 3600.0 - 1))
         {
             return n;
         }
