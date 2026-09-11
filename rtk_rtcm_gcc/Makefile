@@ -8,7 +8,7 @@ ifeq ($(OS), Windows_NT)
 	DFFLAGS    = -DENACMP -DWIN32 -DLAPACK
 	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32 -lopenblas
 else
-	LDFLAGS = -lm -lpthread
+	LDFLAGS = -lm -lpthread -lopenblas
 	DFFLAGS    = -DENACMP -DLAPACK
 endif
 
