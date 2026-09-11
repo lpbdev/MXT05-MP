@@ -3,6 +3,7 @@
 #include "multipath.h"
 #include "logmod.h"
 #include "cJSON.h"
+#include "version_info.h"
 
 #ifndef WIN32
 #include <fcntl.h>
@@ -1305,6 +1306,7 @@ extern FILE* fp_trace; /* file pointer of trace */
 
 int main(int argc, char** argv)
 {
+    ver_print_all();
     solopt_t sopt = solopt_default;
     int      i, len, rw;
     char*    cfgfile;
