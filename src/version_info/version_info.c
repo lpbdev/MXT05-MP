@@ -4,19 +4,29 @@
 
 /* ==================== 编译时注入的信息 ==================== */
 #ifdef DEBUG
-#define VER_DEBUG_FLAGS "debug"
+#define VER_DEBUG_FLAGS "Debug"
 #elif defined(NDEBUG)
-#define VER_DEBUG_FLAGS "release"
+#define VER_DEBUG_FLAGS "Release"
 #else
 #define VER_DEBUG_FLAGS "unknown"
 #endif
 
-#ifndef VER_GIT_INFO
-#define VER_GIT_INFO "unknown"
+#ifndef VER_GIT_BRANCH
+#define VER_GIT_BRANCH "unknown"
+#endif
+#ifndef VER_GIT_COMMIT
+#define VER_GIT_COMMIT "unknown"
 #endif
 #ifndef VER_GIT_STATUS
 #define VER_GIT_STATUS "unknown"
 #endif
+#ifndef VER_GIT_MSG
+#define VER_GIT_MSG "unknown"
+#endif
+#ifndef VER_GIT_TIME
+#define VER_GIT_TIME "unknown"
+#endif
+
 #ifndef VER_SVN_INFO
 #define VER_SVN_INFO "unknown"
 #endif
@@ -110,8 +120,12 @@ const char* ver_get_runtime_os(void)
 
 /* ==================== 各字段 getter ==================== */
 
-const char* ver_get_git_info(void) { return VER_GIT_INFO; }
+const char* ver_get_git_branch(void) { return VER_GIT_BRANCH; }
+const char* ver_get_git_commit(void) { return VER_GIT_COMMIT; }
 const char* ver_get_git_status(void) { return VER_GIT_STATUS; }
+const char* ver_get_git_msg(void) { return VER_GIT_MSG; }
+const char* ver_get_git_time(void) { return VER_GIT_TIME; }
+
 const char* ver_get_svn_info(void) { return VER_SVN_INFO; }
 const char* ver_get_svn_status(void) { return VER_SVN_STATUS; }
 const char* ver_get_build_time(void) { return VER_BUILD_TIME; }
@@ -150,17 +164,59 @@ int ver_svn_is_clean(void)
     return -1;
 }
 
-/* ==================== 一次性打印 ==================== */
+const char* ver_get_c_standard(void)
+{
+#if !defined(__STDC_VERSION__)
+    return "C89/C90";
+#elif __STDC_VERSION__ == 199409L
+    return "C94/C95";
+#elif __STDC_VERSION__ == 199901L
+    return "C99";
+#elif __STDC_VERSION__ == 201112L
+    return "C11";
+#elif __STDC_VERSION__ == 201710L
+    return "C17";
+#elif __STDC_VERSION__ >= 202000L
+    return "C23";
+#else
+    return "Unknown";
+#endif
+}
 
+const char* ver_get_optimize(void)
+{
+#if defined(__OPTIMIZE__)
+    return "YES";
+#else
+    return "NO";
+#endif
+}
+
+/* ==================== 一次性打印 ==================== */
 void ver_print_all(void)
 {
     printf("================ Build Information ================\n");
-    printf("  Git        : %s\n", ver_get_git_info());
-    printf("  SVN        : %s, %s\n", ver_get_svn_info(), ver_get_svn_status());
-    printf("  Build Time : %s\n", ver_get_build_time());
-    printf("  Build Host : %s,(%s)\n", ver_get_build_host(), ver_get_runtime_os());
-    printf("  Compiler   : %s,%s\n", ver_get_compiler(), ver_get_debug_flags());
-    printf("  DEFINES    : %s\n", ver_get_build_flags());
+    printf(
+        "  %-13s : %s@%s (%s)\n", "Git Infos", ver_get_git_branch(), ver_get_git_commit(),
+        ver_get_git_status()
+    );
+    printf("  %-13s : %s\n", "Git Message", ver_get_git_msg());
+    printf("  %-13s : %s\n", "Commit Time", ver_get_git_time());
+    if (ver_svn_is_clean() >= 0)
+    {
+        printf("\n");
+        printf("  %-13s : %s\n", "SVN", ver_get_svn_info());
+    }
+    printf("\n");
+    printf("  %-13s : %s\n", "Build Time", ver_get_build_time());
+    printf("  %-13s : %s\n", "Build Host", ver_get_build_host());
+    printf("  %-13s : %s\n", "Runtime OS", ver_get_runtime_os());
+    printf("\n");
+    printf("  %-13s : %s\n", "Compiler", ver_get_compiler());
+    printf("  %-13s : %s\n", "C Standard", ver_get_c_standard());
+    printf("  %-13s : %s\n", "Optimize ", ver_get_optimize());
+    printf("  %-13s : %s\n", "Debug Flag", ver_get_debug_flags());
+    printf("  %-13s : %s\n", "Defines", ver_get_build_flags());
 
     printf("===================================================\n");
 }

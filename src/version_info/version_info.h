@@ -29,4 +29,4 @@ extern "C"
 }
 #endif
 
-#endif /* MYPROJECT_VERSION_H */
+#endif /* VERSION_INFO_H */

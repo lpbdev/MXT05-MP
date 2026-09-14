@@ -1,7 +1,7 @@
 CC       ?= gcc
 AR       ?= ar
-CFLAGS   ?= -O0 -Wall -Wextra 
-DFFLAGS  ?= -DDEBUG
+CFLAGS   ?= -O2 -Wall -Wextra -std=c11 
+DFFLAGS  ?= -DNDEBUG
 LDFLAGS  ?=
 
 # ---- 平台判断 ----
