@@ -4361,7 +4361,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             
         //     rtk->sol.window[0].jumpflag[k] =1;
         // }
-        if (rtk->sol.acc_warn[k]==1||rtk->sol.window[0].jumpflag[k]!=0 )
+        if (rtk->sol.acc_warn[k]==1&&rtk->sol.window[0].jumpflag[k]!=0 )
         {
             resetRtk(rtk, SOLQ_NONE);
             rtk->sol.rr[0] = rtk->sol.rr[1] = rtk->sol.rr[2] = 0.0;

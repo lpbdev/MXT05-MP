@@ -1173,12 +1173,6 @@ static void* rtksvrthread(void* arg)
             }
             trace(0xff, "------------rtk dynamics-------------\n");
 
-            double  ep[6] = {2026, 8, 28, 19, 20, 0};
-            gtime_t ts    = epoch2time(ep);
-            if (timediff(obs[0].time, ts) < 0)
-            {
-                continue;
-            }
 
             trace(2, "kalman start \n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
