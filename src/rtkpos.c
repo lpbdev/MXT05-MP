@@ -4027,15 +4027,18 @@ extern int getSatNum(
     {
         if (rtk->ssat[obs[i].sat - 1].vs != 1)
         {
+            trace(2,"c1\n" );
             continue;
         }
         if (rtk->ssat[obs[i].sat - 1].quickSelSatDel == 1)
         {
+            trace(2,"c2\n" );
             continue;
         }
         if (rtk->ssat[obs[i].sat - 1].azel[0][1] < elMin ||
             rtk->ssat[obs[i].sat - 1].azel[1][1] < elMin)
         {
+            trace(2,"c3\n" );
             continue;
         }
         for (j = nu; j < nu + nr; j++)
@@ -4045,6 +4048,10 @@ extern int getSatNum(
                 flag = 0;
                 for (f = 0; f < nf; f++)
                 {
+                    trace(2, "P%d, %.4f,%.4f\n", f,obs[i].P[f],obs[j].P[f]);
+                    trace(2, "L%d, %.4f,%.4f\n", f,obs[i].L[f],obs[j].L[f]);
+                    trace(2, "S%d, %d,%d\n", f,obs[i].SNR[f],obs[j].SNR[f]);
+                    trace(2, "code %d, %d,%d\n", f,obs[i].code[f],obs[j].code[f]);
                     if (obs[i].P[f] != 0.0 && obs[j].P[f] != 0.0 && obs[i].L[f] != 0.0 &&
                         obs[j].L[f] != 0.0 && obs[i].SNR[f] > snrMin && obs[j].SNR[f] > snrMin)
                     {
@@ -4054,6 +4061,7 @@ extern int getSatNum(
                 }
                 if (flag == 0)
                 {
+                    trace(2,"c4\n" );
                     continue;
                 }
                 if (rtk->ssat[obs[i].sat - 1].azel[0][1] >= opt->elmin &&
@@ -4325,16 +4333,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     time2str(obs[0].time, ts1, 3);
     time2str(obs[n - 1].time, ts2, 3);
 
-    
-    double  tsep[6] = {2026, 8, 12, 8, 0, 0};
-    gtime_t ts    = epoch2time(tsep);
-    double  teep[6] = {2026, 8, 12, 14, 0, 0};
-    gtime_t te    = epoch2time(teep);
-    // if(timediff(obs[0].time,te)<0 && timediff(obs[0].time,ts)>0)
-    // {
-    //     return 0;
-    // }
-
 #if 1
     int acc_warn[3]={0};
     for (int k = 0; k < 3; k++)
@@ -4371,7 +4369,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             
             trace(2, "reset rtk,%d,%d,%d\n",rtk->sol.window[0].jumpflag[0],rtk->sol.window[0].jumpflag[1],rtk->sol.window[0].jumpflag[2]);
         }
-        trace(2, "Acc jump%d, %s, %.4f, %.4f, %.4f,%d, %d\n", k, ts1, rtk->sol.jump[k], rtk->sol.tmpjump[k],
+        trace(3, "Acc jump%d, %s, %.4f, %.4f, %.4f,%d, %d\n", k, ts1, rtk->sol.jump[k], rtk->sol.tmpjump[k],
             rtk->sol.window[2].ave[k], rtk->sol.window[0].jumpflag[k], rtk->sol.acc_warn[k]);
     }
     for (int k = 0; k < 3; k++)
@@ -4381,7 +4379,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
 #endif
 
 
-    trace(2, "t1,%s\nt2,%s\n", ts1, ts2);
     for (i = 0; i < MAXSAT; i++)
     {
         rtk->ssat[i].vs             = 0;
@@ -4436,7 +4433,8 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     nu = i;  // number of rover observations
     nr = n - nu;
 
-    trace(2, "nu,%d nr,%d\n", nu, nr);
+    trace(2, "nu,%d,%s\n", nu,ts1);
+    trace(2, "nr,%d,%s\n", nr,ts2);
 
     if (nu < 4)
     {
@@ -4446,11 +4444,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         free(var);
         trace(2, "no rover data:%d\n", nu);
         return 1;
-    }
-
-    if (nr > 0)
-    {
-        trace(0xff, "base  time=%ld\n", obs[nu].time.time);
     }
 
     time = rtk->sol.time;
@@ -4481,7 +4474,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             }
         }
     }
-    
+
     trace(2, "solrr00,%s,%14.4f,%14.4f,%14.4f,\n", ts1, rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
     if (pntpos(0, obs, nu, &rtk->sol, NULL, rtk->ssat, &rtk->opt, rtk->tt))
     {  // 0:is ok  -1 eoror
@@ -4550,8 +4543,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             rtk->rb[0], rtk->rb[1], rtk->rb[2], rtk->solb.rr[0], rtk->solb.rr[1], rtk->solb.rr[2],
             baseXyzError
         );
-        // if(baseRtcmPosition[0]==0.0 && baseRtcmPosition[1] == 0.0 &&
-        // baseRtcmPosition[2] == 0.0)
         if (rtk->opt.useRtcmPosFlag == 0)
         {
             SmoothBasePosion(rtk);
@@ -4648,12 +4639,8 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(2, "kalman rtk->x, 01, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
-    ns = getSatNum(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 15.0 * D2R, 0.0);
-
-    char s1[64];
-    time2str(rtk->sol.time, s1, 2);
-    trace(2, "getSatNum, ns, n,nr,nu, %s, %d,%d, %d,%d\n", s1, ns, n, nr, nu);
-
+    //ns = getSatNum(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 15.0 * D2R, 0.0);
+    
     // gloFlag(rtk, obs, nu, nr);
     // if (selectSatFlag(rtk, obs, nu, nr))
     //     quickSelSat(rtk, obs, nu, nr);
@@ -4694,7 +4681,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(2, "kalman rtk->x, in while, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
     
-
     rtk->sol.stat = SOLQ_FLOAT;
     relpos(rtk, obs, nu, nr, sat, iu, ir, rs, dts, var, svh);
     trace(0x04, "rtk lsq ns=%3d nsPre=%3d\n", rtk->sol.nsLsq, rtk->sol.nsLsqPre);

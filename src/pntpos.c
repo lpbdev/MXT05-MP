@@ -58,7 +58,7 @@ static double gettgd(gtime_t time, int sat)
         else
         {
             return CLIGHT * ssat->eph.tgd[0];
-        }
+        }    
     }
     return 0.0;
 }
@@ -429,7 +429,6 @@ static int rescode(
         var[nv] = 0.01;
         nv++;
     }
-    // printf("-------------------------------------\n");
     return nv;
 }
 
@@ -975,8 +974,6 @@ extern int pntpos(
         }
     }
 
-    trace(2, "n:%d ephcnt:%d\n", n, ephcnt);
-
     if (2 * ephcnt < 1 * n)
     {
         trace(2, "pntpos eph sat too less, ephcnt,%d,n,%d\n", ephcnt, n);
@@ -992,7 +989,6 @@ extern int pntpos(
     {
         stat =
             estpos(obs, n, svh, rs, dts, resp, var_sat, azel_, vsat, exc, lsqraim, &opt_, sol, tt);
-        // printf("-----------------------------------\n");
         if (stat == -2 && (sol->ns[0] > (5 + SysCnt)) && lsqraim[0] >= 1)
         {
             sat          = (int)lsqraim[0];

@@ -1597,7 +1597,6 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     rtk->ntPre = rtk->nt;
     rtk->niPre = rtk->ni;
     rtk->naPre = rtk->na;
-
     rtk->nsPre = rtk->ns;
     for (i = 0; i < rtk->ns; i++)
     {

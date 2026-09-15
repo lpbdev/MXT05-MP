@@ -1,0 +1,36 @@
+[
+  {
+    "file": "../src/rtkpos.c",
+    "arguments": [
+      "C:\\Users\\lex.li\\scoop\\apps\\msys2\\2026-06-11\\ucrt64\\bin\\gcc.exe",
+      "-I",
+      "-DENACMP",
+      "-DWIN32",
+      "-DLAPACK",
+      "-std=c11",
+      "-pedantic",
+      "-g",
+      "-O0",
+      "-DDEBUG",
+      "-Wall",
+      "-DVER_GIT_BRANCH=\"dev\"",
+      "-DVER_GIT_COMMIT=\"0913d3c\"",
+      "-DVER_GIT_STATUS=\"dirty\"",
+      "-DVER_GIT_MSG=\"fix(shuyin): fix resetrtk bug\"",
+      "-DVER_GIT_TIME=\"2026-09-15 13:40:01 +0800\"",
+      "-DVER_SVN_INFO=\"unknown\"",
+      "-DVER_SVN_STATUS=\"unknown\"",
+      "-DVER_BUILD_TIME=\"2026-09-15 15:39:42 +0800\"",
+      "-DVER_BUILD_HOST=\"UCRT64 x86_64\"",
+      "-DVER_BUILD_FLAGS=\"-DENACMP -DWIN32 -DLAPACK\"",
+      "-I../src/",
+      "-I../src/version_info",
+      "-c",
+      "../src/rtkpos.c",
+      "-o",
+      "debug/rtkpos.o"
+    ],
+    "directory": "C:\\Users\\lex.li\\scoop\\persist\\msys2\\home\\lex.li\\MXT2105-MP2\\rtk_rtcm_gcc",
+    "output": "debug/rtkpos.o"
+  }
+]
