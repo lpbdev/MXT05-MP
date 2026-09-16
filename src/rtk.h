@@ -978,13 +978,13 @@ typedef struct
     double       fix_ion;
     double       dion;
     gtime_t      ddionTime;
-    double       ddFixBiasWL;
-    double       ddFixBiasNL;
+    // double       ddFixBiasWL;
+    // double       ddFixBiasNL;
     double       fbias[NFREQ];
     int          ionIndexCnt;
     double       Ri;
-    double       ddl;
-    double       ddlcru;
+    // double       ddl;
+    // double       ddlcru;
     // unsigned int useCnt[NFREQ];
     // gtime_t pt[2][NFREQ];
     // double ddtrp;
@@ -1098,8 +1098,8 @@ typedef struct
     int     mpflag;
     gtime_t te;
     int     mvflag;  // move detect module.
-    satts_t rsat[MAXSAT];
-    satts_t bsat[MAXSAT];
+    // satts_t rsat[MAXSAT];
+    // satts_t bsat[MAXSAT];
 } rtk_t;
 
 typedef struct

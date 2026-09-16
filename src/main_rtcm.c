@@ -1173,7 +1173,6 @@ static void* rtksvrthread(void* arg)
             }
             trace(0xff, "------------rtk dynamics-------------\n");
 
-
             trace(2, "\n\nkalman start \n\n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
             trace(2, "\n\nkalman end \n\n");

@@ -3679,12 +3679,8 @@ extern int relpos(
     /* temporal update of states */
     udstate(rtk, obs, sat, iu, ir, ns, r);
 
-    trace(
-        2,
-        "kalman xyz before while, %14.4f %14.4f %14.4f rb, %14.4f, %14.4f, "
-        "%14.4f \n",
-        rtk->x[0], rtk->x[1], rtk->x[2], rtk->rb[0], rtk->rb[1], rtk->rb[2]
-    );
+    trace( 2, "kalman xyz before while, %14.4f %14.4f %14.4f rb, %14.4f, %14.4f, %14.4f \n",
+        rtk->x[0], rtk->x[1], rtk->x[2], rtk->rb[0], rtk->rb[1], rtk->rb[2]);
     trace(2, "kalman rtk->x0 =         ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
@@ -4660,13 +4656,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         free(var);
         return 5;
     }
-    trace(0x04, "sat:");
-    for (i = 0; i < ns; i++)
-    {
-        sys = satsys(sat[i], &prn);
-        trace(0x04, "(%d:%d:%2.0f) ", sys, prn, rtk->ssat[sat[i] - 1].azel[0][1] * R2D);
-    }
-    trace(0x04, "\n");
 
     satposs(obs[0].time, obs, 2 * ns, rtk->opt.sateph, rs, dts, var, svh);
 
@@ -4680,16 +4669,15 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
 
     trace(2, "kalman rtk->x, in while, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
-    
+
     rtk->sol.stat = SOLQ_FLOAT;
     relpos(rtk, obs, nu, nr, sat, iu, ir, rs, dts, var, svh);
+
     trace(0x04, "rtk lsq ns=%3d nsPre=%3d\n", rtk->sol.nsLsq, rtk->sol.nsLsqPre);
-    // if (0) {
     trace(2, "kalman rtk->x, 03, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
-    if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt !=
-    IONOOPT_EST) {
+    if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt != IONOOPT_EST) {
         rtk->sol.rr_lsq[0] = rtk->sol.rr_lsq[1] = rtk->sol.rr_lsq[2] = 0.0;
         rtk->sol.nsLsq = 0;
         int delSat = 0;
@@ -4774,10 +4762,10 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     {
         rtk->sol.stat = SOLQ_FLOAT;
     }
-    for (i = 0; i < MAXSAT; i++)
-    {
-        rtk->ssat[i].ddl = rtk->ssat[i].ddlcru;
-    }
+    // for (i = 0; i < MAXSAT; i++)
+    // {
+    //     rtk->ssat[i].ddl = rtk->ssat[i].ddlcru;
+    // }
     if (rtk->sol.stat == SOLQ_NONE)
     {
         resetRtk(rtk, SOLQ_SINGLE);

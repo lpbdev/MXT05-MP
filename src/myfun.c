@@ -1622,7 +1622,7 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     nr = nobs - nu;
 
     ns = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, rtk->fix30flag);
-    // trace(2, "obsScan, selsatRTK, %d\n",ns);
+    trace(2, "obsScan, selsatRTK, %d\n",ns);
     if (ns > SELETE_SAT_NUM)
     {
         trace(2, "error ns=%d ,SELETE_SAT_NUM, %d\n", ns, SELETE_SAT_NUM);
@@ -1679,11 +1679,10 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     {
         rtk->opt.ionoopt = IONOOPT_BRDC;
     }
-    // if (rtk->opt.bl > 5E3 && rtk->opt.mode != 3 || differHeight > 200)
-    rtk->opt.tropopt = TROPOPT_EST;
-    // else
-    rtk->opt.tropopt = TROPOPT_SAAS;
-    rtk->opt.tropopt = TROPOPT_SAAS;
+    if (rtk->opt.bl > 5E3 && rtk->opt.mode != 3 || differHeight > 200)
+        rtk->opt.tropopt = TROPOPT_EST;
+    else
+        rtk->opt.tropopt = TROPOPT_SAAS;
     // rtk->opt.ionoopt = IONOOPT_EST;
     //    rtk->opt.ionoopt = IONOOPT_BRDC;
     for (f = 0; f < nf; f++)

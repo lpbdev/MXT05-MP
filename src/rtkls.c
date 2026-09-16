@@ -338,11 +338,11 @@ static int rescode(
                 L2  = obs[ir[j]].L[f] * lamj[f] - r2;
 
                 C = SQR(lamj[f % nf] / lamj[0]) * (f / nf == 0 ? -1.0 : 1.0);
-                if (post == 0)
-                {
-                    rtk->ssat[sat[j] - 1].ddlcru = L1 - L2;
-                    rtk->ssat[sat[i] - 1].ddlcru = Lb1 - Lb2;
-                }
+                // if (post == 0)
+                // {
+                //     rtk->ssat[sat[j] - 1].ddlcru = L1 - L2;
+                //     rtk->ssat[sat[i] - 1].ddlcru = Lb1 - Lb2;
+                // }
                 // v[nv] = Lb1 - Lb2 - (L1 - L2) - (rtk->ssat[sat[i] - 1].ddl-
                 // rtk->ssat[sat[j] - 1].ddl); if (fabs(v[nv]) > 0.02) continue;
                 v[nv] = Lb1 - Lb2 - (L1 - L2) - amb -
