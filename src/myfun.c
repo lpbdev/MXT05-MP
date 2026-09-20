@@ -263,7 +263,10 @@ extern void detectionRes(rtk_t* rtk, obsd_t* obs, int n)
         if (flag == 0)
         {
             rtk->ssat[i - 1].rejRes      = 0;
-            rtk->ssat[i - 1].resCnt      = 0;
+            if(rtk->ssat[i - 1].resCnt>0)
+            {
+                rtk->ssat[i - 1].resCnt--;
+            }
             rtk->ssat[i - 1].ionIndexCnt = 0;
             for (f = 0; f < nf; f++)
             {
@@ -280,142 +283,6 @@ extern void detectionRes(rtk_t* rtk, obsd_t* obs, int n)
         }
     }
     trace(0x04, "\n");
-}
-
-/* set select flag ------------------------------------------------*/
-extern int selectSatFlag(rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr)
-{
-    unsigned char i, j, f, nf = rtk->opt.nf, flag, sys, prn, quickSelSatFlag = 0, index1 = 0,
-                           index2 = 0;
-    unsigned char ngps = 0, nglo = 0, ngal = 0, nbds = 0, nqzs = 0;
-    for (i = 0; i < MAXSAT; i++)
-    {
-        if (rtk->ssat[i].vs != 1)
-        {
-            continue;
-        }
-        sys = satsys(i + 1, &prn);
-        if (rtk->ssat[i].azel[0][1] < rtk->opt.elmin || rtk->ssat[i].azel[1][1] < rtk->opt.elmin)
-        {
-            // trace(0x08, "sys=%3d prn=%3d el1=%.2f el2=%lf\n", sys,prn, rtk->ssat[i].azel[0][1] *
-            // R2D, rtk->ssat[i].azel[1][1] * R2D);
-            continue;
-        }
-        flag = 0;
-        for (j = 0; j < nu; j++)
-        {
-            if (obs[j].sat == i + 1)
-            {
-                index1 = j;
-            }
-        }
-        for (j = nu; j < nu + nr; j++)
-        {
-            if (obs[j].sat == i + 1)
-            {
-                index2 = j;
-            }
-        }
-        for (f = 0; f < nf; f++)
-        {
-            if (obs[index1].P[f] != 0.0 && obs[index1].L[f] != 0.0 && obs[index2].P[f] != 0.0 &&
-                obs[index2].L[f] != 0.0)
-            {
-                flag = 1;
-                break;
-            }
-        }
-        if (flag == 0)
-        {
-            trace(0x04, "reset sat:%3d vs\n", i + 1);
-            rtk->ssat[i].vs = 0;
-            continue;
-        }
-        // if (rtk->ssat[i].rejFloat[0] == 1 && rtk->ssat[i].rejFloat[1] == 1 &&
-        // rtk->ssat[i].rejFloat[2] == 1) continue;
-        sys = satsys(i + 1, NULL);
-        if (sys == SYS_GPS)
-        {
-            ngps++;
-        }
-        else if (sys == SYS_GLO)
-        {
-            nglo++;
-        }
-        else if (sys == SYS_GAL)
-        {
-            ngal++;
-        }
-        else if (sys == SYS_BDS)
-        {
-            nbds++;
-        }
-        else
-        {
-            nqzs++;
-        }
-        // printf("%3d ", i+1);
-    }
-    // printf("\n");
-    trace(0x02, "ngps=%d nglo=%d ngal=%d nbds=%d nqzs=%d\n", ngps, nglo, ngal, nbds, nqzs);
-    if (ngps + ngal + nbds + nqzs > SELETE_SAT_NUM)
-    {
-        quickSelSatFlag = 1;
-    }
-    return quickSelSatFlag;
-    if (nbds >= SELETE_SAT_NUM)
-    {
-        if (nbds > SELETE_SAT_NUM)
-        {
-            quickSelSatFlag = 1;
-        }
-        for (i = 0; i < MAXSAT; i++)
-        {
-            sys = satsys(i + 1, NULL);
-            if (sys != SYS_BDS)
-            {
-                rtk->ssat[i].vs = 0;
-            }
-        }
-    }
-    else if ((ngps + nbds + nqzs) >= SELETE_SAT_NUM)
-    {
-        if ((nbds + ngps + nqzs) > SELETE_SAT_NUM)
-        {
-            quickSelSatFlag = 1;
-        }
-        for (i = 0; i < MAXSAT; i++)
-        {
-            sys = satsys(i + 1, NULL);
-            if (sys == SYS_GAL || sys == SYS_GLO)
-            {
-                rtk->ssat[i].vs = 0;
-            }
-        }
-    }
-    else if ((ngps + nbds + ngal + nqzs) >= SELETE_SAT_NUM)
-    {
-        if ((ngps + nbds + ngal + nqzs) > SELETE_SAT_NUM)
-        {
-            quickSelSatFlag = 1;
-        }
-        for (i = 0; i < MAXSAT; i++)
-        {
-            sys = satsys(i + 1, NULL);
-            if (sys == SYS_GLO)
-            {
-                rtk->ssat[i].vs = 0;
-            }
-        }
-    }
-    else if ((ngps + nbds + ngal + nglo + nqzs) >= SELETE_SAT_NUM)
-    {
-        if ((ngps + nbds + ngal + nglo + nqzs) > SELETE_SAT_NUM)
-        {
-            quickSelSatFlag = 1;
-        }
-    }
-    return quickSelSatFlag;
 }
 
 extern void quickSelSat(rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr)
@@ -993,25 +860,28 @@ extern int selsatRTK(
     for (i = 0; i < nu; i++)
     {
         satno2id(obs[i].sat, id);
+#if 0
         if (rtk->ssat[obs[i].sat - 1].vs != 1)
         {
-            //trace(2, "sel,0, %s\n", id);
+            trace(2, "sel,0, %s\n", id);
             continue;
         }
         if (rtk->ssat[obs[i].sat - 1].quickSelSatDel == 1)
         {
-            //trace(2, "sel,1, %s\n", id);
+            trace(2, "sel,1, %s\n", id);
             continue;
         }
         if (rtk->ssat[obs[i].sat - 1].rejRes == 1)
         {
-            //trace(2, "sel,2, %s\n", id);
+            trace(2, "sel,2, %s\n", id);
             continue;
         }
+#endif 
         for (j = nu; j < nu + nr; j++)
         {
             if (obs[i].sat == obs[j].sat)
             { /* elevation at base station */
+#if 0
                 flag = 0;
                 for (f = 0; f < nf; f++)
                 {
@@ -1026,7 +896,7 @@ extern int selsatRTK(
                 }
                 if (flag == 0)
                 {
-                    //trace(2, "sel,3, %s,%d\n", id, nf);
+                    trace(2, "sel,3, %s,%d\n", id, nf);
                     continue;
                 }
                 if (elFlag == 1)
@@ -1038,6 +908,7 @@ extern int selsatRTK(
                         continue;
                     }
                 }
+#endif
                 /*
                 trace(
                     2, "sel,6,azel,%.2f, %.2f, %.2f\n", rtk->ssat[obs[i].sat - 1].azel[0][1],
@@ -1552,45 +1423,11 @@ extern int checkFloatP(rtk_t* rtk, int lcopt)
 }
 extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs)
 {
-    unsigned char sati, nsat, sat[MAXOBS] = {0}, iu[MAXOBS] = {0}, ir[MAXOBS] = {0};
+    unsigned char  nsat, sat[MAXOBS] = {0}, iu[MAXOBS] = {0}, ir[MAXOBS] = {0};
     unsigned char n, n1, n2, murFrq, sigFrq, nu, nr, f, ns, nx = 0, nxWL = 0, nf = rtk->opt.nf, sys,
                                                             prn;
     double pos1[3], pos2[3], dr[3], bl, differHeight;
     int    i, j;
-    nsat = 0;
-    if (rtk->sol.stat != 1)
-    {
-        for (i = 0; i < nobs; i++)
-        {
-            if (obs[i].rcv != 1)
-            {
-                break;
-            }
-            sati = obs[i].sat;
-            if (rtk->ssat[sati - 1].quickSelSatDel == 1)
-            {
-                continue;
-            }
-            if (rtk->ssat[sati - 1].vs != 1)
-            {
-                continue;
-            }
-            if (rtk->ssat[sati - 1].azel[0][1] * R2D > 30.0 &&
-                rtk->ssat[sati - 1].azel[1][1] * R2D > 30.0)
-            {
-                nsat++;
-            }
-        }
-    }
-    if (nsat > 10)
-    {
-        rtk->fix30flag = 1;
-    }
-    else
-    {
-        rtk->fix30flag = 0;
-    }
-    rtk->fix30flag = 0;
 
     rtk->nxPre = rtk->nx;
     rtk->npPre = rtk->np;
@@ -1621,7 +1458,7 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     nu = i;  // number of rover observations
     nr = nobs - nu;
 
-    ns = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, rtk->fix30flag);
+    ns = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 0);
     trace(2, "obsScan, selsatRTK, %d\n",ns);
     if (ns > SELETE_SAT_NUM)
     {
@@ -1659,11 +1496,14 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     }
     ecef2pos(rtk->sol.rr, pos1);
     ecef2pos(rtk->rb, pos2);
+
     bl                    = baseline(rtk->sol.rr, rtk->rb, dr);
     rtk->opt.bl           = bl;
     differHeight          = fabs(pos1[2] - pos2[2]);
+
     rtk->opt.differHeight = differHeight;
     rtk->ns               = ns;
+
     for (i = 0; i < ns; i++)
     {
         rtk->nsSat[i] = sat[i];
@@ -1701,31 +1541,6 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
         }
     }
 
-#if 0
-    for (i = 0; i < ns; i++) {
-        sati = obs[iu[i]].sat;
-        sys = satsys(sati, &prn);
-        if (sys == SYS_BDS && prn >= 19) {
-            if (obs[iu[i]].P[0] != 0.0 && obs[iu[i]].L[0] != 0.0 && obs[ir[i]].P[0] != 0.0 && obs[ir[i]].L[0] != 0.0 &&
-                obs[iu[i]].P[2] != 0.0 && obs[iu[i]].L[2] != 0.0 && obs[ir[i]].P[2] != 0.0 && obs[ir[i]].L[2] != 0.0) {
-                nxWL++;
-                if (3 + nxWL >= NXLC) {
-                    trace(0x04, "nxWL too more:%d\n", nxWL);
-                    break;
-                }
-            }
-        } else {
-            if (obs[iu[i]].P[0] != 0.0 && obs[iu[i]].L[0] != 0.0 && obs[ir[i]].P[0] != 0.0 && obs[ir[i]].L[0] != 0.0 &&
-                obs[iu[i]].P[1] != 0.0 && obs[iu[i]].L[1] != 0.0 && obs[ir[i]].P[1] != 0.0 && obs[ir[i]].L[1] != 0.0) {
-                nxWL++;
-                if (3 + nxWL >= NXLC) {
-                    trace(0x04, "nxWL too more:%d\n", nxWL);
-                    break;
-                }
-            }
-        }
-    }
-#endif
     n = 0;
     for (i = 0; i < nobs; i++)
     {

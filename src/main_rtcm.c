@@ -1026,6 +1026,7 @@ static void* rtksvrthread(void* arg)
                 {
                     obs[n].LockTime[f] = 3000;
                 }
+#if 0
                 for (k = 0; k < NFREQ; k++)
                 {
                     if (obs[n].SNR[k] < svr->rtk.opt.cn0Min * 4 || obs[n].LCK[k] < 8)
@@ -1033,19 +1034,16 @@ static void* rtksvrthread(void* arg)
                         obs[n].P[k] = obs[n].L[k] = obs[n].D[k] = 0.0;
                     }
                 }
+#endif
                 cnt = 0;
                 if (sys == SYS_BDS)
                 {
+                    trace(2, "code,%d,%d,%d,%d,%d,%d,%d,\n",f,
+                            obs[n].code[0],obs[n].code[1],obs[n].code[2],
+                            obs[n].code[3],obs[n].code[4],obs[n].code[5]);
                     for (f = 0; f < NFREQ; f++)
                     {
-                        if (obs[n].P[f] != 0.0)
-                        {
-                            cnt++;
-                        }
-                    }
-                    for (f = 0; f < NFREQ; f++)
-                    {
-                        if (cnt >= 2 && f >= 3)
+                        if (obs[n].code[f] != CODE_L1I && obs[n].code[f] != CODE_L6I )
                         {
                             obs[n].P[f] = obs[n].L[f] = 0.0;
                         }
@@ -1081,17 +1079,6 @@ static void* rtksvrthread(void* arg)
             for (j = 0; j < n; j++)
             {
                 obs2ssat(svr->rtk.ssat + obs[j].sat - 1, obs + j);
-
-                // trace(2,"SKYSAT:%d,obs[%d],%d,%d,%d,%d,%d,%d\n",obs[j].sat,j,
-                //     svr->rtk.ssat[obs[j].sat - 1].SNR[0],
-                //     svr->rtk.ssat[obs[j].sat - 1].SNR[1],
-                //     svr->rtk.ssat[obs[j].sat - 1].SNR[2],
-                //     svr->rtk.ssat[obs[j].sat - 1].SNR[3],
-                //     svr->rtk.ssat[obs[j].sat - 1].SNR[4],
-                //     svr->rtk.ssat[obs[j].sat - 1].SNR[5]);
-
-                // trace(2,"SKYSNR:%d,obs[%d],%d,%d,%d,%d,%d,%d\n",obs[j].sat,j,obs[j].SNR[0],obs[j].SNR[1],obs[j].SNR[2],obs[j].SNR[3],obs[j].SNR[4],obs[j].SNR[5]);
-                // trace(2,"SKYCOD:%d,obs[%d],%d,%d,%d,%d,%d,%d\n",obs[j].sat,j,obs[j].code[0],obs[j].code[1],obs[j].code[2],obs[j].code[3],obs[j].code[4],obs[j].code[5]);
             }
         }
         qobs.n = 0;
@@ -1173,9 +1160,9 @@ static void* rtksvrthread(void* arg)
             }
             trace(0xff, "------------rtk dynamics-------------\n");
 
-            trace(2, "\n\nkalman start \n\n");
+            trace(2, "kalman start \n\n");
             rtkReturnValue = rtkpos(&svr->rtk, obs, n);
-            trace(2, "\n\nkalman end \n\n");
+            trace(2, "kalman end \n\n");
             time = svr->rtk.sol.time;
             if (sopt.times == 3)
             {

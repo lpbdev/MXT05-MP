@@ -19,9 +19,9 @@ static unsigned char fixErrorCnt  = 0;
 static unsigned char largeShift   = 0;
 static unsigned char rejectcount  = 0;
 static unsigned char baseXyzError = 0;
-static double        varerr_gamit(
-           int sat, int sys, double el, double bl, double dt, int f, const prcopt_t* opt
-       )
+
+static double varerr_gamit(
+        int sat, int sys, double el, double bl, double dt, int f, const prcopt_t* opt)
 {
     double a, b, c = 0 * bl / 1E4, d = CLIGHT * 0 * dt;
     double sinel;
@@ -2748,9 +2748,9 @@ static int check_res(
                     sortVsat[vi] = sat[j];
                     vi++;
                 }
-                if (fabs(rtk->v[nv]) > 0.09)
+                if (fabs(rtk->v[nv]) > 0.15 && f==0)
                 {
-                    rtk->ssat[sortVsat[i] - 1].vs = 0;
+                    rtk->ssat[sat[j] - 1].vs = 0;
                     trace(
                         2, "fix error v=%lf el=%lf\r\n", rtk->v[nv],
                         rtk->ssat[sat[j] - 1].azel[0][1] * R2D
@@ -2894,21 +2894,18 @@ static int ddres(
         for (j = 0; j < NFREQ; j++)
         {
             rtk->ssat[i].vsat[j] = 0;
-            // rtk->ssat[i].resc[j] = 0.0;
+            rtk->ssat[i].resc[j] = 0.0;
         }
     }
     trace(2, "ddres, opt->mode, %d, PMODE_DGPS, %d\n", opt->mode, PMODE_DGPS);
     for (f = opt->mode > PMODE_DGPS ? 0 : nf; f < nf * 2; f++)
     {
-        // if (rtk->nx == nv)break;
-        // if (f >= nf) break;
         if (nv >= NY)
         {
             break;
         }
         for (m = 0; m < NSYS; m++)
         {
-            // if (rtk->nx == nv)break;
             if (nv >= NY)
             {
                 break;
@@ -4429,8 +4426,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     nu = i;  // number of rover observations
     nr = n - nu;
 
-    trace(2, "nu,%d,%s\n", nu,ts1);
-    trace(2, "nr,%d,%s\n", nr,ts2);
+    trace(2, "nunr,00,%s,%d,%d,%d\n", ts1,nu,nr,n);
 
     if (nu < 4)
     {
@@ -4641,12 +4637,14 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     // if (selectSatFlag(rtk, obs, nu, nr))
     //     quickSelSat(rtk, obs, nu, nr);
 
-    detectionRes(rtk, obs, nu);
+    trace(2, "nunr,01,%s,%d,%d,%d\n", ts1,nu,nr,n);
+    // detectionRes(rtk, obs, nu);
     ns = obsScan(rtk, &rtk->opt, obs, n);
-    trace(2, "obsScan, ns, %d,n, %d\n", ns, n);
+    trace(2, "nunr,02,%s,%d,%d,%d\n", ts1,nu,nr,ns);
     nu = nr = ns / 2;
+    trace(2, "nunr,02-1,%s,%d,%d\n", ts1,nu,nr);
     ns      = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 0);
-    trace(2, "selsatRTK, ns, %d\n", ns);
+    trace(2, "nunr,03,%s,%d,%d\n", ts1,nu,nr);
     if (ns < 5)
     {
         trace(0x02, "warnning rtk ns=%d\n", ns);
@@ -4670,6 +4668,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(2, "kalman rtk->x, in while, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
+    trace(2, "nunr,04,%s,%d,%d\n", ts1,nu,nr);
     rtk->sol.stat = SOLQ_FLOAT;
     relpos(rtk, obs, nu, nr, sat, iu, ir, rs, dts, var, svh);
 

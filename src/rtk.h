@@ -379,7 +379,7 @@ static const char frqcodes[] = "1256789"; /* frequency codes */
 #define CODE_L9X 55 /* obs code: SB+C       (IRN) */
 #define CODE_L1D 56 /* obs code: B1C       (BDS) */
 #define CODE_L5D 57 /* obs code: B2a       (BDS) */
-#define CODE_L7D 58 /* obs code: B2a       (BDS) */
+#define CODE_L7D 58 /* obs code: B2b       (BDS) */
 #define MAXCODE 59  /* max number of obs code */
 
 #define MAXFREQ 7 /* max NFREQ */
