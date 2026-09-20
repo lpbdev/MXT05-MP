@@ -485,7 +485,7 @@ static int searchAvalidPsr(obsd_t* obs)
     }
     char id[4];
     satno2id(obs->sat, id);
-    // trace(2,"searchAvalidPsr, %d,%s,\n",index,id);
+    trace(4,"searchAvalidPsr, %d,%s,\n",index,id);
     return index;
 }
 
@@ -507,6 +507,8 @@ extern void satposs(
         {
             dts[j + i * 2] = 0.0;
         }
+        trace(4, "satposs: sat=%2d P=%.2f %.2f %.2f %.2f\n", obs[i].sat, obs[i].P[0], obs[i].P[1], obs[i].P[2], obs[i].P[3]);
+        trace(4, "satposs: sat=%2d L=%.2f %.2f %.2f %.2f\n", obs[i].sat, obs[i].L[0], obs[i].L[1], obs[i].L[2], obs[i].L[3]);
         var[i]                   = 0.0;
         svh[i]                   = 0;
         obs[i].pvtAvalidPsrIndex = -1;
@@ -524,7 +526,7 @@ extern void satposs(
         /* satellite clock bias by broadcast ephemeris */
         if (!ephclk(time[i], teph, obs[i].sat, &g_nav, &dt))
         {
-            // trace(0x04, "no satellite clock sys=%d prn=%d\n", sys, prn);
+            trace(0x04, "no satellite clock sys=%d sat=%d\n", sys, obs[i].sat);
             continue;
         }
         time[i] = timeadd(time[i], -dt);
@@ -534,7 +536,7 @@ extern void satposs(
                 time[i], teph, obs[i].sat, ephopt, &g_nav, rs + i * 6, dts + i * 2, var + i, svh + i
             ))
         {
-            // trace(0x04, "satellite position error sat=%d\n", obs[i].sat);
+            trace(0x04, "satellite position error sat=%d\n", obs[i].sat);
             continue;
         }
         // if no precise clock available, use broadcast clock instead

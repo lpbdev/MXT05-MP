@@ -857,73 +857,20 @@ extern int selsatRTK(
 {
     unsigned char i, j, k = 0, f, flag, nf = rtk->opt.nf;
     char          id[4];
-    for (i = 0; i < nu; i++)
-    {
-        satno2id(obs[i].sat, id);
-#if 0
-        if (rtk->ssat[obs[i].sat - 1].vs != 1)
-        {
-            trace(2, "sel,0, %s\n", id);
-            continue;
-        }
-        if (rtk->ssat[obs[i].sat - 1].quickSelSatDel == 1)
-        {
-            trace(2, "sel,1, %s\n", id);
-            continue;
-        }
-        if (rtk->ssat[obs[i].sat - 1].rejRes == 1)
-        {
-            trace(2, "sel,2, %s\n", id);
-            continue;
-        }
-#endif 
-        for (j = nu; j < nu + nr; j++)
-        {
-            if (obs[i].sat == obs[j].sat)
-            { /* elevation at base station */
-#if 0
-                flag = 0;
-                for (f = 0; f < nf; f++)
-                {
-                    if (obs[i].P[f] != 0.0 && obs[j].P[f] != 0.0 && obs[i].L[f] != 0.0 &&
-                        obs[j].L[f] != 0.0)
-                    {
-                        //trace(2, "sel,5, %s,%d,%d\n", id, f, nf);
 
-                        flag = 1;
-                        break;
-                    }
-                }
-                if (flag == 0)
-                {
-                    trace(2, "sel,3, %s,%d\n", id, nf);
-                    continue;
-                }
-                if (elFlag == 1)
-                {
-                    if (rtk->ssat[obs[i].sat - 1].azel[0][1] * R2D <= 30.0 &&
-                        rtk->ssat[obs[i].sat - 1].azel[1][1] * R2D <= 30.0)
-                    {
-                        //trace(2, "sel,4, %s\n", id);
-                        continue;
-                    }
-                }
-#endif
-                /*
-                trace(
-                    2, "sel,6,azel,%.2f, %.2f, %.2f\n", rtk->ssat[obs[i].sat - 1].azel[0][1],
-                    rtk->ssat[obs[i].sat - 1].azel[1][1], opt->elmin
-                );
-                */
-                if (rtk->ssat[obs[i].sat - 1].azel[0][1] >= opt->elmin &&
-                    rtk->ssat[obs[i].sat - 1].azel[1][1] >= opt->elmin)
-                {
-                    sat[k]  = obs[i].sat;
-                    iu[k]   = i;
-                    ir[k++] = j;
-                }
-                break;
-            }
+    for(i=0;i<nu+nr;i++)
+    {
+        satno2id(obs[i].sat,id);
+        trace(2,"(%2d) rcv=%3d %s, azel=%.2f\n",i,obs[i].rcv,id,rtk->ssat[obs[i].sat - 1].azel[0][1]*R2D);
+    }
+
+    for (i=0,j=nu;i<nu&&j<nu+nr;i++,j++) {
+        if      (obs[i].sat<obs[j].sat) j--;
+        else if (obs[i].sat>obs[j].sat) i--;
+        else if (rtk->ssat[obs[i].sat - 1].azel[0][1] >= opt->elmin &&
+                    rtk->ssat[obs[i].sat - 1].azel[1][1] >= opt->elmin) { /* elevation at base station */
+            sat[k]=obs[i].sat; iu[k]=i; ir[k++]=j;
+            trace(4,"(%2d) sat=%3d iu=%2d ir=%2d\n",k-1,obs[i].sat,i,j);
         }
     }
     return k;
@@ -1459,7 +1406,7 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     nr = nobs - nu;
 
     ns = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 0);
-    trace(2, "obsScan, selsatRTK, %d\n",ns);
+    trace(2, "obsScan, selsatRTK, %d,nobs,%d,nu,%d,nr,%d\n",ns,nobs,nu,nr);
     if (ns > SELETE_SAT_NUM)
     {
         trace(2, "error ns=%d ,SELETE_SAT_NUM, %d\n", ns, SELETE_SAT_NUM);

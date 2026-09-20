@@ -228,6 +228,8 @@ static int rescode(
     {
         vsat[i]     = 0;
         azel[i * 2] = azel[i * 2 + 1] = resp[i] = 0.0;
+        
+        trace(4, "rescode, sat=%3d, svh=%d, exc=%d\n", obs[i].sat, svh[i], exc[obs[i].sat - 1]);
         if (svh[i])
         {
             continue;
@@ -766,11 +768,17 @@ static void update_state(
                 lam[j] = g_bdsLam[j];
             }
         }
+        
+        char id[4];
+        satno2id(obs[i].sat, id);
 
         if (base == 0)
         {
             ssat[obs[i].sat - 1].azel[0][0] = azel_[i * 2];
             ssat[obs[i].sat - 1].azel[0][1] = azel_[1 + i * 2];
+            
+            trace(4, "spp update_state, base,%d,id,%s,azel=%.2f %.2f,i*2,%d,sat,%d\n",
+                 base, id, azel_[i * 2] * R2D, azel_[1 + i * 2] * R2D, i * 2,obs[i].sat);
             index                           = obs[i].pvtAvalidPsrIndex;
             if (index == -1)
             {
@@ -835,6 +843,9 @@ static void update_state(
         {
             ssat[obs[i].sat - 1].azel[1][0] = azel_[i * 2];
             ssat[obs[i].sat - 1].azel[1][1] = azel_[1 + i * 2];
+
+            trace(4, "spp update_state, base,%d,id,%s,azel=%.2f %.2f\n",
+                 base, id, azel_[i * 2] * R2D, azel_[1 + i * 2] * R2D);
             if (ssat[obs[i].sat - 1].vs == -1)
             {
                 continue;  // check rover is not ok
@@ -967,6 +978,7 @@ extern int pntpos(
         if (rs[i * 6] == 0)
         {
             exc[obs[i].sat - 1] = 1;
+            trace(4,"exc,rs=0, sat,%d,base,%d\n",obs[i].sat,base);
         }
         else
         {
@@ -993,6 +1005,7 @@ extern int pntpos(
         {
             sat          = (int)lsqraim[0];
             exc[sat - 1] = 1;
+            trace(2, "spp reject 10 sat=%d\n", sat);
             sys          = satsys(sat, &prn);
             trace(
                 0x04, "rcv:%d spp reject sys=%d prn=%d v=%lf stdv=%lf\n", base + 1, sys, prn,

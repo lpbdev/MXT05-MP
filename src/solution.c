@@ -704,7 +704,18 @@ static int outenu_dynamic(
         enu2[2], sol->stat, rtk->sol.fixxyz[0], rtk->sol.fixxyz[1], rtk->sol.fixxyz[2]
 
     );
-
+if (oFile.fpOut[0])
+    {
+        fprintf(
+            oFile.fpOut[0],
+            "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%"
+            "s%8.4f%s%8.4f%s%6.2f%s%6.1f,%4.2f,%4.2f,%4.2f,\n",
+            s, sep, enu2[0], sep, enu2[1], sep, enu2[2], sep,
+            sol->stat, sep, ns, sep, SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
+            sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio, sol->dop[0][0],
+            sol->dop[0][1], sol->dop[0][2]
+        );
+    }
     trace(
         4, "rr:%14.4lf %14.4lf %14.4lf %14.4lf %14.4lf %14.4lf\n", sol->rr[0], sol->rr[1],
         sol->rr[2], enu2[0], enu2[1], enu2[2]
@@ -1322,18 +1333,7 @@ static int outenu_dynamic(
         sol->stat, sep, ns, sep, SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
         sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio
     );
-    if (oFile.fpOut[0])
-    {
-        fprintf(
-            oFile.fpOut[0],
-            "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%"
-            "s%8.4f%s%8.4f%s%6.2f%s%6.1f,%4.2f,%4.2f,%4.2f,\n",
-            s, sep, sol->enu_original[0], sep, sol->enu_original[1], sep, sol->enu_original[2], sep,
-            sol->stat, sep, ns, sep, SQRT(Q[0]), sep, SQRT(Q[4]), sep, SQRT(Q[8]), sep, sqvar(Q[1]),
-            sep, sqvar(Q[5]), sep, sqvar(Q[2]), sep, sol->age, sep, sol->ratio, sol->dop[0][0],
-            sol->dop[0][1], sol->dop[0][2]
-        );
-    }
+
     return p - (char*)buff;
 }
 
