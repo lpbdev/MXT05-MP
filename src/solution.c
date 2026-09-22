@@ -699,6 +699,7 @@ static int outenu_dynamic(
     ecef2enu(pos, rr, enu2);  // 大地坐标转站心坐标
     ecef2enu(pos, rr, enu);   // 大地坐标转站心坐标
 
+
     trace(
         2, "ENU2 ,%s,%14.4lf, %14.4lf,%14.4lf,%d,%14.4lf,%14.4lf,%14.4lf\n", s, enu2[0], enu2[1],
         enu2[2], sol->stat, rtk->sol.fixxyz[0], rtk->sol.fixxyz[1], rtk->sol.fixxyz[2]
@@ -748,6 +749,16 @@ if (oFile.fpOut[0])
             rtk->sol.nsFixPre = rtk->sol.ns[1];
         }
         return 0;
+    }
+
+    for (i = 0; i < 3; i++)
+    {
+        if(rtk->enuWindwoIndex[i] <= rtk->maxSmoothPoint) continue;
+        if (rtk->aveEnu[i] - enu[i] > 0.02 )
+        {
+            enu[i]  = rtk->aveEnu[i] + 0.001;
+            enu2[i] = enu[i];
+        }
     }
     // if (fixEnuErrorCheck <= 3 && rtk->enuWindwoIndex[0] > 0)
     // {

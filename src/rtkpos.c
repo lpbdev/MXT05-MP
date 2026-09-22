@@ -306,7 +306,13 @@ static void udpos(rtk_t* rtk, double tt)
             initx(rtk, rtk->sol.rr[i], var, i);
         }
         return;
-    }
+    }else {
+            // 继承上一历元位置，只增加过程噪声
+            double process_noise = SQR(0.05);   // 从 0.01 改成 0.05
+            for (i = 0; i < 3; i++) {
+                rtk->P[i + i * rtk->nx] += process_noise * fabs(tt);
+            }
+        }
     /* check variance of estimated postion */
     for (i = 0; i < 3; i++)
     {
@@ -3329,8 +3335,8 @@ static int ddres(
 
     if (rtk->opt.bl <= BSLTHRESHOLD)
     {
-        K0 = 1.5;
-        K1 = 3.0;
+        K0 = 2.0;
+        K1 = 4.0;
     }
     else
     {
@@ -3672,6 +3678,8 @@ extern int relpos(
     {
         robust[i] = 0;
     }
+    trace(2, "relpos before udstate: x[0..2]=%.4f %.4f %.4f\n",
+        rtk->x[0], rtk->x[1], rtk->x[2]);
     trace(2, "udstate,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
     /* temporal update of states */
     udstate(rtk, obs, sat, iu, ir, ns, r);
@@ -3991,6 +3999,9 @@ extern int relpos(
 extern void resetRtk(rtk_t* rtk, int stat)
 {
     int i;
+
+    trace(2, "!!!!! resetRtk called, stat=%d !!!!!\n", stat);
+
     // rtk->opt.mode = PMODE_KINEMA;
     rtk->sol.stat  = stat;
     rtk->sol.ratio = 0.0;
@@ -4161,7 +4172,7 @@ static void detslp_gf(rtk_t* rtk, const obsd_t* obs, unsigned char n, int index1
         {
             thres = sqrt(2 * (1 + C)) * 0.01 * 5.9 * fabs(age);
         }
-        thres = 1.0;
+        // thres = 1.0;
         if (fabs(g1 - g0) > thres && fabs(age) < 7200.0)
         {
             trace(
@@ -4675,7 +4686,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(0x04, "rtk lsq ns=%3d nsPre=%3d\n", rtk->sol.nsLsq, rtk->sol.nsLsqPre);
     trace(2, "kalman rtk->x, 03, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
-
+#if 1
     if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt != IONOOPT_EST) {
         rtk->sol.rr_lsq[0] = rtk->sol.rr_lsq[1] = rtk->sol.rr_lsq[2] = 0.0;
         rtk->sol.nsLsq = 0;
@@ -4727,7 +4738,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         }
     }
     trace(2, "kalman rtk->x, 05, ");         tracemat(2, rtk->x,1,6,14,4);
-
+#endif
     if (rtk->sol.stat == SOLQ_FIX)
     {
         if (rtk->sol.fixxyz[0] != 0)

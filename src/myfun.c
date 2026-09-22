@@ -1395,6 +1395,20 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
         rtk->nxRecordFrq[i]    = 0;
     }
 
+    // ---- 保存上一历元的位置/速度/加速度状态和协方差 ----
+    double x_pos_save[9] = {0};
+    double P_pos_save[9][9] = {0};
+    int np_save = rtk->npPre;
+    if (np_save > 9) np_save = 9;
+    int nx_old = rtk->nxPre;
+    for (i = 0; i < np_save; i++) {
+        x_pos_save[i] = rtk->x[i];
+        for (j = 0; j < np_save; j++) {
+            P_pos_save[i][j] = rtk->P[i + j * nx_old];
+        }
+    }
+    // ---- 保存结束 ----
+
     for (i = 0; i < nobs; i++)
     {
         if (obs[i].rcv != 1)
@@ -1470,6 +1484,9 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
         rtk->opt.tropopt = TROPOPT_EST;
     else
         rtk->opt.tropopt = TROPOPT_SAAS;
+    /* 单北斗：短基线强制 BRDC + SAAS */
+    rtk->opt.ionoopt = IONOOPT_BRDC;
+    rtk->opt.tropopt = TROPOPT_SAAS;
     // rtk->opt.ionoopt = IONOOPT_EST;
     //    rtk->opt.ionoopt = IONOOPT_BRDC;
     for (f = 0; f < nf; f++)
@@ -1552,6 +1569,16 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
 
     memset(rtk->x, 0, sizeof(double) * NX);
     memset(rtk->P, 0, sizeof(double) * NX * NX);
+    
+    // ---- 恢复位置/速度/加速度状态 ----
+    int np_new = rtk->np;
+    for (i = 0; i < np_new && i < np_save; i++) {
+        rtk->x[i] = x_pos_save[i];
+        for (j = 0; j < np_new && j < np_save; j++) {
+            rtk->P[i + j * rtk->nx] = P_pos_save[i][j];
+        }
+    }
+    // ---- 恢复结束 ----
 
     assignAmbX(rtk, 0);
     assignAmbP(rtk, 0);
@@ -1563,7 +1590,9 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     {
         assignIon(rtk);
     }
-
+    trace(2, "obsScan end: x[0..2]=%.4f %.4f %.4f P00=%.4f P11=%.4f P22=%.4f\n",
+        rtk->x[0], rtk->x[1], rtk->x[2],
+        rtk->P[0], rtk->P[1 + 1 * rtk->nx], rtk->P[2 + 2 * rtk->nx]);
     return n;
 }
 
@@ -1870,15 +1899,15 @@ extern void initCfgOpt(cfgopt_t* opt)
     opt->stationPCV[1]        = 0.0;
     opt->stationPCV[2]        = 0.0;
     opt->senceopt             = 0;
-    opt->initEnuTime          = 1;
+    opt->initEnuTime          = 12;
     opt->smoothWindowsTime    = 12;
     opt->detectSensitivity    = 10;
     opt->typeSol              = 0;
     opt->timeIntervalSolution = 0;
 
-    opt->minFixSat      = 5;
+    opt->minFixSat      = 6;
     opt->maxDelSat      = 5;
-    opt->minSatRes      = 0.02;
+    opt->minSatRes      = 0.03;
     opt->gpsMask        = -1;
     opt->qzssMask       = -1;
     opt->glonassMask    = -1;
@@ -2016,6 +2045,11 @@ extern void setCfgOpt(cfgopt_t cfgOpt, prcopt_t* procOpt)
     {
         procOpt->ionoopt = TROPOPT_SAAS;
     }
+
+    procOpt->ionoopt = IONOOPT_BRDC;
+    procOpt->tropopt = TROPOPT_SAAS;
+    procOpt->ioncfg  = 0;
+    procOpt->trocfg  = 0;
 
     procOpt->tidecorr             = cfgOpt.tides;
     procOpt->sys                  = cfgOpt.sys;
