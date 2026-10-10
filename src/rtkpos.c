@@ -672,8 +672,7 @@ static void detslp_dop(rtk_t* rtk, const obsd_t* obs, int i, int rcv)
 
 static void udbias(
     rtk_t * rtk, double tt, const obsd_t* obs, const unsigned char* sat, const unsigned char* iu,
-    const unsigned char* ir, unsigned char ns, double* r
-)
+    const unsigned char* ir, unsigned char ns, double* r)
 {
     double        cp, pr, bias, lam = 0.0, var, offset[NFREQ] = {0};
     int           i, f, nx2, slip, nf = rtk->opt.nf, offsetCnt[NFREQ] = {0};
@@ -697,7 +696,6 @@ static void udbias(
             sys = satsys(sat[i], &prn);
 
             getWavelength(sys, prn, &lam);
-            }
             cp = sdobs(obs, iu[i], ir[i], f); /* cycle */
             pr = sdobs(obs, iu[i], ir[i], f + NFREQ);
             if (cp == 0.0 || pr == 0.0 || lam <= 0.0)
@@ -3538,7 +3536,7 @@ static int sat_ts_update(const obsd_t* obsd, satts_t* satts, double tint)
 {
     int     i, j, freq;
     int     m, n;
-    satts_t satts0 = {0.0};
+    satts_t satts0 = {{0.0}};
 
     double tt = 0.0;
 
@@ -3601,7 +3599,7 @@ extern int relpos(
     double *      r, *azel;
     double *      y, *e;
     double        dt = timediff(time, obs[nu].time);
-    double *      standard_v, sigma;
+    double *      standard_v;
 
     azel       = zeros(2 * SELETE_SAT_NUM * 2, 1);
     y          = zeros(NFREQ * 2 * SELETE_SAT_NUM * 2, 1);
@@ -3785,9 +3783,9 @@ extern int relpos(
         if (nv == -2)
         {
             ilterCout = 0;
-            memset(standard_v, 0, sizeof(standard_v));
-            memset(rtk->v, 0, sizeof(rtk->v));
-            memset(rtk->R, 0, sizeof(rtk->R));
+            memset(standard_v, 0, sizeof(double)*NY);
+            memset(rtk->v, 0, sizeof(double) * NY);
+            memset(rtk->R, 0, sizeof(double) * NY * NY);
             continue;
         }
         if (ilterCout < 5 && nv == 0)
@@ -4094,7 +4092,8 @@ static double gfmeas0(
 static void detslp_gf(rtk_t* rtk, const obsd_t* obs, unsigned char n, int index1, int index2)
 {
     double        g0, g1, thres, age, C, ep[6], lam[NFREQ];
-    int i, j, k, sys, prn;
+    int i, j, k, sys;
+    unsigned char prn;
     time2epoch(obs[0].time, ep);
     for (i = 0; i < n; i++)
     {
@@ -4306,7 +4305,8 @@ void static SmoothBasePosion(rtk_t* rtk)
 extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
 {
     gtime_t       time = {0};
-    int i, j, f, flag, m, nu, nr, ns, ns_tmp, sys, prn, returnValue = 0;
+    int i, f,  m;
+    unsigned char nu, nr, ns,  sys, prn;
     unsigned char sat[MAXOBS] = {0}, iu[MAXOBS] = {0}, ir[MAXOBS] = {0}, exc[MAXSAT] = {0};
     double *      rs, *dts;
     double        lsqraim[3] = {0};
@@ -4534,9 +4534,9 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         {
             SmoothBasePosion(rtk);
         }
-        if ((fabs(rtk->rb[0] - rtk->solb.rr[0]) > 100) ||
+        if (((fabs(rtk->rb[0] - rtk->solb.rr[0]) > 100) ||
             (fabs(rtk->rb[1] - rtk->solb.rr[1]) > 100) ||
-            (fabs(rtk->rb[2] - rtk->solb.rr[2]) > 100) && rtk->opt.useRtcmPosFlag == 0)
+            (fabs(rtk->rb[2] - rtk->solb.rr[2]) > 100) )&& rtk->opt.useRtcmPosFlag == 0)
         {
             baseXyzError++;
             if (baseXyzError > 10)
@@ -4559,9 +4559,9 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             baseXyzError = 0;
         }
 
-        if ((fabs(rtk->rb[0] - rtk->solb.rr[0]) > 30) ||
+        if (((fabs(rtk->rb[0] - rtk->solb.rr[0]) > 30) ||
             (fabs(rtk->rb[1] - rtk->solb.rr[1]) > 30) ||
-            (fabs(rtk->rb[2] - rtk->solb.rr[2]) > 30) && rtk->opt.useRtcmPosFlag == 0)
+            (fabs(rtk->rb[2] - rtk->solb.rr[2]) > 30)) && rtk->opt.useRtcmPosFlag == 0)
         {
             baseXyzError++;
         }
