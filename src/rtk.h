@@ -1010,6 +1010,7 @@ typedef struct
 } satts_t;
 
 // #define xyzWindowSize 86400
+#define MAXSLOT 40
 typedef struct
 { /* RTK control/result type */
     unsigned char allSlipFlag[NSYS][NFREQ];
@@ -1032,6 +1033,10 @@ typedef struct
 
     unsigned char nxFixSat[5 + 40 + 40 * NFREQ];
     unsigned char nxFixFrq[5 + 40 + 40 * NFREQ];
+
+    int satloc[MAXSAT];
+    int locsat[40];
+    int satlos[40*NFREQ];
 
     // unsigned char nxFixSatPre[5 + 40 + 40 * NFREQ];
     // unsigned char nxFixFrqPre[5 + 40 + 40 * NFREQ];
@@ -1098,8 +1103,6 @@ typedef struct
     int     mpflag;
     gtime_t te;
     int     mvflag;  // move detect module.
-    // satts_t rsat[MAXSAT];
-    // satts_t bsat[MAXSAT];
 } rtk_t;
 
 typedef struct

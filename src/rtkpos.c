@@ -20,6 +20,21 @@ static int largeShift   = 0;
 static int rejectcount  = 0;
 static int baseXyzError = 0;
 
+/* state variable index */
+static inline int II(int satno,rtk_t *rtk){
+    int NP = rtk->na;
+    int s= rtk->satloc[satno-1];
+    return (NP+(s)-1);                 /* ionos (s:satellite no) */
+}
+
+static inline int IB(int satno, int f, rtk_t *rtk)
+{
+    int NR = rtk->na+rtk->ni+rtk->nt;
+    int s= rtk->satloc[satno-1];
+    prcopt_t *opt = &rtk->opt;
+    return (NR+MAXSLOT*(f)+(s)-1); 
+}
+
 static double varerr_gamit(
         int sat, int sys, double el, double bl, double dt, int f, const prcopt_t* opt)
 {
@@ -502,7 +517,7 @@ static void udpos(rtk_t* rtk, double tt)
 }
 
 static void udion(
-    rtk_t* rtk, const obsd_t* obs, const unsigned char* iu, const unsigned char* ir, double tt,
+    rtk_t *rtk, const obsd_t* obs, const unsigned char* iu, const unsigned char* ir, double tt,
     double bl, const unsigned char* sat, unsigned char ns
 )
 {
@@ -671,7 +686,7 @@ static void detslp_dop(rtk_t* rtk, const obsd_t* obs, int i, int rcv)
 }
 
 static void udbias(
-    rtk_t * rtk, double tt, const obsd_t* obs, const unsigned char* sat, const unsigned char* iu,
+    rtk_t *rtk, double tt, const obsd_t* obs, const unsigned char* sat, const unsigned char* iu,
     const unsigned char* ir, unsigned char ns, double* r)
 {
     double        cp, pr, bias, lam = 0.0, var, offset[NFREQ] = {0};
@@ -3586,6 +3601,85 @@ static int sat_ts_update(const obsd_t* obsd, satts_t* satts, double tint)
 
     return 0;
 }
+
+// satslot: bit i = 1 表示第 i 个槽位已占用
+// satloc[satno-1]: 0 表示该卫星还没分配槽位
+// nmax: 只在前 nmax 个槽位里找（1 <= nmax <= 64）
+// 返回：1 = 分配成功，0 = 前 nmax 个槽位已满（或无可用）
+static int assign_sat_slot(rtk_t *rtk,int satno)
+{
+    int i;
+    if (rtk->satloc[satno-1] != 0)
+        return 1;                       // 已有槽位，无需分配
+    
+    int pos=-1;
+
+    for(i=0;i<MAXSLOT;i++){
+        if(rtk->locsat[i]==0){
+            pos=i;
+            break;
+        }
+    }
+    if(pos<0) return 1;
+
+    rtk->satloc[satno-1] = pos + 1;            // +1，因为 0 表示“未分配”
+    rtk->locsat[pos]   = satno;            // +1，因为 0 表示“未分配”
+    return 0;
+}
+static int free_sat_slot(rtk_t *rtk, int satno)
+{
+    int loc = rtk->satloc[satno-1];
+    int j=0,k=0;
+
+    if (rtk->opt.ionoopt==IONOOPT_EST) {
+        j=II(satno,rtk);
+        initx(rtk,1E-6,0,j);
+    }
+    for(k=0;k<rtk->opt.nf;k++){
+        j=IB(satno,k,rtk);
+        initx(rtk,0.0,0.0,j);
+    }
+
+    rtk->locsat[loc-1]=0;
+    rtk->satlos[loc-1]=0;
+    rtk->satloc[satno-1]=0;
+    return 0;
+}
+
+static int assign_sats(rtk_t *rtk, int  *sat, int ns)
+{
+    int i=0,j=0;
+    int satno=0,loc;
+
+    for(i=0;i<MAXSLOT;i++){
+        if(rtk->satlos[i]>10){
+            satno = rtk->locsat[i];
+            free_sat_slot(rtk,satno);
+        }
+    }
+
+    for(i=0;i<MAXSLOT;i++){
+        if(rtk->locsat[i]!=0){
+            rtk->satlos[i]++;
+        }
+    }
+
+    for(i=0;i<ns;i++)
+    {
+        satno = sat[i];
+
+        loc= rtk->satloc[satno-1];
+        rtk->satlos[loc-1]=0;
+        if(rtk->satloc[satno-1]==0)
+        {
+            assign_sat_slot(rtk, satno);
+        }
+    }
+
+    return 0;
+
+}
+
 /* relative positioning ------------------------------------------------------*/
 extern int relpos(
     rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr, unsigned char* sat,
