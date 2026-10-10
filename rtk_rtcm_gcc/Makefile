@@ -6,9 +6,9 @@ BUILD_DIR = ./
 
 ifeq ($(OS), Windows_NT)
 	DFFLAGS    = -DENACMP -DWIN32 -DLAPACK
-	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32 -lopenblas
+	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32 -lopenblas 
 else
-	LDFLAGS = -lm -lpthread -lopenblas
+	LDFLAGS = -lm -lpthread -lopenblas -fsanitize=address -fno-omit-frame-pointer -pipe
 	DFFLAGS    = -DENACMP -DLAPACK
 endif
 

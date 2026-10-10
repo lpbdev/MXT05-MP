@@ -5,7 +5,7 @@
 #define MAX_ION_STD 0.5
 #define VAR_GRA SQR(0.001) /* initial variance of gradient (m^2) */
 #define SQRT(x) ((x) < 0.0 ? 0.0 : sqrt(x))
-static unsigned char ilterCout;
+static int ilterCout;
 static double        stdvMax;
 static double        K0, K1;
 
@@ -13,12 +13,12 @@ static double       baseXyz[3];
 static unsigned int smoothCnt = 0;
 extern double       baseRtcmPosition[3];
 
-static unsigned char halfSlip;
-static unsigned char halfSlipCnt;
-static unsigned char fixErrorCnt  = 0;
-static unsigned char largeShift   = 0;
-static unsigned char rejectcount  = 0;
-static unsigned char baseXyzError = 0;
+static int halfSlip;
+static int halfSlipCnt;
+static int fixErrorCnt  = 0;
+static int largeShift   = 0;
+static int rejectcount  = 0;
+static int baseXyzError = 0;
 
 static double varerr_gamit(
         int sat, int sys, double el, double bl, double dt, int f, const prcopt_t* opt)
@@ -244,7 +244,8 @@ static void udpos(rtk_t* rtk, double tt)
         {
             for (i = 3; i < 6; i++)
             {
-                initx(rtk, rtk->sol.rr[i], VAR_VEL, i);  // initx(rtk, 1E-3, VAR_VEL, i);
+                initx(rtk, rtk->sol.rr[i], VAR_VEL, i);  
+                // initx(rtk, 1E-3, VAR_VEL, i);
             }
         }
         if (rtk->opt.dynamics == 2)
@@ -599,7 +600,7 @@ static void udtrop(rtk_t* rtk, double tt, double bl)
 static void detslp_dop(rtk_t* rtk, const obsd_t* obs, int i, int rcv)
 {
     /* detection with doppler disabled because of clock-jump issue (v.2.3.0) */
-    unsigned char k, f, sys, prn, sat = obs[i].sat;
+    int k, f, sys, prn, sat = obs[i].sat;
     double        tt = rtk->tt, dph, dpt, lam[NFREQ], thres;
 
     sys = satsys(sat, &prn);
@@ -670,7 +671,7 @@ static void detslp_dop(rtk_t* rtk, const obsd_t* obs, int i, int rcv)
 }
 
 static void udbias(
-    rtk_t* rtk, double tt, const obsd_t* obs, const unsigned char* sat, const unsigned char* iu,
+    rtk_t * rtk, double tt, const obsd_t* obs, const unsigned char* sat, const unsigned char* iu,
     const unsigned char* ir, unsigned char ns, double* r
 )
 {
@@ -694,25 +695,8 @@ static void udbias(
         for (i = 0; i < ns; i++)
         {
             sys = satsys(sat[i], &prn);
-            if (sys == SYS_GPS || sys == SYS_QZS)
-            {
-                lam = g_gpsLam[f];
-            }
-            else if (sys == SYS_GLO)
-            {
-                lam = g_gloLam[prn - 1][f];
-            }
-            else if (sys == SYS_GAL)
-            {
-                lam = g_galLam[f];
-            }
-            else if (sys == SYS_BDS)
-            {
-                lam = g_bdsLam[f];
-            }
-            else
-            {
-                lam = g_gpsLam[f];
+
+            getWavelength(sys, prn, &lam);
             }
             cp = sdobs(obs, iu[i], ir[i], f); /* cycle */
             pr = sdobs(obs, iu[i], ir[i], f + NFREQ);
@@ -1719,7 +1703,7 @@ extern int resamb_LAMBDA(rtk_t* rtk, int lcopt)
 
 static int scanFloatState(rtk_t* rtk, unsigned char* floatSat, unsigned char* floatSatFrq)
 {
-    unsigned char i, j, sati, frqi, satj, frqj, flag, na = rtk->np + rtk->nt + rtk->ni;
+    int i, j, sati, frqi, satj, frqj, flag, na = rtk->np + rtk->nt + rtk->ni;
     unsigned char floatCnt = 0;
     if (rtk->nxFixNx <= 5)
     {
@@ -1779,7 +1763,7 @@ static void rtkFloatState(rtk_t* rtk, unsigned char vsat[][NFREQ])
 {
     unsigned char floatSat[3 + 2 + 40 + 40 * NFREQ]    = {0};
     unsigned char floatSatFrq[3 + 2 + 40 + 40 * NFREQ] = {0};
-    unsigned char i, j, k;
+    int i, j, k;
     double        ratio;
     int           lambdaReturn;
     matcpy(rtk->x, rtk->xp, NX, 1);
@@ -2566,7 +2550,7 @@ static int check_res(
     unsigned char* iu, unsigned char* ir, int ns, double* azel
 )
 {
-    unsigned char i, j, k, nv = 0, m, index1, index2, sati, satj, frqi, frqj, flag, f, sysi, sysj,
+    int i, j, k, nv = 0, m, index1, index2, sati, satj, frqi, frqj, flag, f, sysi, sysj,
                            prni, prnj, nf = rtk->opt.nf;
     double lami[NFREQ], lamj[NFREQ], thres, C1, C2, posu[3], posr[3];
     int    nvCar = 0, na = rtk->np + rtk->ni + rtk->nt;
@@ -4026,7 +4010,7 @@ extern int getSatNum(
     unsigned char* sat, unsigned char* iu, unsigned char* ir, double elMin, int snrMin
 )
 {
-    unsigned char i, j, k = 0, f, flag, nf = rtk->opt.nf;
+    int i, j, k = 0, f, flag, nf = rtk->opt.nf;
     for (i = 0; i < nu; i++)
     {
         if (rtk->ssat[obs[i].sat - 1].vs != 1)
@@ -4110,7 +4094,7 @@ static double gfmeas0(
 static void detslp_gf(rtk_t* rtk, const obsd_t* obs, unsigned char n, int index1, int index2)
 {
     double        g0, g1, thres, age, C, ep[6], lam[NFREQ];
-    unsigned char i, j, k, sys, prn;
+    int i, j, k, sys, prn;
     time2epoch(obs[0].time, ep);
     for (i = 0; i < n; i++)
     {
@@ -4200,7 +4184,7 @@ static void detslp_gf(rtk_t* rtk, const obsd_t* obs, unsigned char n, int index1
 
 extern void detectSlip(rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr)
 {
-    unsigned char i, f, n = nu + nr;
+    int i, f, n = nu + nr;
 
     for (i = 0; i < nu; i++)
     {
@@ -4322,7 +4306,7 @@ void static SmoothBasePosion(rtk_t* rtk)
 extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
 {
     gtime_t       time = {0};
-    unsigned char i, j, f, flag, m, nu, nr, ns, ns_tmp, sys, prn, returnValue = 0;
+    int i, j, f, flag, m, nu, nr, ns, ns_tmp, sys, prn, returnValue = 0;
     unsigned char sat[MAXOBS] = {0}, iu[MAXOBS] = {0}, ir[MAXOBS] = {0}, exc[MAXSAT] = {0};
     double *      rs, *dts;
     double        lsqraim[3] = {0};
