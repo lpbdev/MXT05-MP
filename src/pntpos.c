@@ -227,9 +227,17 @@ static int rescode(
     for (i = *ns = 0; i < n; i++)
     {
         vsat[i]     = 0;
-        azel[i * 2] = azel[i * 2 + 1] = resp[i] = 0.0;
-        
         trace(4, "rescode, sat=%3d, svh=%d, exc=%d\n", obs[i].sat, svh[i], exc[obs[i].sat - 1]);
+        azel[i * 2] = azel[i * 2 + 1] = resp[i] = 0.0;
+        if ((r = geodist(rs + i * 6, rr, e)) <= 0)
+        {
+            continue;
+        }
+        if (satazel(pos, e, azel + i * 2) < opt->elmin)
+        {
+            continue;
+        }
+        
         if (svh[i])
         {
             continue;
@@ -249,14 +257,7 @@ static int rescode(
             i++;
             continue;
         }
-        if ((r = geodist(rs + i * 6, rr, e)) <= 0)
-        {
-            continue;
-        }
-        if (satazel(pos, e, azel + i * 2) < opt->elmin)
-        {
-            continue;
-        }
+
         /* psudorange with code bias correction */
         index = obs[i].pvtAvalidPsrIndex;
         P     = obs[i].P[index];

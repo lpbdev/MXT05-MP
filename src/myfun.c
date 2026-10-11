@@ -1551,8 +1551,8 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
             return 0;
         }
     }
-    rtk->na = nx;
-    rtk->nx = rtk->np + rtk->nt + rtk->ni + rtk->na;
+    rtk->na = MAXSLOT*NFREQ;
+    rtk->nx = rtk->np + rtk->nt + rtk->ni + MAXSLOT*NFREQ;
 
     
 

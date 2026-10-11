@@ -4268,6 +4268,19 @@ extern int relpos(
         trace(2, "relpos, nv,%d, ns,%d, \n", nv, ns);
         trace(2, "relpos rtk->v,");
         tracemat(2, rtk->v, 1, nv, 8, 4);
+
+        trace(2, "relpos rtk->x,");
+        tracemat(2, rtk->x, 1, rtk->nx, 8, 4);
+        for(i=0;i<NFREQ;i++){
+            for(int j=0;j<MAXSLOT;j++){
+                printf("%10.4f, ",rtk->x[3+i*NFREQ+j]);
+            }
+            printf("\n");
+        }
+
+        trace(2, "relpos rtk->P,%d,%d,\n",rtk->nx,rtk->nx);
+        tracemat(2, rtk->P, rtk->nx, rtk->nx, 8, 4);
+
         /* kalman filter measurement update */
         if (rtk->opt.mode == PMODE_DGPS)
         {

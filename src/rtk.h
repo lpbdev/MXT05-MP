@@ -1010,7 +1010,7 @@ typedef struct
 } satts_t;
 
 // #define xyzWindowSize 86400
-#define MAXSLOT 40
+#define MAXSLOT 20
 typedef struct
 { /* RTK control/result type */
     unsigned char allSlipFlag[NSYS][NFREQ];
