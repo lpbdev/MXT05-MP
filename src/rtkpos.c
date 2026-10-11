@@ -22,7 +22,7 @@ static int baseXyzError = 0;
 
 /* state variable index */
 static inline int II(int satno,rtk_t *rtk){
-    int NP = rtk->na;
+    int NP = rtk->np+rtk->nt;
     int s= rtk->satloc[satno-1];
     return (NP+(s)-1);                 /* ionos (s:satellite no) */
 }
@@ -709,6 +709,7 @@ static void udbias(
         for (i = 0; i < ns; i++)
         {
             sys = satsys(sat[i], &prn);
+            nx2 = IB(sat[i],f,rtk);
 
             getWavelength(sys, prn, &lam);
             cp = sdobs(obs, iu[i], ir[i], f); /* cycle */
@@ -763,7 +764,6 @@ static void udbias(
             bias                           = cp - pr / lam;
             rtk->ssat[sat[i] - 1].fbias[f] = bias;
             //printf("satno0,%d\n",sat[i]);
-            nx2= IB(sat[i],f,rtk);
             if (rtk->x[nx2] != 0.0)
             {
                 offset[f] += bias - rtk->x[nx2];
@@ -2359,27 +2359,6 @@ static void rtkAR(rtk_t* rtk, obsd_t* obs, unsigned char* sat, int n)
         rtk->nxFixNx = 0;
     }
 
-    for (i = 0; i < NSYS; i++)
-    {
-        // if (i == 0)    trace(0x04, "GPS BASE PRN:");
-        // else if (i == 1)    trace(0x04, "GLO BASE PRN:");
-        // else if (i == 2)    trace(0x04, "GAL BASE PRN:");
-        // else  trace(0x04, "BDS BASE PRN:");
-        // for (j = 0; j < NFREQ; j++) {
-        //     sys = satsys(rtk->base_prn[i][j], &prn);
-        //     trace(0x04, "%3d ", prn);
-        // }
-        // trace(0x04, "\n");
-    }
-    j = -1;
-    for (i = na; i < rtk->nx; i++)
-    {
-        sati = rtk->nxRecordSat[i - na];
-        frqi = rtk->nxRecordFrq[i - na];
-        sys  = satsys(sati, &prn);
-        j    = frqi;
-    }
-    // trace(0x04, "\n");
 
     /* save solution status */
     if (rtk->sol.stat == SOLQ_FIX)
@@ -3204,13 +3183,9 @@ static int check_res(
                         2, "fix error v=%lf el=%lf\r\n", rtk->v[nv],
                         rtk->ssat[sat[j] - 1].azel[0][1] * R2D
                     );
-                    for (k = na; k < rtk->nx; k++)
-                    {
-                        if (rtk->nxRecordSat[k - na] == sat[j])
-                        {
-                            initx(rtk, 0, 0, k);
-                            initxp(rtk, 0, 0, k);
-                        }
+                    for (int f2 = 0; f2 < nf; f2++) {
+                        int idx = IB(sat[j], f2, rtk);
+                        if (idx >= 0) { initx(rtk, 0, 0, idx); initxp(rtk, 0, 0, idx); }
                     }
                     if (rtk->opt.ionoopt == IONOOPT_EST)
                     {
@@ -3896,12 +3871,9 @@ static int ddres(
 
                 memset(rtk->Ri, 0, sizeof(double) * NY);
                 memset(rtk->Rj, 0, sizeof(double) * NY);
-                for (i = rtk->np + rtk->nt + rtk->ni; i < rtk->nx; i++)
-                {
-                    if (rtk->nxRecordSat[i - (rtk->np + rtk->nt + rtk->ni)] == vmax_sat)
-                    {
-                        initx(rtk, 0, 0, i);
-                    }
+                for (int f2 = 0; f2 < nf; f2++) {
+                        int idx = IB(vmax_sat, f2, rtk);
+                            if (idx >= 0) initx(rtk, 0, 0, idx);
                 }
                 if (rtk->opt.ionoopt == IONOOPT_EST)
                 {
@@ -4209,7 +4181,7 @@ extern int relpos(
         stdvMax = 0.0;
         /* undifferenced residuals for rover */
         matcpy(rtk->xp, rtk->x, NX, 1);
-        matcpy(rtk->Pp, rtk->P, NX, NX);
+        matcpy(rtk->Pp, rtk->P,NX, NX);
 
         ilterCout++;
         rtk->sol.ilterCout++;
@@ -4271,15 +4243,15 @@ extern int relpos(
 
         trace(2, "relpos rtk->x,");
         tracemat(2, rtk->x, 1, rtk->nx, 8, 4);
-        for(i=0;i<NFREQ;i++){
-            for(int j=0;j<MAXSLOT;j++){
-                printf("%10.4f, ",rtk->x[3+i*NFREQ+j]);
-            }
-            printf("\n");
-        }
+        //for(i=0;i<NFREQ;i++){
+        //    for(int j=0;j<MAXSLOT;j++){
+        //        printf("%10.4f, ",rtk->x[3+i*NFREQ+j]);
+        //    }
+        //    printf("\n");
+        //}
 
-        trace(2, "relpos rtk->P,%d,%d,\n",rtk->nx,rtk->nx);
-        tracemat(2, rtk->P, rtk->nx, rtk->nx, 8, 4);
+        //trace(2, "relpos rtk->P,%d,%d,\n",rtk->nx,rtk->nx);
+        //tracemat(2, rtk->P, rtk->nx, rtk->nx, 8, 4);
 
         /* kalman filter measurement update */
         if (rtk->opt.mode == PMODE_DGPS)
@@ -5174,8 +5146,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     // detectionRes(rtk, obs, nu);
     ns = obsScan(rtk, &rtk->opt, obs, n);
     trace(2, "nunr,02,%s,%d,%d,%d\n", ts1,nu,nr,ns);
-    nu = nr = ns / 2;
-    trace(2, "nunr,02-1,%s,%d,%d\n", ts1,nu,nr);
     ns      = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 0);
     trace(2, "nunr,03,%s,%d,%d\n", ts1,nu,nr);
     if (ns < 5)

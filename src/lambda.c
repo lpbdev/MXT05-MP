@@ -667,8 +667,8 @@ extern int lambda(
 
         if (lcopt == 0)
         {
-            thresDet = 0.0228;
-            thresP   = 0.999;
+            thresDet = 0.1;
+            thresP   = 0.99;
         }
         else if (lcopt == 3)
         {
@@ -715,13 +715,9 @@ extern int lambda(
                 index = k / 2;
             }
 
-            trace(0x02, "nb=%2d\tk=%2d\t%lf\t%f\n", n, k, P[index], P[k / 2]);
+            trace(0x02, "nb=%2d, k=%2d,%lf,%f\n", n, k, P[index], P[k / 2]);
             if (P[index] < thresP || k < n / 2)
             {
-                // if (P < pow(0.9999, k)||k<n) {
-                //*msg += sprintf(*msg, "bottstrapping nb=%2d\tk=%2d\tp[%d]=%lf\n", n, k, index,
-                // P[index]);
-                // printf("bottstrapping failed nb=%2d\tk=%2d\tp=%lf\n", n, k, P[index]);
                 info = -3;
             }
         }

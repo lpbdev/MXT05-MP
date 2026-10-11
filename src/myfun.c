@@ -862,7 +862,7 @@ extern int selsatRTK(
     {
         satno2id(obs[i].sat,id);
         trace(2,"(%2d) rcv=%3d %s, azel=%.2f\n",i,obs[i].rcv,id,rtk->ssat[obs[i].sat - 1].azel[0][1]*R2D);
-        printf("(%2d) rcv=%3d %s, azel=%.2f,%14.4f, %14.4f\n",i,obs[i].rcv,id,rtk->ssat[obs[i].sat - 1].azel[0][1]*R2D, obs[i].L[0], obs[i].P[0]);
+//        printf("(%2d) rcv=%3d %s, azel=%.2f,%14.4f, %14.4f\n",i,obs[i].rcv,id,rtk->ssat[obs[i].sat - 1].azel[0][1]*R2D, obs[i].L[0], obs[i].P[0]);
     }
 
     for (i=0,j=nu;i<nu&&j<nu+nr;i++,j++) {
@@ -1476,35 +1476,7 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     rtk->opt.tropopt = TROPOPT_SAAS;
     // rtk->opt.ionoopt = IONOOPT_EST;
     //    rtk->opt.ionoopt = IONOOPT_BRDC;
-    for (f = 0; f < nf; f++)
-    {
-        for (i = 0; i < ns; i++)
-        {
-            if (obs[iu[i]].P[f] != 0.0 && obs[iu[i]].L[f] != 0.0 && obs[ir[i]].P[f] != 0.0 &&
-                obs[ir[i]].L[f] != 0.0)
-            {
-                rtk->nxRecordSat[nx]                    = obs[iu[i]].sat;
-                rtk->nxRecordFrq[nx]                    = f;
-                rtk->ssat[obs[iu[i]].sat - 1].xIndex[f] = nx;
-
-                nx++;
-            }
-        }
-    }
-
-    n = 0;
-    for (i = 0; i < nobs; i++)
-    {
-        for (j = 0; j < ns; j++)
-        {
-            // trace(2, "obsscan, i,j,obs[i].sat, sat[j], %d,%d,%d,%d\n",i,j,obs[i].sat, sat[j] );
-            if (obs[i].sat == sat[j])
-            {
-                obs[n++] = obs[i];
-                break;
-            }
-        }
-    }
+   
 
     // trace(2,"obsScan,WTF,n,%d,nobs,%d,ns,%d,i,%d,j,%d\n",n,nobs,ns,i,j);
 

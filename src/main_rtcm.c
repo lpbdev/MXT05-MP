@@ -1431,8 +1431,8 @@ int main(int argc, char** argv)
         svr.rtk.opt.initEnuTime = svr.rtk.opt.smoothWindowsTime;
     }
 
-    SELETE_SAT_NUM = 40;
-    NX             = (3 + 2 + SELETE_SAT_NUM + SELETE_SAT_NUM * NFREQ);
+    SELETE_SAT_NUM = 20;
+    NX             = (3 +  SELETE_SAT_NUM * NFREQ);
     NY             = NX;
 
     svr.rtk.x  = zeros(NX, 1);
