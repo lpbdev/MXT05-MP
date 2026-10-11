@@ -29,7 +29,7 @@ static inline int II(int satno,rtk_t *rtk){
 
 static inline int IB(int satno, int f, rtk_t *rtk)
 {
-    int NR = rtk->na+rtk->ni+rtk->nt;
+    int NR = rtk->np+rtk->ni+rtk->nt;
     int s= rtk->satloc[satno-1];
     prcopt_t *opt = &rtk->opt;
     return (NR+MAXSLOT*(f)+(s)-1); 
@@ -762,13 +762,13 @@ static void udbias(
             }
             bias                           = cp - pr / lam;
             rtk->ssat[sat[i] - 1].fbias[f] = bias;
+            //printf("satno0,%d\n",sat[i]);
+            nx2= IB(sat[i],f,rtk);
             if (rtk->x[nx2] != 0.0)
             {
                 offset[f] += bias - rtk->x[nx2];
                 offsetCnt[f]++;
             }
-
-            nx2++;
         }
     }
     nx2 = rtk->np + rtk->nt + rtk->ni;
@@ -812,6 +812,8 @@ static void udbias(
                 pr = r[iu[i]] - r[ir[i]];
             }
             bias = cp - pr / lam;
+            //printf("satno1,%d\n",sat[i]);
+            nx2= IB(sat[i],f,rtk);
             if (rtk->opt.ionoopt == IONOOPT_EST)
             {
                 if (rtk->x[nx2] == 0.0)
@@ -868,7 +870,6 @@ static void udbias(
                     }
                 }
             }
-            nx2++;
         }
     }
     // printf("ratio=%.2f\n", rtk->sol.ratio);
@@ -1137,7 +1138,7 @@ static int zdres(
     }
     return 0;
 }
-
+#if 0
 static int ddmat(rtk_t* rtk, double* D, int* fixSatNum)
 {
     int           i, j, k, m, f, nb = 0, na = rtk->np + rtk->nt + rtk->ni, nf = rtk->opt.nf;
@@ -1381,6 +1382,148 @@ static void holdamb(rtk_t* rtk, const double* xa)
         }
     }
 }
+#else
+
+static int ddmat(rtk_t* rtk, double* D, int* fixSatNum)
+{
+    int i, j, m, f, nb = 0, na = rtk->np + rtk->nt + rtk->ni, nf = rtk->opt.nf;
+    unsigned char sati, sys;
+    int flag, ns = 0;
+    int idx_ref, idx;
+
+    for (i = 0; i < MAXSAT; i++)
+        for (j = 0; j < NFREQ; j++)
+            rtk->ssat[i].fix[j] = 0;
+
+    for (i = 0; i < na; i++)
+        D[i + i * rtk->nx] = 1.0;
+
+    for (f = 0; f < nf; f++) {
+        for (m = 0; m < NSYS; m++) {
+            /* 找参考星 */
+            idx_ref = -1;
+            for (i = 1; i <= MAXSAT; i++) {
+                if (rtk->satloc[i-1] == 0) continue;
+                sys = satsys(i, NULL);
+                if (!test_sys(sys, m)) continue;
+                if (i != rtk->base_prn[m][f]) continue;
+                idx_ref = IB(i, f, rtk);
+                break;
+            }
+            if (idx_ref < 0) continue;
+
+            rtk->ssat[rtk->base_prn[m][f]-1].fix[f] = 2;
+
+            /* 对每颗非参考星 */
+            for (i = 1; i <= MAXSAT; i++) {
+                if (rtk->satloc[i-1] == 0) continue;
+                if (i == rtk->base_prn[m][f]) continue;
+                sys = satsys(i, NULL);
+                if (!test_sys(sys, m)) continue;
+                if (rtk->x[IB(i, f, rtk)] == 0.0) continue;
+                if (!rtk->ssat[i-1].vsat[f]) continue;
+                if (rtk->ssat[i-1].slip[f] & 2) {
+                    rtk->ssat[i-1].fix[f] = 1;
+                    continue;
+                }
+                idx = IB(i, f, rtk);
+                D[idx_ref + (na + nb) * rtk->nx] = 1.0;
+                D[idx     + (na + nb) * rtk->nx] = -1.0;
+                rtk->ssat[i-1].fix[f] = 2;
+                nb++;
+            }
+        }
+    }
+    /* 统计 fixSat 和 ns */
+    for (i = 0; i < MAXSAT; i++)
+        for (f = 0; f < NFREQ; f++)
+            if (rtk->ssat[i].fix[f] == 2) { ns++; (*fixSatNum)++; }
+    rtk->sol.ns[1] = ns;
+    return nb;
+}
+
+static void restamb(rtk_t* rtk, const double* bias, int nb)
+{
+    int i, f, m, nv = 0, nf = rtk->opt.nf;
+    int na = rtk->np + rtk->nt + rtk->ni;
+    int idx_ref, idx;
+    unsigned char sys;
+
+    for (f = 0; f < nf; f++) {
+        for (m = 0; m < NSYS; m++) {
+            idx_ref = -1;
+            for (i = 1; i <= MAXSAT; i++) {
+                if (rtk->satloc[i-1] == 0) continue;
+                sys = satsys(i, NULL);
+                if (!test_sys(sys, m)) continue;
+                if (i != rtk->base_prn[m][f]) continue;
+                idx_ref = IB(i, f, rtk);
+                break;
+            }
+            if (idx_ref < 0) continue;
+
+            for (i = 1; i <= MAXSAT; i++) {
+                if (rtk->satloc[i-1] == 0) continue;
+                if (i == rtk->base_prn[m][f]) continue;
+                sys = satsys(i, NULL);
+                if (!test_sys(sys, m)) continue;
+                if (rtk->ssat[i-1].fix[f] != 2) continue;
+                idx = IB(i, f, rtk);
+                rtk->xp[idx] = rtk->xp[idx_ref] - bias[nv];
+                nv++;
+            }
+        }
+    }
+}
+
+static void holdamb(rtk_t* rtk, const double* xa)
+{
+    int i, f, m, info, idx_ref, idx, nv = 0, nf = rtk->opt.nf;
+    unsigned char sys;
+
+    memset(rtk->v, 0, sizeof(double) * NY);
+    memset(rtk->R, 0, sizeof(double) * NY * NY);
+    memset(rtk->H, 0, sizeof(double) * NY * NX);
+
+    for (f = 0; f < nf; f++) {
+        for (m = 0; m < NSYS; m++) {
+            idx_ref = -1;
+            for (i = 1; i <= MAXSAT; i++) {
+                if (rtk->satloc[i-1] == 0) continue;
+                sys = satsys(i, NULL);
+                if (!test_sys(sys, m)) continue;
+                if (i != rtk->base_prn[m][f]) continue;
+                idx_ref = IB(i, f, rtk);
+                break;
+            }
+            if (idx_ref < 0) continue;
+
+            for (i = 1; i <= MAXSAT; i++) {
+                if (rtk->satloc[i-1] == 0) continue;
+                if (i == rtk->base_prn[m][f]) continue;
+                sys = satsys(i, NULL);
+                if (!test_sys(sys, m)) continue;
+                if (rtk->ssat[i-1].fix[f] != 2) continue;
+                idx = IB(i, f, rtk);
+
+                rtk->ssat[i-1].fix[f] = 3;
+                rtk->v[nv] = (xa[idx_ref] - xa[idx]) - (rtk->x[idx_ref] - rtk->x[idx]);
+                rtk->H[idx_ref + nv * rtk->nx] = 1.0;
+                rtk->H[idx     + nv * rtk->nx] = -1.0;
+                nv++;
+            }
+        }
+    }
+
+    if (nv > 0) {
+        for (i = 0; i < nv; i++)
+            rtk->R[i + i * nv] = 0.001;
+        if ((info = filter(rtk, rtk->xp, rtk->Pp, rtk->H, rtk->v, rtk->R,
+                           rtk->nx, nv, rtk->x, rtk->P)))
+            trace(0x02, "holdamb filter error (info=%d)\n", info);
+    }
+}
+#endif
 
 /* resolve integer ambiguity by LAMBDA ---------------------------------------*/
 extern int resamb_LAMBDA(rtk_t* rtk, int lcopt)
@@ -1713,7 +1856,7 @@ extern int resamb_LAMBDA(rtk_t* rtk, int lcopt)
     }
     return nb; /* number of ambiguities */
 }
-
+#if 0
 static int scanFloatState(rtk_t* rtk, unsigned char* floatSat, unsigned char* floatSatFrq)
 {
     int i, j, sati, frqi, satj, frqj, flag, na = rtk->np + rtk->nt + rtk->ni;
@@ -1771,6 +1914,40 @@ static int scanFloatState(rtk_t* rtk, unsigned char* floatSat, unsigned char* fl
     }
     return floatCnt;
 }
+#else
+static int scanFloatState(rtk_t* rtk, unsigned char* floatSat, unsigned char* floatSatFrq)
+{
+    int i, j, f, sati, frqi, flag, na = rtk->np + rtk->nt + rtk->ni;
+    unsigned char floatCnt = 0;
+    if (rtk->nxFixNx <= 5) return 0;
+
+    for (i = 1; i <= MAXSAT; i++) {
+        if (rtk->satloc[i-1] == 0) continue;
+        for (f = 0; f < rtk->opt.nf; f++) {
+            if (rtk->ssat[i-1].vsat[f] == 0) continue;
+            flag = 0;
+            for (j = 0; j < rtk->nxFixNx; j++) {
+                if (i == rtk->nxFixSat[j] && f == rtk->nxFixFrq[j]) {
+                    if (rtk->ssat[i-1].slip[f] & 1) break;
+                    flag = 1;
+                    break;
+                }
+            }
+            if (flag == 0) {
+                int abs_idx = IB(i, f, rtk);
+                initxp(rtk, 0, SQR(30), abs_idx);
+                if (rtk->opt.ionoopt == IONOOPT_EST) {
+                    /* ni=0 时不走 */
+                }
+                floatSat[floatCnt] = i;
+                floatSatFrq[floatCnt] = f;
+                floatCnt++;
+            }
+        }
+    }
+    return floatCnt;
+}
+#endif
 
 static void rtkFloatState(rtk_t* rtk, unsigned char vsat[][NFREQ])
 {
@@ -2091,7 +2268,7 @@ static void rtkARdeleteSys(rtk_t* rtk, int sys, unsigned char* sat, int n, unsig
     }
 }
 #endif
-
+#if 0
 static void rtkAR(rtk_t* rtk, obsd_t* obs, unsigned char* sat, int n)
 {
     int i, j, k, m, f, sati, frqi, lambdaReturn, nf = rtk->opt.nf, na = rtk->np + rtk->nt + rtk->ni;
@@ -2544,6 +2721,300 @@ static void rtkAR(rtk_t* rtk, obsd_t* obs, unsigned char* sat, int n)
     }
 #endif
 }
+#else
+
+static void rtkAR(rtk_t* rtk, obsd_t* obs, unsigned char* sat, int n)
+{
+    int i, j, k, m, f, sati, frqi, lambdaReturn;
+    int nf = rtk->opt.nf;
+    int na = rtk->np + rtk->nt + rtk->ni;
+    unsigned char vsat[MAXSAT][NFREQ], sys, prn;
+    double ratio = 0.0;
+
+    /* 备份 vsat */
+    for (i = 0; i < MAXSAT; i++)
+        for (j = 0; j < NFREQ; j++)
+            vsat[i][j] = rtk->ssat[i].vsat[j];
+
+    /* 备份 x/P 到 xp/Pp */
+    matcpy(rtk->x, rtk->xp, NX, 1);
+    matcpy(rtk->P, rtk->Pp, NX, NX);
+
+    /* 尝试 LAMBDA */
+    lambdaReturn = resamb_LAMBDA(rtk, 0);
+
+    if (lambdaReturn == -1)
+        rtk->sol.stat = 0;
+
+    if (lambdaReturn > 1) {
+        /* 固定成功：hold 约束 */
+        rtk->sol.stat = SOLQ_FIX;
+        matcpy(rtk->x, rtk->xp, NX, 1);
+        matcpy(rtk->P, rtk->Pp, NX, NX);
+        holdamb(rtk, rtk->xp);
+    } else {
+        /* 固定失败：回滚 */
+        matcpy(rtk->xp, rtk->x, NX, 1);
+        matcpy(rtk->Pp, rtk->P, NX, NX);
+    }
+
+    /* 浮点解：剔除浮点卫星再试一次 */
+    if (rtk->sol.stat == SOLQ_FLOAT) {
+        ratio = rtk->sol.ratio;
+        if (rtk->nxFixNx > 0)
+            rtkFloatState(rtk, vsat);
+    }
+
+    if (rtk->sol.stat == SOLQ_FLOAT) {
+        rtk->nfix = 0;
+        checkFloatP(rtk, 0);
+    }
+    if (rtk->sol.stat != SOLQ_FIX)
+        rtk->nxFixNx = 0;
+
+    /* 保存解状态 */
+    if (rtk->sol.stat == SOLQ_FIX) {
+        for (i = 0; i < 3; i++) {
+            rtk->sol.rr[i] = rtk->xp[i];
+            rtk->sol.qr[i] = (float)rtk->Pp[i + i * rtk->nx];
+        }
+        for (i = 0; i < rtk->nx; i++)
+            rtk->x[i] = rtk->xp[i];
+        rtk->sol.qr[3] = (float)rtk->Pp[1];
+        rtk->sol.qr[4] = (float)rtk->Pp[1 + 2 * rtk->nx];
+        rtk->sol.qr[5] = (float)rtk->Pp[2];
+
+        /* 重建 nxFixSat/nxFixFrq：遍历 slot */
+        k = 0;
+        for (sati = 1; sati <= MAXSAT; sati++) {
+            if (rtk->satloc[sati - 1] == 0) continue;
+            for (frqi = 0; frqi < nf; frqi++) {
+                int abs_idx;
+                if (rtk->ssat[sati - 1].slip[frqi] & 2) continue;
+                if (rtk->ssat[sati - 1].vsat[frqi] == 0) continue;
+                abs_idx = IB(sati, frqi, rtk);
+                if (abs_idx < 0) continue;
+                if (rtk->xp[abs_idx] != 0.0) {
+                    rtk->nxFixSat[k] = sati;
+                    rtk->nxFixFrq[k] = frqi;
+                    k++;
+                }
+            }
+        }
+        rtk->nxFixNx = k;
+
+        if (rtk->opt.dynamics) {
+            for (i = 3; i < 6; i++) {
+                rtk->sol.rr[i]     = rtk->xp[i];
+                rtk->sol.qv[i - 3] = (float)rtk->Pp[i + i * rtk->nx];
+            }
+            if (rtk->opt.dynamics == 2) {
+                for (i = 6; i < 9; i++)
+                    rtk->sol.rr[i] = rtk->xp[i];
+            }
+            rtk->sol.qv[3] = (float)rtk->Pp[4 + 3 * rtk->nx];
+            rtk->sol.qv[4] = (float)rtk->Pp[5 + 4 * rtk->nx];
+            rtk->sol.qv[5] = (float)rtk->Pp[5 + 3 * rtk->nx];
+        }
+        rtk->nfloat = 0;
+        rtk->nfix++;
+    }
+    else if (rtk->sol.stat == SOLQ_FLOAT) {
+        for (i = 0; i < 3; i++) {
+            rtk->sol.rr[i] = rtk->xp[i];
+            rtk->sol.qr[i] = (float)rtk->Pp[i + i * rtk->nx];
+        }
+        rtk->sol.qr[3] = (float)rtk->Pp[1];
+        rtk->sol.qr[4] = (float)rtk->Pp[1 + 2 * rtk->nx];
+        rtk->sol.qr[5] = (float)rtk->Pp[2];
+
+        if (rtk->opt.dynamics) {
+            for (i = 3; i < 6; i++) {
+                rtk->sol.rr[i]     = rtk->xp[i];
+                rtk->sol.qv[i - 3] = (float)rtk->Pp[i + i * rtk->nx];
+            }
+            if (rtk->opt.dynamics == 2) {
+                for (i = 6; i < 9; i++)
+                    rtk->sol.rr[i] = rtk->xp[i];
+            }
+            rtk->sol.qv[3] = (float)rtk->Pp[4 + 3 * rtk->nx];
+            rtk->sol.qv[4] = (float)rtk->Pp[5 + 4 * rtk->nx];
+            rtk->sol.qv[5] = (float)rtk->Pp[5 + 3 * rtk->nx];
+        }
+        rtk->nfix = 0;
+        rtk->nfloat++;
+        rtk->sol.ratio = ratio;
+    }
+    else {
+        rtk->sol.stat = SOLQ_NONE;
+        rtk->nfix     = 0;
+        rtk->nfloat   = 0;
+    }
+
+    /* 固定失败时，把 fix==2 降回 fix==1 */
+    for (i = 0; i < MAXSAT; i++)
+        for (j = 0; j < nf; j++)
+            if (rtk->ssat[i].fix[j] == 2 && rtk->sol.stat != SOLQ_FIX)
+                rtk->ssat[i].fix[j] = 1;
+
+    if (rtk->sol.stat != SOLQ_NONE) {
+        matcpy(rtk->x, rtk->xp, NX, 1);
+        matcpy(rtk->P, rtk->Pp, NX, NX);
+    } else {
+        memset(rtk->x,  0, sizeof(double) * NX);
+        memset(rtk->P,  0, sizeof(double) * NX * NX);
+        memset(rtk->xp, 0, sizeof(double) * NX);
+        memset(rtk->Pp, 0, sizeof(double) * NX * NX);
+    }
+
+    /* ===== 固定解后处理：填充 fix_amb、ddAmb、ddion、ddtrp ===== */
+    if (rtk->sol.stat == SOLQ_FIX) {
+        unsigned char satj, frqj;
+
+        /* 清空 fix_amb */
+        for (i = 0; i < MAXSAT; i++)
+            for (j = 0; j < NFREQ; j++)
+                rtk->ssat[i].fix_amb[j] = 9999.9;
+
+        for (i = 0; i < NSYS; i++)
+            for (j = 0; j < NFREQ; j++)
+                rtk->basePrnLsq[i][j] = rtk->base_prn[i][j];
+
+        for (j = 0; j < NFREQ; j++) {
+            rtk->nsLsq[j] = 0;
+            for (i = 0; i < MAXOBS; i++)
+                rtk->satLsq[j][i] = 0;
+        }
+
+        /* 用 nxFixSat/nxFixFrq 填充 satLsq 和 fix_amb */
+        for (j = 0; j < rtk->nxFixNx; j++) {
+            int abs_idx;
+            satj = rtk->nxFixSat[j];
+            frqj = rtk->nxFixFrq[j];
+
+            rtk->satLsq[frqj][rtk->nsLsq[frqj]++] = satj;
+
+            if (rtk->opt.ionoopt == IONOOPT_EST)
+                rtk->ssat[satj - 1].fix_ion = rtk->ssat[satj - 1].dion;
+            else
+                rtk->ssat[satj - 1].fix_ion = 0.0;
+
+            if (rtk->opt.tropopt == TROPOPT_EST)
+                rtk->ssat[satj - 1].fix_trop = rtk->ssat[satj - 1].ddtrp;
+            else
+                rtk->ssat[satj - 1].fix_trop = 0.0;
+
+            abs_idx = IB(satj, frqj, rtk);
+            if (abs_idx >= 0)
+                rtk->ssat[satj - 1].fix_amb[frqj] = rtk->xp[abs_idx];
+        }
+
+        /* 计算 ddAmb（双差模糊度） */
+        for (m = 0; m < NSYS; m++) {
+            int base_sat;
+            for (f = 0; f < NFREQ; f++) {
+                base_sat = rtk->basePrnLsq[m][f];
+                for (i = -1, j = 0; j < n; j++) {
+                    if (sat[j] == base_sat) { i = j; break; }
+                }
+                if (i == -1) continue;
+
+                for (j = 0; j < n; j++) {
+                    sys = satsys(sat[j], &prn);
+                    if (!test_sys(sys, m)) continue;
+                    if (sat[j] == 0 || sat[j] == sat[i]) continue;
+                    if (rtk->ssat[sat[j] - 1].fix_amb[f] == 9999.9) continue;
+                    if ((rtk->ssat[sat[j] - 1].slip[f] & 1) ||
+                        (rtk->ssat[sat[j] - 1].slip[f] & 2)) {
+                        rtk->ssat[sat[j] - 1].fix_amb[f] = 9999.9;
+                        continue;
+                    }
+                    rtk->ssat[sat[j] - 1].ddAmb[f] =
+                        rtk->ssat[sat[i] - 1].fix_amb[f] -
+                        rtk->ssat[sat[j] - 1].fix_amb[f];
+                }
+            }
+        }
+
+        /* 计算 ddion / ddtrp */
+        for (m = 0; m < NSYS; m++) {
+            int    base_sat;
+            int    index1, index2;
+            double dL1, dLb1, ddL1, dL2, dLb2, ddL2, ddN1, ddN2;
+            double ddion, f1, f2;
+            double dr, drb, ddr, ddtrp;
+            double lam[NFREQ] = {0};
+
+            base_sat = rtk->basePrnLsq[m][0];
+            for (i = -1, j = 0; j < n; j++) {
+                sys = satsys(sat[j], &prn);
+                if (!test_sys(sys, m)) continue;
+                if (sat[j] == base_sat) { i = j; break; }
+            }
+            if (i == -1) continue;
+
+            for (j = 0; j < n; j++) {
+                sys = satsys(sat[j], &prn);
+                getWavelength(sys, prn, lam);
+                if (!test_sys(sys, m)) continue;
+                if (sat[j] == 0 || sat[j] == sat[i]) continue;
+                if (rtk->ssat[sat[j] - 1].fix_amb[0] == 9999.9) continue;
+                if (rtk->ssat[sat[j] - 1].ph[0][0] == 0.0 ||
+                    rtk->ssat[sat[j] - 1].ph[1][0] == 0.0) continue;
+
+                index1 = 0;
+                index2 = 0;
+                for (f = 1; f < NFREQ; f++) {
+                    if (rtk->ssat[sat[j] - 1].ph[0][f] != 0.0 &&
+                        rtk->ssat[sat[j] - 1].ph[1][f] != 0.0) {
+                        index2 = f;
+                        break;
+                    }
+                }
+                if (index2 == 0) continue;
+
+                dL1  = rtk->ssat[sat[j] - 1].ph[0][0] - rtk->ssat[sat[j] - 1].ph[1][0];
+                dLb1 = rtk->ssat[sat[i] - 1].ph[0][0] - rtk->ssat[sat[i] - 1].ph[1][0];
+                ddL1 = (dLb1 - dL1) * lam[0];
+
+                dL2  = rtk->ssat[sat[j] - 1].ph[0][index2] -
+                       rtk->ssat[sat[j] - 1].ph[1][index2];
+                dLb2 = rtk->ssat[sat[i] - 1].ph[0][index2] -
+                       rtk->ssat[sat[i] - 1].ph[1][index2];
+
+                if (rtk->ssat[sat[i] - 1].ph[0][index2] == 0 ||
+                    rtk->ssat[sat[i] - 1].ph[1][index2] == 0) {
+                    rtk->ssat[sat[j] - 1].ddion = 0.0;
+                    continue;
+                }
+                ddL2 = (dLb2 - dL2) * lam[index2];
+
+                ddN1 = rtk->ssat[sat[j] - 1].ddAmb[0];
+                ddN2 = rtk->ssat[sat[j] - 1].ddAmb[index2];
+                f1   = CLIGHT / lam[0];
+                f2   = CLIGHT / lam[index2];
+
+                ddion = (SQR(f2) / (SQR(f1) - SQR(f2))) *
+                        (ddL1 - ddL2 - (lam[0] * ddN1 - lam[index2] * ddN2));
+                rtk->ssat[sat[j] - 1].ddion     = ddion;
+                rtk->ssat[sat[j] - 1].ddionTime = rtk->sol.time;
+                rtk->ssat[sat[j] - 1].ddtrp     = ddion;
+
+                dr    = rtk->ssat[sat[j] - 1].dist[0] - rtk->ssat[sat[j] - 1].dist[1];
+                drb   = rtk->ssat[sat[i] - 1].dist[0] - rtk->ssat[sat[i] - 1].dist[1];
+                ddr   = drb - dr;
+                ddtrp = (SQR(f1) / (SQR(f1) - SQR(f2))) * (ddL1 - lam[0] * ddN1) -
+                        (SQR(f2) / (SQR(f1) - SQR(f2))) * (ddL2 - lam[index2] * ddN2) - ddr;
+                rtk->ssat[sat[j] - 1].ddtrp = ddtrp;
+            }
+        }
+        rtk->fix_state = 1;
+    } else {
+        rtk->fix_state = 0;
+    }
+}
+
+#endif
 
 static double prectrop(
     rtk_t* rtk, const double* pos, int r, const double* azel, const prcopt_t* opt, const double* x,
@@ -2700,37 +3171,12 @@ static int check_res(
                 {
                     rtk->v[nv] -= C1 * x[rtk->np + rtk->nt + i] - C2 * x[rtk->np + rtk->nt + j];
                 }
-                for (index1 = na; index1 < rtk->nx; index1++)
-                {
-                    sati = rtk->nxRecordSat[index1 - na];
-                    frqi = rtk->nxRecordFrq[index1 - na];
-                    if (frqi != f)
-                    {
-                        continue;
-                    }
-                    if (sati == sat[i])
-                    {
-                        break;
-                    }
-                }
-                for (index2 = na; index2 < rtk->nx; index2++)
-                {
-                    satj = rtk->nxRecordSat[index2 - na];
-                    frqj = rtk->nxRecordFrq[index2 - na];
-
-                    if (frqj != f)
-                    {
-                        continue;
-                    }
-                    if (satj == sat[j])
-                    {
-                        break;
-                    }
-                }
                 //trace(
                 //    3, "nxRecord, check_res(), index1,%d, index2, %d, %d,%d\n", index1, index2,
                 //    rtk->ssat[sat[i] - 1].xIndex[f], rtk->ssat[sat[j] - 1].xIndex[f]
                 //);
+				index1 = IB(sat[i], f, rtk);
+				index2 = IB(sat[j], f, rtk);
                 rtk->v[nv] -= (lami[f] * x[index1] - lami[f] * x[index2]);
                 rtk->v[nv] -= (lami[f] - lamj[f]) * x[index2];
                 // if (rtk->opt.nf == 1) {
@@ -3100,6 +3546,10 @@ static int ddres(
                 {
                     // rtk->v[nv] -= lami * rtk->ssat[sat[i] - 1].dbias[f] - lamj *
                     // rtk->ssat[sat[j] - 1].dbias[f];
+                    index1 = IB(sat[i], f, rtk);
+                    index2 = IB(sat[j], f, rtk);
+                    if (index1 < 0 || index2 < 0) continue;
+                    /*
                     for (index1 = na; index1 < rtk->nx; index1++)
                     {
                         sati = rtk->nxRecordSat[index1 - na];
@@ -3127,6 +3577,7 @@ static int ddres(
                             break;
                         }
                     }
+                    */
                     rtk->v[nv] -= (lami[f] * x[index1] - lami[f] * x[index2]);
                     rtk->v[nv] -= (lami[f] - lamj[f]) * x[index2];
                     if (rtk->opt.bl <= BSLTHRESHOLD && baseXyzError == 0)
@@ -3134,9 +3585,6 @@ static int ddres(
                         if (post == 0 && f < nf && rtk->sol.fixxyz[0] != 0.0 &&
                             rtk->sol.rr_smooth_cnt > 10)
                         {
-                            // rtk->ssat[sat[j] - 1].resc[f] = x[index1] - x[index2] -
-                            // ROUND(x[index1] - x[index2]); rtk->ssat[sat[j] - 1].resc[f] =
-                            // (x[index1] - x[index2]);
                             rtk->ssat[sat[j] - 1].resc[f] =
                                 rtk->ssat[sat[i] - 1].fbias[f] - rtk->ssat[sat[j] - 1].fbias[f] -
                                 ROUND(
@@ -3164,17 +3612,13 @@ static int ddres(
                                 );
                                 if (f == 0)
                                 {
-                                    for (k = na; k < rtk->nx; k++)
-                                    {
-                                        if (rtk->nxRecordSat[k - na] == sat[j])
-                                        {
-                                            trace(
-                                                2, "ddres, k, %d, xIndex, %d\n",
-                                                rtk->ssat[sat[j] - 1].xIndex[f]
-                                            );
-                                            initx(rtk, 0, 0, k);
-                                        }
-                                    }
+
+                                    k = IB(sat[j],f,rtk);
+                                    trace(
+                                            2, "ddres, k, %d, xIndex, %d\n",
+                                            rtk->ssat[sat[j] - 1].xIndex[f]
+                                         );
+                                    initx(rtk, 0, 0, k);
                                     if (rtk->opt.ionoopt == IONOOPT_EST)
                                     {
                                         for (k = 0; k < rtk->ns; k++)
@@ -3191,14 +3635,8 @@ static int ddres(
                                 }
                                 else
                                 {
-                                    for (k = na; k < rtk->nx; k++)
-                                    {
-                                        if (rtk->nxRecordSat[k - na] == sat[j] &&
-                                            rtk->nxRecordFrq[k - na] == sat[j])
-                                        {
-                                            initx(rtk, 0, 0, k);
-                                        }
-                                    }
+                                    k = IB(sat[j],f,rtk);
+                                    initx(rtk, 0, 0, k);
                                     rtk->ssat[sat[j] - 1].slip[f] = 3;
                                 }
                                 rtk->sol.ilterCout = 0;
@@ -3222,13 +3660,8 @@ static int ddres(
                         0x04, "outlier rejected (sat=%3d-%3d %s%d v=%.3f)\n", sat[i], sat[j],
                         f < nf ? "L" : "P", f % nf + 1, rtk->v[nv]
                     );
-                    for (k = na; k < rtk->nx; k++)
-                    {
-                        if (rtk->nxRecordSat[k - na] == sat[j])
-                        {
-                            initx(rtk, 0, 0, k);
-                        }
-                    }
+                    k = IB(sat[j],f,rtk);
+                    initx(rtk, 0, 0, k);
                     if (rtk->opt.ionoopt == IONOOPT_EST)
                     {
                         for (k = 0; k < rtk->ns; k++)
@@ -3396,12 +3829,9 @@ static int ddres(
                     // if (rtk->opt.tropopt == TROPOPT_EST) {
                     //     free(tropu); free(tropr);free(dtdxu);free(dtdxr);
                     // }
-                    for (i = rtk->np + rtk->nt + rtk->ni; i < rtk->nx; i++)
-                    {
-                        if (rtk->nxRecordSat[i - (rtk->np + rtk->nt + rtk->ni)] == vmax_sat)
-                        {
-                            initx(rtk, 0, 0, i);
-                        }
+                    for(f=0;f<NFREQ;f++){
+                        i  = IB(vmax_sat,f,rtk);
+                        initx(rtk, 0, 0, i);
                     }
                     if (rtk->opt.ionoopt == IONOOPT_EST)
                     {
@@ -3646,7 +4076,7 @@ static int free_sat_slot(rtk_t *rtk, int satno)
     return 0;
 }
 
-static int assign_sats(rtk_t *rtk, int  *sat, int ns)
+static int assign_sats(rtk_t *rtk, unsigned char *sat, int ns)
 {
     int i=0,j=0;
     int satno=0,loc;
@@ -3667,13 +4097,12 @@ static int assign_sats(rtk_t *rtk, int  *sat, int ns)
     for(i=0;i<ns;i++)
     {
         satno = sat[i];
-
-        loc= rtk->satloc[satno-1];
-        rtk->satlos[loc-1]=0;
         if(rtk->satloc[satno-1]==0)
         {
             assign_sat_slot(rtk, satno);
         }
+        loc= rtk->satloc[satno-1];
+        rtk->satlos[loc-1]=0;
     }
 
     return 0;
@@ -3757,6 +4186,8 @@ extern int relpos(
     trace(2, "relpos before udstate: x[0..2]=%.4f %.4f %.4f\n",
         rtk->x[0], rtk->x[1], rtk->x[2]);
     trace(2, "udstate,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
+
+    assign_sats(rtk,sat,ns);
     /* temporal update of states */
     udstate(rtk, obs, sat, iu, ir, ns, r);
 

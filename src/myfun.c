@@ -862,6 +862,7 @@ extern int selsatRTK(
     {
         satno2id(obs[i].sat,id);
         trace(2,"(%2d) rcv=%3d %s, azel=%.2f\n",i,obs[i].rcv,id,rtk->ssat[obs[i].sat - 1].azel[0][1]*R2D);
+        printf("(%2d) rcv=%3d %s, azel=%.2f,%14.4f, %14.4f\n",i,obs[i].rcv,id,rtk->ssat[obs[i].sat - 1].azel[0][1]*R2D, obs[i].L[0], obs[i].P[0]);
     }
 
     for (i=0,j=nu;i<nu&&j<nu+nr;i++,j++) {
@@ -1395,20 +1396,6 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
         rtk->nxRecordFrq[i]    = 0;
     }
 
-    // ---- 保存上一历元的位置/速度/加速度状态和协方差 ----
-    double x_pos_save[9] = {0};
-    double P_pos_save[9][9] = {0};
-    int np_save = rtk->npPre;
-    if (np_save > 9) np_save = 9;
-    int nx_old = rtk->nxPre;
-    for (i = 0; i < np_save; i++) {
-        x_pos_save[i] = rtk->x[i];
-        for (j = 0; j < np_save; j++) {
-            P_pos_save[i][j] = rtk->P[i + j * nx_old];
-        }
-    }
-    // ---- 保存结束 ----
-
     for (i = 0; i < nobs; i++)
     {
         if (obs[i].rcv != 1)
@@ -1567,21 +1554,8 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     rtk->na = nx;
     rtk->nx = rtk->np + rtk->nt + rtk->ni + rtk->na;
 
-    memset(rtk->x, 0, sizeof(double) * NX);
-    memset(rtk->P, 0, sizeof(double) * NX * NX);
     
-    // ---- 恢复位置/速度/加速度状态 ----
-    int np_new = rtk->np;
-    for (i = 0; i < np_new && i < np_save; i++) {
-        rtk->x[i] = x_pos_save[i];
-        for (j = 0; j < np_new && j < np_save; j++) {
-            rtk->P[i + j * rtk->nx] = P_pos_save[i][j];
-        }
-    }
-    // ---- 恢复结束 ----
 
-    assignAmbX(rtk, 0);
-    assignAmbP(rtk, 0);
     if (rtk->opt.tropopt == TROPOPT_EST && rtk->ntPre != 0)
     {
         assignTrp(rtk);

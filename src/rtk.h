@@ -1035,8 +1035,8 @@ typedef struct
     unsigned char nxFixFrq[5 + 40 + 40 * NFREQ];
 
     int satloc[MAXSAT];
-    int locsat[40];
-    int satlos[40*NFREQ];
+    int locsat[MAXSLOT];
+    int satlos[MAXSLOT];
 
     // unsigned char nxFixSatPre[5 + 40 + 40 * NFREQ];
     // unsigned char nxFixFrqPre[5 + 40 + 40 * NFREQ];
@@ -1059,16 +1059,16 @@ typedef struct
     unsigned int  nfix;   /* number of continuous fixes of ambiguity */
     double        tt, fs; /* time difference between current and previous (s) */
     double        sumPostCarV;
-    double *      x, *P;    /* float states and their covariance */
-    double *      xp, *Pp;  // 31*2k
-    double*       H;
-    double*       F;
-    double*       K;
-    double*       I;
-    double*       Ri;
-    double*       Rj;
-    double*       R;  // 41k
-    double*       v;
+    double *x, *P;    /* float states and their covariance */
+    double *xp, *Pp;  // 31*2k
+    double *H;
+    double *F;
+    double *K;
+    double *I;
+    double *Ri;
+    double *Rj;
+    double *R;  // 41k
+    double *v;
     ssat_t        ssat[MAXSAT]; /* satellite status */
     prcopt_t      opt;          /* processing options */
     double*       enuWindow[3];
@@ -1404,6 +1404,7 @@ extern int selsatDGPS(
 extern int checkFixP(rtk_t* rtk, int lcopt);
 extern int checkFloatP(rtk_t* rtk, int lcopt);
 extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs);
+
 
 extern void assignSatBias(rtk_t* rtk, gtime_t teph, gtime_t tepb, obsd_tmp_t* obs_tmp, int ns);
 extern int  rtkLsq(

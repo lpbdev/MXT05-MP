@@ -841,6 +841,10 @@ static void* rtksvrthread(void* arg)
     gtime_t obstime = {0};
     qobs_t  qobs;
 
+    memset(svr->rtk.satloc,0,sizeof(int)*MAXSAT);
+    memset(svr->rtk.locsat,0,sizeof(int)*MAXSLOT);
+    memset(svr->rtk.satlos,0,sizeof(int)*MAXSLOT);
+
     // printf("detectSensitivity=%d\n", svr->rtk.opt.detectSensitivity);
     // printf("senceopt=%d\n", svr->rtk.opt.senceopt);
     // printf("mvflag=%d\n", svr->rtk.mvflag);
@@ -1035,20 +1039,6 @@ static void* rtksvrthread(void* arg)
                     }
                 }
 #endif
-                cnt = 0;
-                if (sys == SYS_BDS)
-                {
-                    trace(2, "code,%d,%d,%d,%d,%d,%d,%d,\n",f,
-                            obs[n].code[0],obs[n].code[1],obs[n].code[2],
-                            obs[n].code[3],obs[n].code[4],obs[n].code[5]);
-                    for (f = 0; f < NFREQ; f++)
-                    {
-                        if (obs[n].code[f] != CODE_L1I && obs[n].code[f] != CODE_L6I )
-                        {
-                            obs[n].P[f] = obs[n].L[f] = 0.0;
-                        }
-                    }
-                }
                 n++;
             }
             qobs.n = 0;

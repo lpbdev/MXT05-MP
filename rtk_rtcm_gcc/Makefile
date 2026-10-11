@@ -8,7 +8,7 @@ ifeq ($(OS), Windows_NT)
 	DFFLAGS    = -DENACMP -DWIN32 -DLAPACK
 	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32 -lopenblas 
 else
-	LDFLAGS = -lm -lpthread -lopenblas -fsanitize=address -fno-omit-frame-pointer -pipe
+	LDFLAGS = -lm -lpthread -lopenblas -fsanitize=address -fno-omit-frame-pointer -pipe #-fanalyzer
 	DFFLAGS    = -DENACMP -DLAPACK
 endif
 
