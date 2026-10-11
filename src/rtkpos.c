@@ -5188,16 +5188,15 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(0x04, "rtk lsq ns=%3d nsPre=%3d\n", rtk->sol.nsLsq, rtk->sol.nsLsqPre);
     trace(2, "kalman rtk->x, 03, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
-#if 1
+#if 0
     if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt != IONOOPT_EST) {
         rtk->sol.rr_lsq[0] = rtk->sol.rr_lsq[1] = rtk->sol.rr_lsq[2] = 0.0;
         rtk->sol.nsLsq = 0;
         int delSat = 0;
         if (rtk->fix_state == 1) {
             while (1) {
-                lsqstat = rtkLsq(rtk, obs, 2 * ns, nu, svh, rs, dts, var,
-                lsqraim, ns, sat, iu, ir, exc); if (lsqstat == -2 &&
-                rtk->sol.ns[1] > 5 && lsqraim[0] > 0) {
+                lsqstat = rtkLsq(rtk, obs, n, nu, svh, rs, dts, var, lsqraim, ns, sat, iu, ir, exc); 
+                if (lsqstat == -2 && rtk->sol.ns[1] > 5 && lsqraim[0] > 0) {
                     delSat++;
                     exc[(int)lsqraim[0] - 1] = 1;
                     sys = satsys((int)lsqraim[0], &prn);
@@ -5233,7 +5232,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             rtk->sol.nsLsqPre = 0;
             rtk->sol.stat = SOLQ_FLOAT;
         }
-        delSat = rtk->opt.maxDelSat;
+        //delSat = rtk->opt.maxDelSat;
         if (delSat > rtk->opt.maxDelSat) {
             trace(0x04, "rtkls reject nsat;%d maxDelSat:%d\n", delSat,
             rtk->opt.maxDelSat); rtk->sol.stat = SOLQ_FLOAT;
