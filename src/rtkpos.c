@@ -711,7 +711,27 @@ static void udbias(
             sys = satsys(sat[i], &prn);
             nx2 = IB(sat[i],f,rtk);
 
-            getWavelength(sys, prn, &lam);
+            if (sys == SYS_GPS || sys == SYS_QZS)
+            {
+                lam = g_gpsLam[f];
+            }
+            else if (sys == SYS_GLO)
+            {
+                lam = g_gloLam[prn - 1][f];
+            }
+            else if (sys == SYS_GAL)
+            {
+                lam = g_galLam[f];
+            }
+            else if (sys == SYS_BDS)
+            {
+                lam = g_bdsLam[f];
+            }
+            else
+            {
+                lam = g_gpsLam[f];
+            }
+
             cp = sdobs(obs, iu[i], ir[i], f); /* cycle */
             pr = sdobs(obs, iu[i], ir[i], f + NFREQ);
             if (cp == 0.0 || pr == 0.0 || lam <= 0.0)
@@ -4085,10 +4105,11 @@ static int assign_sats(rtk_t *rtk, unsigned char *sat, int ns)
 extern int relpos(
     rtk_t* rtk, obsd_t* obs, unsigned char nu, unsigned char nr, unsigned char* sat,
     unsigned char* iu, unsigned char* ir, double* rs, double* dts, double* var, int* svh
+    ,unsigned char ns
 )
 {
     int           i, f, n = nu + nr, nv, vflg[5 + 40 + 40 * NFREQ], info;
-    unsigned char ns, nf = rtk->opt.nf;
+    unsigned char nf = rtk->opt.nf;
     unsigned char robust[5 + 40 + 40 * NFREQ] = {0};
     gtime_t       time                        = obs[0].time;
     double *      r, *azel;
@@ -4109,21 +4130,8 @@ extern int relpos(
             rtk->base_prn_fix[i][f] = 0;
         }
     }
-    ns = nu;
-    
-    trace(2, "relpos,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
-    // for (i = 0; i < nu; i++)
-    // {
-    //     // if(obs[i].sat!=6) continue;
-    //     // printf("sat,%d,%d,%.3f, %.3f, %.3d\n",obs[i].rcv, obs[i].sat,obs[i].L[0],
-    //     // obs[i].P[0], obs[i].SNR[0]);
-    //     sat_ts_update(&obs[i], &rtk->rsat[obs[i].sat - 1], rtk->opt.timeInterval);
-    // }
 
-    // for (i = nu; i < n; i++)
-    // {
-    //     sat_ts_update(&obs[i], &rtk->bsat[obs[i].sat - 1], rtk->opt.timeInterval);
-    // }
+    trace(2, "relpos,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
 
     /* undifferenced residuals for base station */
     if (zdres(
@@ -4155,11 +4163,9 @@ extern int relpos(
     {
         robust[i] = 0;
     }
-    trace(2, "relpos before udstate: x[0..2]=%.4f %.4f %.4f\n",
-        rtk->x[0], rtk->x[1], rtk->x[2]);
+    trace(2, "relpos before udstate: x[0..2]=%.4f %.4f %.4f\n", rtk->x[0], rtk->x[1], rtk->x[2]);
     trace(2, "udstate,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
 
-    assign_sats(rtk,sat,ns);
     /* temporal update of states */
     udstate(rtk, obs, sat, iu, ir, ns, r);
 
@@ -4993,7 +4999,7 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
 
     if (rtk->opt.mode == PMODE_MOVEB || rtk->opt.mode == PMODE_KINEMA ||
         rtk->opt.mode == PMODE_STATIC)
-    { /*  moving baseline */
+    { 
         /* estimate position/velocity of base station */
         trace(2, "solrr03,%s,%14.4f,%14.4f,%14.4f,\n", ts1, rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
 
@@ -5133,21 +5139,14 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             }
         }
     }
+
     trace(2, "kalman rtk->x, 01, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
-
-    //ns = getSatNum(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 15.0 * D2R, 0.0);
-    
-    // gloFlag(rtk, obs, nu, nr);
-    // if (selectSatFlag(rtk, obs, nu, nr))
-    //     quickSelSat(rtk, obs, nu, nr);
-
-    trace(2, "nunr,01,%s,%d,%d,%d\n", ts1,nu,nr,n);
     // detectionRes(rtk, obs, nu);
     ns = obsScan(rtk, &rtk->opt, obs, n);
-    trace(2, "nunr,02,%s,%d,%d,%d\n", ts1,nu,nr,ns);
-    ns      = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 0);
-    trace(2, "nunr,03,%s,%d,%d\n", ts1,nu,nr);
+    ns = selsatRTK(rtk, obs, nu, nr, &rtk->opt, sat, iu, ir, 0);
+    assign_sats(rtk,sat,ns);
+
     if (ns < 5)
     {
         trace(0x02, "warnning rtk ns=%d\n", ns);
@@ -5158,7 +5157,17 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         return 5;
     }
 
-    satposs(obs[0].time, obs, 2 * ns, rtk->opt.sateph, rs, dts, var, svh);
+
+    /*
+    for (int i=0;i<n;i++) {
+        printf ("i,%d,sat,%d,%.2f,%.2f,%.2f,%.2f\n",i,obs[i].sat,
+                rtk->ssat[obs[i].sat - 1].azel[0][0],rtk->ssat[obs[i].sat - 1].azel[0][1],  
+                rtk->ssat[obs[i].sat - 1].azel[1][0],rtk->ssat[obs[i].sat - 1].azel[1][1]  );
+    }
+    */
+ 
+
+    satposs(obs[0].time, obs, n, rtk->opt.sateph, rs, dts, var, svh);
 
     if (rtk->sol.fixxyz[0] != 0.0 && rtk->sol.rr_smooth_cnt > 10)
     {
@@ -5171,9 +5180,10 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(2, "kalman rtk->x, in while, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
+
     trace(2, "nunr,04,%s,%d,%d\n", ts1,nu,nr);
     rtk->sol.stat = SOLQ_FLOAT;
-    relpos(rtk, obs, nu, nr, sat, iu, ir, rs, dts, var, svh);
+    relpos(rtk, obs, nu, nr, sat, iu, ir, rs, dts, var, svh,ns);
 
     trace(0x04, "rtk lsq ns=%3d nsPre=%3d\n", rtk->sol.nsLsq, rtk->sol.nsLsqPre);
     trace(2, "kalman rtk->x, 03, ");

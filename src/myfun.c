@@ -1539,7 +1539,7 @@ extern int obsScan(rtk_t* rtk, const prcopt_t* popt, obsd_t* obs, const int nobs
     trace(2, "obsScan end: x[0..2]=%.4f %.4f %.4f P00=%.4f P11=%.4f P22=%.4f\n",
         rtk->x[0], rtk->x[1], rtk->x[2],
         rtk->P[0], rtk->P[1 + 1 * rtk->nx], rtk->P[2 + 2 * rtk->nx]);
-    return n;
+    return 0;
 }
 
 extern int rtksvrinit(rtksvr_t* svr)

@@ -512,7 +512,7 @@ extern int rtkLsq(
 
     if ((!H) || (!v) || (!var))
     {
-        trace(0x01, "estpos mat allocate error");
+        trace(0x01, "rtkLsq mat allocate error");
         free(H);
         free(v);
         free(var);
