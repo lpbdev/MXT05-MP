@@ -3341,7 +3341,7 @@ static int ddres(
             rtk->ssat[i].resc[j] = 0.0;
         }
     }
-    trace(2, "ddres, opt->mode, %d, PMODE_DGPS, %d\n", opt->mode, PMODE_DGPS);
+    trace(2, "ddres, opt->mode, %d, n", opt->mode);
     for (f = opt->mode > PMODE_DGPS ? 0 : nf; f < nf * 2; f++)
     {
         if (nv >= NY)
@@ -4131,6 +4131,9 @@ extern int relpos(
         }
     }
 
+    char ts1[32], ts2[32];
+    time2str(obs[0].time, ts1, 3);
+
     trace(2, "relpos,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
 
     /* undifferenced residuals for base station */
@@ -4163,8 +4166,6 @@ extern int relpos(
     {
         robust[i] = 0;
     }
-    trace(2, "relpos before udstate: x[0..2]=%.4f %.4f %.4f\n", rtk->x[0], rtk->x[1], rtk->x[2]);
-    trace(2, "udstate,%.4f,%.4f,%.4f\n", rtk->sol.rr[0], rtk->sol.rr[1], rtk->sol.rr[2]);
 
     /* temporal update of states */
     udstate(rtk, obs, sat, iu, ir, ns, r);
@@ -4243,11 +4244,11 @@ extern int relpos(
             break;
         }
 
-        trace(2, "relpos, nv,%d, ns,%d, \n", nv, ns);
-        trace(2, "relpos rtk->v,");
+        trace(2, "relpos_nvns, %s,nv,%d, ns,%d, \n", ts1, nv, ns);
+        trace(2, "relpos rtk->v,%s\n",ts1);
         tracemat(2, rtk->v, 1, nv, 8, 4);
 
-        trace(2, "relpos rtk->x,");
+        trace(2, "relpos rtk->x, %s\n",ts1);
         tracemat(2, rtk->x, 1, rtk->nx, 8, 4);
         //for(i=0;i<NFREQ;i++){
         //    for(int j=0;j<MAXSLOT;j++){
