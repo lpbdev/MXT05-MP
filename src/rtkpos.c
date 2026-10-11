@@ -888,6 +888,7 @@ static void udbias(
                     {
                         rtk->x[nx2] += offset[f] / offsetCnt[f];
                     }
+                    rtk->P[nx2+nx2*rtk->nx] += SQR(1e-3) *fabs(tt);
                 }
             }
         }
@@ -1698,6 +1699,25 @@ extern int resamb_LAMBDA(rtk_t* rtk, int lcopt)
             for (j = 0; j < nb; j++)
             {
                 Qb[i + j * nb] = Qy[na + i + (na + j) * ny];
+            }
+        }
+        /* ===== 新增：Qb 对角线下限保护，防止协方差退化 ===== */
+        {
+            const double QB_DIAG_MIN = 1E-6;   /* 0.001 cycle 标准差 */
+            int qb_bad_cnt = 0;
+            for (i = 0; i < nb; i++)
+            {
+                double d = Qb[i + i * nb];
+                if (!(d > QB_DIAG_MIN))     /* 处理 d<=0 或 NaN 的情况 */
+                {
+                    Qb[i + i * nb] = QB_DIAG_MIN;
+                    qb_bad_cnt++;
+                }
+            }
+            if (qb_bad_cnt > 0)
+            {
+                trace(0x02, "Qb diag clamp: %d/%d elements lifted to %.1e\n",
+                      qb_bad_cnt, nb, QB_DIAG_MIN);
             }
         }
     }

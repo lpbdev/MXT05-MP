@@ -581,6 +581,28 @@ extern int lambda(
     {
         return -1;
     }
+
+    /* ===== 新增：Q 对角线下限保护 ===== */
+    {
+        const double Q_DIAG_MIN = 1E-6;
+        double* Qmutable = (double*)Q;      /* 需要改调用方允许修改 */
+        int qbad = 0;
+        for (i = 0; i < n; i++)
+        {
+            double d = Qmutable[i + i * n];
+            if (!(d > Q_DIAG_MIN))
+            {
+                Qmutable[i + i * n] = Q_DIAG_MIN;
+                qbad++;
+            }
+        }
+        if (qbad > 0)
+        {
+            trace(0x02, "lambda: Q diag clamp %d/%d elements\n", qbad, n);
+        }
+    }
+
+
     // L = zeros(n, n);
     D = mat(n, 1);
     // Z = eye(n);
