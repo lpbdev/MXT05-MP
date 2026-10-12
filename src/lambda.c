@@ -584,7 +584,7 @@ extern int lambda(
 
     /* ===== 新增：Q 对角线下限保护 ===== */
     {
-        const double Q_DIAG_MIN = 1E-6;
+        const double Q_DIAG_MIN = 1E-2;
         double* Qmutable = (double*)Q;      /* 需要改调用方允许修改 */
         int qbad = 0;
         for (i = 0; i < n; i++)
@@ -685,7 +685,7 @@ extern int lambda(
         memcpy(rtk->F, QD, sizeof(double) * NY * NX);
 
         detAdop = myDet(rtk->F, n);
-        trace(0x02, "ADOP = %.2f\n", detAdop);
+        trace(0x02, "ADOP = %.10f\n", detAdop);
 
         if (lcopt == 0)
         {
@@ -702,6 +702,7 @@ extern int lambda(
             thresDet = 1.5;
             thresP   = 0.85;
         }
+
         if (detAdop > thresDet)
         {
             info = -2;

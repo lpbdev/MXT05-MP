@@ -993,6 +993,7 @@ typedef struct
     // gtime_t gf_t[NFREQ];//previous carrier-phase time
     // double ph[2][NFREQ];//previous carrier-phase observable (cycle)
     FILE* fp_ssat;
+    double sd_ph_prev[NFREQ];
 } ssat_t;
 
 typedef struct

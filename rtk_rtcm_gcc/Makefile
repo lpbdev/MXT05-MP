@@ -22,7 +22,8 @@ SRCS =  \
 	$(SRC_DIR)/rtcm3.c  $(SRC_DIR)/rtkls.c  $(SRC_DIR)/rtkpos.c $(SRC_DIR)/tides.c $(SRC_DIR)/stream.c \
 	$(SRC_DIR)/multipath.c $(SRC_DIR)/cJSON.c $(SRC_DIR)/BandPassFilter.c \
 	$(SRC_DIR)/fft.c $(SRC_DIR)/logmod.c $(SRC_DIR)/pos_filter.c \
-	$(SRC_DIR)/version_info/version_info.c
+	$(SRC_DIR)/version_info/version_info.c \
+	$(SRC_DIR)/rtk_math.c
 
 # 头文件
 VERSION_DIR = $(SRC_DIR)/version_info
@@ -30,7 +31,8 @@ VERSION_DIR = $(SRC_DIR)/version_info
 INCS = -I$(INC_DIR) -I$(VERSION_DIR)
 DEPS_INC = $(INC_DIR)/rtk.h $(INC_DIR)/cJSON.h  $(INC_DIR)/fft.h \
 		   $(INC_DIR)/BandPassFilter.h $(INC_DIR)/logmod.h $(INC_DIR)/pos_filter.h \
-		   $(INC_DIR)/version_info/version_info.h
+		   $(INC_DIR)/version_info/version_info.h \
+			$(SRC_DIR)/rtk_math.c
 
 # 目标文件
 TARGET = main_rtcm

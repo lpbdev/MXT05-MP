@@ -685,6 +685,7 @@ static void detslp_dop(rtk_t* rtk, const obsd_t* obs, int i, int rcv)
     }
 }
 
+#if 0
 static void udbias(
     rtk_t *rtk, double tt, const obsd_t* obs, const unsigned char* sat, const unsigned char* iu,
     const unsigned char* ir, unsigned char ns, double* r)
@@ -787,10 +788,22 @@ static void udbias(
             if (rtk->x[nx2] != 0.0)
             {
                 offset[f] += bias - rtk->x[nx2];
+                printf("offset,  %d,f, %d, %.4f,\n",offsetCnt[f],f,bias - rtk->x[nx2]);
                 offsetCnt[f]++;
             }
         }
     }
+    /*
+    for(f=0;f<nf;f++){
+        printf("freq,%d,",f);
+        for(int j=0;j<offsetCnt[f];j++){
+            printf(" %.4f,",offset[j]);
+        }
+        printf("\n");
+    }
+    */
+
+    printf("\n\n");
     nx2 = rtk->np + rtk->nt + rtk->ni;
     for (f = 0; f < nf; f++)
     {
@@ -888,11 +901,17 @@ static void udbias(
                     {
                         rtk->x[nx2] += offset[f] / offsetCnt[f];
                     }
-                    rtk->P[nx2+nx2*rtk->nx] += SQR(1e-3) *fabs(tt);
+                    rtk->P[nx2+nx2*rtk->nx] += SQR(1e-2) *fabs(tt);
                 }
             }
         }
     }
+
+	trace(2, "udbias: P_amb_min=%.4e P_amb_max=%.4e\n",
+    rtk->P[IB(sat[0],0,rtk) + IB(sat[0],0,rtk)*rtk->nx],
+    rtk->P[IB(sat[ns-1],0,rtk) + IB(sat[ns-1],0,rtk)*rtk->nx]);
+
+
     // printf("ratio=%.2f\n", rtk->sol.ratio);
     for (i = 0; i < NSYS; i++)
     {
@@ -907,6 +926,99 @@ static void udbias(
         }
     }
 }
+#else
+
+static void udbias(
+    rtk_t *rtk, double tt, const obsd_t* obs, const unsigned char* sat, const unsigned char* iu,
+    const unsigned char* ir, unsigned char ns, double* r)
+{
+    double        cp, pr, bias, lam = 0.0, var;
+    int           i, f, nx2, slip, nf = rtk->opt.nf;
+    int           nsat[NSYS][NFREQ], nslip[NSYS][NFREQ];
+    unsigned char sys, prn;
+
+    for (i = 0; i < NSYS; i++)
+        for (f = 0; f < NFREQ; f++)
+            nsat[i][f] = nslip[i][f] = 0;
+
+    for (f = 0; f < nf; f++) {
+        for (i = 0; i < ns; i++) {
+            sys = satsys(sat[i], &prn);
+
+            if (sys == SYS_GPS || sys == SYS_QZS)      lam = g_gpsLam[f];
+            else if (sys == SYS_GLO)                   lam = g_gloLam[prn - 1][f];
+            else if (sys == SYS_GAL)                   lam = g_galLam[f];
+            else if (sys == SYS_BDS)                   lam = g_bdsLam[f];
+            else                                       lam = g_gpsLam[f];
+
+            cp = sdobs(obs, iu[i], ir[i], f);
+            pr = sdobs(obs, iu[i], ir[i], f + NFREQ);
+            if (cp == 0.0 || lam <= 0.0) continue;
+
+            slip = rtk->ssat[sat[i] - 1].slip[f];
+            if (sys == SYS_GPS || sys == SYS_QZS)      nsat[0][f]++;
+            else if (sys == SYS_GLO)                   nsat[1][f]++;
+            else if (sys == SYS_GAL)                   nsat[2][f]++;
+            else if (sys == SYS_BDS)                   nsat[3][f]++;
+
+            nx2 = IB(sat[i], f, rtk);
+
+            /* --- 周跳：复位状态和相位历史 --- */
+            if (slip & 1) {
+                rtk->x[nx2] = 0.0;
+                rtk->ssat[sat[i] - 1].sd_ph_prev[f] = 0.0;
+                if (sys == SYS_GPS || sys == SYS_QZS)      nslip[0][f]++;
+                else if (sys == SYS_GLO)                   nslip[1][f]++;
+                else if (sys == SYS_GAL)                   nslip[2][f]++;
+                else if (sys == SYS_BDS)                   nslip[3][f]++;
+            }
+
+            if (rtk->x[nx2] == 0.0) {
+                /* === 首次初始化：用伪距 === */
+                if (pr != 0.0) {
+                    if (baseXyzError == 0) pr = r[iu[i]] - r[ir[i]];
+                    bias = cp - pr / lam;
+                    var  = 900.0;
+                    initx(rtk, bias, var, nx2);
+                    rtk->ssat[sat[i] - 1].fbias[f] = bias;
+                    trace(4, "ini bias: sat=%d f=%d bias=%.2f\n", sat[i], f, bias);
+                }
+            } else {
+                /* === 后续历元：用相位增量累加 === */
+                double prev_cp = rtk->ssat[sat[i] - 1].sd_ph_prev[f];
+                if (prev_cp != 0.0) {
+                    double dL = cp - prev_cp;
+                    if (fabs(dL) > 5.0) {
+                        /* 异常突变（漏检周跳/时钟跳变），复位 */
+                        rtk->x[nx2] = 0.0;
+                        rtk->ssat[sat[i] - 1].sd_ph_prev[f] = 0.0;
+                        trace(4, "sd-phase jump: sat=%d f=%d dL=%.2f, reset\n",
+                              sat[i], f, dL);
+                    } else {
+                        rtk->x[nx2] += dL;
+                        rtk->P[nx2 + nx2 * rtk->nx] += SQR(1e-3) * fabs(tt);
+                    }
+                }
+                rtk->ssat[sat[i] - 1].fbias[f] = rtk->x[nx2];
+            }
+
+            /* 保存本历元单差相位 */
+            rtk->ssat[sat[i] - 1].sd_ph_prev[f] = cp;
+        }
+    }
+
+    for (i = 0; i < NSYS; i++) {
+        for (f = 0; f < nf; f++) {
+            if (nslip[i][f] == nsat[i][f] && nslip[i][f] != 0) {
+                rtk->allSlipFlag[i][f] = 1;
+                trace(4, "nslip[%d][%d]=%d,nsat=%d\n",
+                      i, f, nslip[i][f], nsat[i][f]);
+            }
+        }
+    }
+}
+
+#endif
 
 /* temporal update of states
  * --------------------------------------------------*/
@@ -1700,7 +1812,18 @@ extern int resamb_LAMBDA(rtk_t* rtk, int lcopt)
             {
                 Qb[i + j * nb] = Qy[na + i + (na + j) * ny];
             }
-        }
+		}
+
+
+		double qb_min = 1e99, qb_max = -1e99;
+		for (i = 0; i < nb; i++) {
+			double d = Qb[i + i * nb];
+			if (d < qb_min) qb_min = d;
+			if (d > qb_max) qb_max = d;
+		}
+		trace(2, "Qb diag: min=%.4e max=%.4e\n", qb_min, qb_max);
+
+
         /* ===== 新增：Qb 对角线下限保护，防止协方差退化 ===== */
         {
             const double QB_DIAG_MIN = 1E-6;   /* 0.001 cycle 标准差 */
@@ -1835,7 +1958,30 @@ extern int resamb_LAMBDA(rtk_t* rtk, int lcopt)
                 if (lcopt == 0)
                 {
                     matmul("NN", nb, 1, nb, 1.0, Qb, y + na, 0.0, db);
-                    matmul("NN", na, 1, nb, -1.0, Qab, db, 1.0, rtk->xp);
+					matmul("NN", na, 1, nb, -1.0, Qab, db, 1.0, rtk->xp);
+
+					/* ===== 位置修正量限幅 ===== */
+					{
+						double dx = fabs(rtk->xp[0] - rtk->x[0]);
+						double dy = fabs(rtk->xp[1] - rtk->x[1]);
+						double dz = fabs(rtk->xp[2] - rtk->x[2]);
+						double dmax = dx > dy ? dx : dy;
+						if (dz > dmax) dmax = dz;
+
+						const double POS_CORR_LIMIT = 0.008;   /* 8mm，可按需调整 */
+
+						if (dmax > POS_CORR_LIMIT)
+						{
+							trace(0x02, "LAMBDA pos corr clamp: dx=%.4f dy=%.4f dz=%.4f\n", dx, dy, dz);
+							double scale = POS_CORR_LIMIT / dmax;
+							for (i = 0; i < 3; i++) {
+								rtk->xp[i] = rtk->x[i] + (rtk->xp[i] - rtk->x[i]) * scale;
+							}
+						}
+					}
+					/* ===== 限幅结束 ===== */
+
+
                     /* transform float to fixed solution (xa=xa-Qab*Qb\(b0-b)) */
                     /* covariance of fixed solution (Qa=Qa-Qab*Qb^-1*Qab') */
                     matmul("NN", na, nb, nb, 1.0, Qab, Qb, 0.0, QQ);
