@@ -852,10 +852,11 @@ static int outenu_dynamic(
 
     if (rtk->mvflag == 1)
     {
-        for (i = 0; i < 3; i++)
+        if ((sol->window[0].jumpflag[0] == 2 || sol->acc_warn[0] == 1)&&
+            (sol->window[0].jumpflag[1] == 2 || sol->acc_warn[1] == 1)&&
+            (sol->window[0].jumpflag[2] == 2 || sol->acc_warn[2] == 1))
         {
-            if (sol->window[0].jumpflag[i] == 2 || sol->acc_warn[i] == 1)
-            {
+            for (i = 0; i < 3; i++) {
                 sol->window[2].n[i] = 0;  // sol->window[0].n;
 
                 sol->window[2].ave[i]   = sol->window[2].ave[i] + sol->jump[i];
@@ -942,7 +943,6 @@ static int outenu_dynamic(
                 {
                     trace(0x02, "changed enu:%d\n", k);
                     enu[k] = rtk->aveEnu[k] + 0.0001;
-                    ;
                 }
                 sol->enu_sum[k] += enu2[k];
             }

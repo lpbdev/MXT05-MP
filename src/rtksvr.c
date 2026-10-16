@@ -1858,7 +1858,7 @@ static void* rtksvrthread(void* arg)
                 traceconfig();
 
                 svr->rtk.initmax =(int) (svr->rtk.opt.initEnuTime * 3600.0 /svr->rtk.opt.timeInterval);
-                if(svr->rtk.iniCnt > svr->rtk.initmax+1||rebootFlag==1) svr->rtk.iniCnt = svr->rtk.initmax+1;
+                if (svr->rtk.iniCnt >= svr->rtk.initmax && svr->rtk.initmax!=0 && iniEnuFlag == 0)
                 //printf("iniCnt, %d, %d,%d\n",svr->rtk.iniCnt, rebootFlag,svr->rtk.initmax);
 
                 memset(buff, 0, DEBUG_BUFF_LEN);
@@ -2263,7 +2263,7 @@ static void* rtksvrthread(void* arg)
                     }
 
                     // if (svr->rtk.tt != 0.0) {
-                    if (svr->rtk.iniCnt >= svr->rtk.initmax &&   iniEnuFlag == 0)
+                    if (svr->rtk.iniCnt >= svr->rtk.initmax && svr->rtk.initmax!=0 && iniEnuFlag == 0)
                     {
                         iniEnuFlag = 1;
                     }

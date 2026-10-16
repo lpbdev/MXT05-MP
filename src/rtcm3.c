@@ -2241,11 +2241,8 @@ static int decode_type4070(rtcm_t* rtcm)
             else
             {
             }
-            trace(
-                2, "acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%d,%d,%d\n", time_str(tt, 3), subtype,
-                typelen, k, week, ms / 1000.0, rtcm->obs.acc_warn[0], rtcm->obs.acc_warn[1],
-                rtcm->obs.acc_warn[2]
-            );
+            trace(2, "acc_warn, %s,%d,%d,k,%d,%d,ms,%.2f,%d,%d,%d\n", time_str(tt, 3), subtype,
+                typelen, k, week, ms / 1000.0, rtcm->obs.acc_warn[0], rtcm->obs.acc_warn[1], rtcm->obs.acc_warn[2]);
         }
     }
 
@@ -2259,6 +2256,11 @@ static int decode_type4070(rtcm_t* rtcm)
         rtcm->obs.acc_warn[2] = 1;
     }
 
+    trace(2, "acc_warn, acc_warn,%d,%d,%d,\n", 
+            rtcm->obs.acc_warn[0],
+            rtcm->obs.acc_warn[1],
+            rtcm->obs.acc_warn[2]
+    );
     return 0;
 }
 extern int decode_rtcm3(rtcm_t* rtcm)
