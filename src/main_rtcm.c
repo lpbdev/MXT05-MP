@@ -304,6 +304,7 @@ extern int decoderaw(rtksvr_t* svr, int index)
                     2, "decoderaw: index,%d,ret,%d,nobs,%d,time,%d,%d,%d,%d\n", index, ret, obs->n,
                     obs->data[0].time.time, obs->acc_warn[0], obs->acc_warn[1], obs->acc_warn[2]
                 );
+                svr->rtk.sol.has_acc = svr->rtcm[index].has_acc;
                 for (int k = 0; k < 3; k++)
                 {
                     if (obs->acc_warn[k] == 1)

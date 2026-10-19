@@ -2194,7 +2194,8 @@ static int decode_type4070(rtcm_t* rtcm)
     double tow  = 0.0;
     tow         = time2gpst(rtcm->time, &week);
     i += 4;  // skip 4 bit reserved
-
+    
+    rtcm->has_acc=1;
     subtype = getbitu(rtcm->buff, i, 32);
     i += 32;
     if (subtype == 0x00000ACC)

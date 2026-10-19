@@ -879,6 +879,7 @@ typedef struct
     unsigned char  buff[1024];          /* message buffer */
     unsigned int   word;                /* word buffer for rtcm 2 */
     char           opt[256];            /* RTCM dependent options */
+    uint8_t has_acc;
 } rtcm_t;
 
 typedef struct
@@ -936,6 +937,7 @@ typedef struct
     double jump[3];
     double tmpjump[3];
     data_t wdata;
+    uint8_t has_acc;
     int acc_warn[3];
     int acc_warn_pre[3];
     gtime_t acc_warn_time[3];

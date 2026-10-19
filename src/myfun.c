@@ -1908,6 +1908,7 @@ extern int init_rtcm(rtcm_t* rtcm)
     obsd_t  data0 = {{0}};
     int     i;
 
+    rtcm->has_acc = 0;
     rtcm->staid = rtcm->stah = rtcm->seqno = rtcm->outtype = 0;
     rtcm->time = rtcm->time_s = time0;
     rtcm->sta.name[0] = rtcm->sta.marker[0] = '\0';

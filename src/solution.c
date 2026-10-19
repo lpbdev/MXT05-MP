@@ -852,19 +852,56 @@ static int outenu_dynamic(
 
     if (rtk->mvflag == 1)
     {
-        if ((sol->window[0].jumpflag[0] == 2 || sol->acc_warn[0] == 1)&&
-            (sol->window[0].jumpflag[1] == 2 || sol->acc_warn[1] == 1)&&
-            (sol->window[0].jumpflag[2] == 2 || sol->acc_warn[2] == 1))
-        {
-            for (i = 0; i < 3; i++) {
-                sol->window[2].n[i] = 0;  // sol->window[0].n;
+        char tst[64];
+        time2str(sol->time,tst,2);
+        trace(2,"soljump,%s,win,%d,%d,%d,acc,%d,%d,%d\n",tst,
+                sol->window[0].jumpflag[0], sol->window[0].jumpflag[1], sol->window[0].jumpflag[2], 
+                sol->acc_warn[0],sol->acc_warn[1],sol->acc_warn[2]);
 
-                sol->window[2].ave[i]   = sol->window[2].ave[i] + sol->jump[i];
-                sol->window[2].var[i]   = 0.0;  // sol->window[0].var[i];
-                sol->window[2].std[i]   = 0.0;  // sol->window[0].std[i];
-                sol->window[2].sumX2[i] = 0.0;  // sol->window[0].sumX2[i];
-                trace(2, "wjump,%d,%.4f\n", sol->window[0].jumpflag[i], sol->window[2].ave[i]);
+        time2str(sol->acc_warn_time[0],tst,2); trace(2,"soljump,%s\n",tst);
+        time2str(sol->acc_warn_time[1],tst,2); trace(2,"soljump,%s\n",tst);
+        time2str(sol->acc_warn_time[2],tst,2); trace(2,"soljump,%s\n",tst);
+        int acc_warn=1;
+
+        if(sol->has_acc == 1 )
+        {
+            double tdiff[3]={0.0};
+            tdiff[0] = timediff(sol->time, sol->acc_warn_time[0]);
+            tdiff[1] = timediff(sol->time, sol->acc_warn_time[1]);
+            tdiff[2] = timediff(sol->time, sol->acc_warn_time[2]);
+            
+            if(tdiff[0]<60 &&tdiff[1]<60 && tdiff[2] <60)
+            {
+                if ((sol->window[0].jumpflag[0] == 2 || sol->acc_warn[0] == 1)&&
+                        (sol->window[0].jumpflag[1] == 2 || sol->acc_warn[1] == 1)&&
+                        (sol->window[0].jumpflag[2] == 2 || sol->acc_warn[2] == 1))
+                {
+                    for (i = 0; i < 3; i++) {
+                        sol->window[2].n[i] = 0;  // sol->window[0].n;
+
+                        sol->window[2].ave[i]   = sol->window[2].ave[i] + sol->jump[i];
+                        sol->window[2].var[i]   = 0.0;  // sol->window[0].var[i];
+                        sol->window[2].std[i]   = 0.0;  // sol->window[0].std[i];
+                        sol->window[2].sumX2[i] = 0.0;  // sol->window[0].sumX2[i];
+                        trace(2, "wjump,%d,%.4f\n", sol->window[0].jumpflag[i], sol->window[2].ave[i]);
+                    }
+                }
             }
+        }else
+        {
+            if ((sol->window[0].jumpflag[0] == 2)&& (sol->window[0].jumpflag[1] == 2 )&& (sol->window[0].jumpflag[2] == 2 ))
+            {
+                for (i = 0; i < 3; i++) {
+                    sol->window[2].n[i] = 0;  // sol->window[0].n;
+
+                    sol->window[2].ave[i]   = sol->window[2].ave[i] + sol->jump[i];
+                    sol->window[2].var[i]   = 0.0;  // sol->window[0].var[i];
+                    sol->window[2].std[i]   = 0.0;  // sol->window[0].std[i];
+                    sol->window[2].sumX2[i] = 0.0;  // sol->window[0].sumX2[i];
+                    trace(2, "wjump,%d,%.4f\n", sol->window[0].jumpflag[i], sol->window[2].ave[i]);
+                }
+            }
+
         }
     }
 

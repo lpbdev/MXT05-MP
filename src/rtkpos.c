@@ -4358,7 +4358,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         double difftime = fabs(timediff(rtk->sol.time, rtk->sol.acc_warn_time[k]));
         trace(2, "difftime, %s,%.2f, %d,%d,%d\n",time_str(rtk->sol.time,2), difftime,rtk->sol.acc_warn[k],rtk->sol.window[0].jumpflag[k],k);
         // if (rtk->sol.acc_warn[k]==1){
-            
         //     rtk->sol.window[0].jumpflag[k] =1;
         // }
         if (rtk->sol.acc_warn[k]==1&&rtk->sol.window[0].jumpflag[k]!=0 )

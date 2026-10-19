@@ -369,6 +369,7 @@ extern int decoderaw(rtksvr_t* svr, int index)
             if(index==0){
                 trace(2, "decoderaw: index,%d,ret,%d,nobs,%d,time,%d,%d,%d,%d\n", 
                     index, ret, obs->n, obs->data[0].time.time,obs->acc_warn[0],obs->acc_warn[1],obs->acc_warn[2]);
+                svr->rtk.sol.has_acc = svr->rtcm[index].has_acc;
                 for(int k=0;k<3;k++){
                     if(obs->acc_warn[k] == 1){
                         svr->rtk.sol.acc_warn_time[k] = obs->data[0].time;
@@ -1858,7 +1859,8 @@ static void* rtksvrthread(void* arg)
                 traceconfig();
 
                 svr->rtk.initmax =(int) (svr->rtk.opt.initEnuTime * 3600.0 /svr->rtk.opt.timeInterval);
-                if (svr->rtk.iniCnt >= svr->rtk.initmax && svr->rtk.initmax!=0 && iniEnuFlag == 0)
+                if(( svr->rtk.iniCnt > svr->rtk.initmax+1 && svr->rtk.initmax!=0 )||rebootFlag==1) 
+                    svr->rtk.iniCnt = svr->rtk.initmax+1; 
                 //printf("iniCnt, %d, %d,%d\n",svr->rtk.iniCnt, rebootFlag,svr->rtk.initmax);
 
                 memset(buff, 0, DEBUG_BUFF_LEN);
