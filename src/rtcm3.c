@@ -2247,12 +2247,12 @@ static int decode_type4070(rtcm_t* rtcm)
         }
     }
 
-    if (acc_cnt[0] > 2 && acc_cnt[1] > 2)
+    if (acc_cnt[0] > 1 && acc_cnt[1] > 1)
     {
         rtcm->obs.acc_warn[0] = 1;
         rtcm->obs.acc_warn[1] = 1;
     }
-    if (acc_cnt[2] > 2)
+    if (acc_cnt[2] > 1)
     {
         rtcm->obs.acc_warn[2] = 1;
     }
