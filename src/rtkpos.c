@@ -4325,15 +4325,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     time2str(obs[0].time, ts1, 3);
     time2str(obs[n - 1].time, ts2, 3);
 
-    
-    double  tsep[6] = {2026, 8, 12, 8, 0, 0};
-    gtime_t ts    = epoch2time(tsep);
-    double  teep[6] = {2026, 8, 12, 14, 0, 0};
-    gtime_t te    = epoch2time(teep);
-    // if(timediff(obs[0].time,te)<0 && timediff(obs[0].time,ts)>0)
-    // {
-    //     return 0;
-    // }
 
 #if 1
     int acc_warn[3]={0};
@@ -4360,14 +4351,21 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
         // if (rtk->sol.acc_warn[k]==1){
         //     rtk->sol.window[0].jumpflag[k] =1;
         // }
-        if (rtk->sol.acc_warn[k]==1&&rtk->sol.window[0].jumpflag[k]!=0 )
+        if (rtk->sol.acc_warn[k]==1 && rtk->sol.window[0].jumpflag[k]!=0 )
         {
             resetRtk(rtk, SOLQ_NONE);
             rtk->sol.rr[0] = rtk->sol.rr[1] = rtk->sol.rr[2] = 0.0;
             rtk->sol.fixxyz[0] = rtk->sol.fixxyz[1] = rtk->sol.fixxyz[2] = 0.0;
             
             rtk->sol.rr_smooth_cnt = 0;
-            
+
+            rtk->sol.window[2].  n[k] = 0;  // sol->window[0].n;
+            rtk->sol.window[2].ave[k]   = rtk->sol.window[2].ave[k] + rtk->sol.jump[k];
+            rtk->sol.window[2].var[k]   = 0.0;  // sol->window[0].var[i];
+            rtk->sol.window[2].std[k]   = 0.0;  // sol->window[0].std[i];
+            rtk->sol.window[2].sumX2[k] = 0.0;  // sol->window[0].sumX2[i];
+                                                //trace(2, "wjump,%d,%.4f\n", sol->window[0].jumpflag[i], sol->window[2].ave[i]);
+
             trace(2, "reset rtk,%d,%d,%d\n",rtk->sol.window[0].jumpflag[0],rtk->sol.window[0].jumpflag[1],rtk->sol.window[0].jumpflag[2]);
         }
         trace(2, "Acc jump%d, %s, %.4f, %.4f, %.4f,%d, %d\n", k, ts1, rtk->sol.jump[k], rtk->sol.tmpjump[k],

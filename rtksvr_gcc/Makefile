@@ -8,8 +8,8 @@ ifeq ($(OS), Windows_NT)
 	OPTS    = -DENACMP -DWIN32
 	LDFLAGS = -lm  -lwinmm -lpthread -lws2_32
 else
-	LDFLAGS = -lm -lpthread
-	OPTS    = -DENACMP
+	LDFLAGS = -lm -lpthread -lopenblas
+	DFFLAGS    = -DENACMP -DLAPACK
 endif
 
 

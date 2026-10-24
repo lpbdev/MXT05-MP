@@ -870,15 +870,20 @@ static int outenu_dynamic(
             tdiff[1] = timediff(sol->time, sol->acc_warn_time[1]);
             tdiff[2] = timediff(sol->time, sol->acc_warn_time[2]);
             
-            if(tdiff[0]<60 &&tdiff[1]<60 && tdiff[2] <60)
+            trace(2, "tdiff,3, %.2f,%.2f,%.2f\n",tdiff[0],tdiff[1],tdiff[2]);
+            trace(2, "jumpflag,3, %d,%d,%d\n", sol->window[0].jumpflag[0], sol->window[0].jumpflag[1], sol->window[0].jumpflag[2]);
+            trace(2, "acc_warn,3, %d,%d,%d\n", sol->acc_warn[0],sol->acc_warn[1],sol->acc_warn[2]);
+
+#if 1
+            if (((sol->window[0].jumpflag[0] == 2 || sol->acc_warn[0] == 1) &&
+                 (sol->window[0].jumpflag[1] == 2 || sol->acc_warn[1] == 1))||
+                 (sol->window[0].jumpflag[2] == 2 || sol->acc_warn[2] == 1))
             {
-                if ((sol->window[0].jumpflag[0] == 2 || sol->acc_warn[0] == 1)&&
-                        (sol->window[0].jumpflag[1] == 2 || sol->acc_warn[1] == 1)&&
-                        (sol->window[0].jumpflag[2] == 2 || sol->acc_warn[2] == 1))
+
+                if(tdiff[0]<300 && tdiff[1]<300 && tdiff[2] <300)
                 {
                     for (i = 0; i < 3; i++) {
                         sol->window[2].n[i] = 0;  // sol->window[0].n;
-
                         sol->window[2].ave[i]   = sol->window[2].ave[i] + sol->jump[i];
                         sol->window[2].var[i]   = 0.0;  // sol->window[0].var[i];
                         sol->window[2].std[i]   = 0.0;  // sol->window[0].std[i];
@@ -887,9 +892,23 @@ static int outenu_dynamic(
                     }
                 }
             }
+#else
+            for (i = 0; i < 3; i++) {
+                if(tdiff[i]<60)
+                {
+                    if(sol->window[0].jumpflag[i] == 2 || sol->acc_warn[i] == 1 ){
+                        sol->window[2].n[i] = 0;  // sol->window[0].n;
+                        sol->window[2].ave[i]   = sol->window[2].ave[i] + sol->jump[i];
+                        sol->window[2].var[i]   = 0.0;  // sol->window[0].var[i];
+                        sol->window[2].std[i]   = 0.0;  // sol->window[0].std[i];
+                        sol->window[2].sumX2[i] = 0.0;  // sol->window[0].sumX2[i];
+                    }
+                }
+            }
+#endif
         }else
         {
-            if ((sol->window[0].jumpflag[0] == 2)&& (sol->window[0].jumpflag[1] == 2 )&& (sol->window[0].jumpflag[2] == 2 ))
+            if ((sol->window[0].jumpflag[0] == 2)|| (sol->window[0].jumpflag[1] == 2 )|| (sol->window[0].jumpflag[2] == 2 ))
             {
                 for (i = 0; i < 3; i++) {
                     sol->window[2].n[i] = 0;  // sol->window[0].n;
