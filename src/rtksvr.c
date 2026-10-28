@@ -489,9 +489,8 @@ static void outDnyResult(
         {
             *pbuff += sprintf(
                 *pbuff,
-                "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%"
-                ".9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%."
-                "4lf,%d;",
+                "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,"
+                "%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,%d;",
                 s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_filer[0],
                 svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
                 svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.rr_filer[0],

@@ -4364,7 +4364,6 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
             rtk->sol.window[2].var[k]   = 0.0;  // sol->window[0].var[i];
             rtk->sol.window[2].std[k]   = 0.0;  // sol->window[0].std[i];
             rtk->sol.window[2].sumX2[k] = 0.0;  // sol->window[0].sumX2[i];
-                                                //trace(2, "wjump,%d,%.4f\n", sol->window[0].jumpflag[i], sol->window[2].ave[i]);
 
             trace(2, "reset rtk,%d,%d,%d\n",rtk->sol.window[0].jumpflag[0],rtk->sol.window[0].jumpflag[1],rtk->sol.window[0].jumpflag[2]);
         }
