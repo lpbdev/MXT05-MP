@@ -419,7 +419,7 @@ static void outDnyResult(
                 *pbuff,
                 "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%"
                 ".9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%."
-                "4lf,%d;",
+                "4lf,%d,%c,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f;",
                 s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0],
                 svr->rtk.sol.rr_original[0] + svr->rtk.dr[0],
                 svr->rtk.sol.rr_original[1] + svr->rtk.dr[1],
@@ -431,7 +431,10 @@ static void outDnyResult(
                 svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1], svr->rtk.sol.vel[2],
                 svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
                 svr->rtk.opt.masterXyz[0], svr->rtk.opt.masterXyz[1], svr->rtk.opt.masterXyz[2],
-                iniEnuFlag
+                iniEnuFlag,svr->rtk.linetype,svr->rtk.baseid,svr->rtk.roveid,
+                svr->rtk.sol.qr[0], svr->rtk.sol.qr[1], svr->rtk.sol.qr[2],
+                svr->rtk.sol.qr[3], svr->rtk.sol.qr[4], svr->rtk.sol.qr[5],
+                1,svr->rtk.sol.ratio,0.0
             );
         }
         else
@@ -440,7 +443,7 @@ static void outDnyResult(
                 *pbuff,
                 "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%"
                 ".9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%."
-                "4lf,%d;",
+                "4lf,%d,%c,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f;",
                 s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_original[0],
                 svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2],
                 svr->rtk.sol.enu_original[0], svr->rtk.sol.enu_original[1],
@@ -449,7 +452,10 @@ static void outDnyResult(
                 svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1], svr->rtk.sol.vel[2],
                 svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
                 svr->rtk.opt.masterXyz[0], svr->rtk.opt.masterXyz[1], svr->rtk.opt.masterXyz[2],
-                iniEnuFlag
+                iniEnuFlag,svr->rtk.linetype,svr->rtk.baseid,svr->rtk.roveid,
+                svr->rtk.sol.qr[0], svr->rtk.sol.qr[1], svr->rtk.sol.qr[2],
+                svr->rtk.sol.qr[3], svr->rtk.sol.qr[4], svr->rtk.sol.qr[5],
+                1,svr->rtk.sol.ratio,0.0
             );
         }
     }
@@ -471,7 +477,7 @@ static void outDnyResult(
                 *pbuff,
                 "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%"
                 ".9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%."
-                "4lf,%d;",
+                "4lf,%d,%c,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f;",
                 s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0],
                 svr->rtk.sol.rr_filer[0] + svr->rtk.dr[0],
                 svr->rtk.sol.rr_filer[1] + svr->rtk.dr[1],
@@ -482,15 +488,19 @@ static void outDnyResult(
                 svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1], svr->rtk.sol.vel[2],
                 svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
                 svr->rtk.opt.masterXyz[0], svr->rtk.opt.masterXyz[1], svr->rtk.opt.masterXyz[2],
-                iniEnuFlag
+                iniEnuFlag,svr->rtk.linetype,svr->rtk.baseid,svr->rtk.roveid,
+                svr->rtk.sol.qr[0], svr->rtk.sol.qr[1], svr->rtk.sol.qr[2],
+                svr->rtk.sol.qr[3], svr->rtk.sol.qr[4], svr->rtk.sol.qr[5],
+                1,svr->rtk.sol.ratio,0.0
             );
         }
         else
         {
             *pbuff += sprintf(
                 *pbuff,
-                "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,"
-                "%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,%d;",
+                "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%"
+                ".9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%."
+                "4lf,%d,%c,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f;",
                 s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_filer[0],
                 svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
                 svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.rr_filer[0],
@@ -498,7 +508,10 @@ static void outDnyResult(
                 svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1],
                 svr->rtk.sol.vel[2], svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
                 svr->rtk.opt.masterXyz[0], svr->rtk.opt.masterXyz[1], svr->rtk.opt.masterXyz[2],
-                iniEnuFlag
+                iniEnuFlag,svr->rtk.linetype,svr->rtk.baseid,svr->rtk.roveid,
+                svr->rtk.sol.qr[0], svr->rtk.sol.qr[1], svr->rtk.sol.qr[2],
+                svr->rtk.sol.qr[3], svr->rtk.sol.qr[4], svr->rtk.sol.qr[5],
+                1,svr->rtk.sol.ratio,0.0
             );
         }
     }
@@ -560,14 +573,18 @@ static void outDnyResult(
             *pbuff,
             "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%."
             "9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,"
-            "%d;",
+            "%d,%c,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f;",
             s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_original[0],
             svr->rtk.sol.rr_original[1], svr->rtk.sol.rr_original[2], svr->rtk.sol.enu_original[0],
             svr->rtk.sol.enu_original[1], svr->rtk.sol.enu_original[2], svr->rtk.sol.rr_filer[0],
             svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
             svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1],
             svr->rtk.sol.vel[2], svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
-            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag
+            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag,
+            svr->rtk.linetype,svr->rtk.baseid,svr->rtk.roveid,
+            svr->rtk.sol.qr[0], svr->rtk.sol.qr[1], svr->rtk.sol.qr[2],
+            svr->rtk.sol.qr[3], svr->rtk.sol.qr[4], svr->rtk.sol.qr[5],
+            1,svr->rtk.sol.ratio,0.0
         );
     }
     else
@@ -581,14 +598,18 @@ static void outDnyResult(
             *pbuff,
             "pos,%s,%d,%d,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%.9lf,%."
             "9lf,%.9lf,%.9lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.6lf,%.4lf,%.4lf,%.4lf,"
-            "%d;",
+            "%d,%c,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f;",
             s1, svr->rtk.sol.stat, svr->rtk.sol.ns[0], svr->rtk.sol.rr_filer[0],
             svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
             svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.rr_filer[0],
             svr->rtk.sol.rr_filer[1], svr->rtk.sol.rr_filer[2], svr->rtk.sol.enu[0],
             svr->rtk.sol.enu[1], svr->rtk.sol.enu[2], svr->rtk.sol.vel[0], svr->rtk.sol.vel[1],
             svr->rtk.sol.vel[2], svr->rtk.sol.acc[0], svr->rtk.sol.acc[1], svr->rtk.sol.acc[2],
-            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag
+            svr->rtk.rb[0], svr->rtk.rb[1], svr->rtk.rb[2], iniEnuFlag,
+            svr->rtk.linetype,svr->rtk.baseid,svr->rtk.roveid,
+            svr->rtk.sol.qr[0], svr->rtk.sol.qr[1], svr->rtk.sol.qr[2],
+            svr->rtk.sol.qr[3], svr->rtk.sol.qr[4], svr->rtk.sol.qr[5],
+            1,svr->rtk.sol.ratio,0.0
         );
     }
     /* OUTPUT FFT Infomation */
@@ -902,25 +923,25 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff)
         cfgOpt->stationPCV[2] = json_data_tmp->valuedouble;
     }
 
-    // json_data_tmp = cJSON_GetObjectItem(json, "scene");
-    // if (json_data_tmp == NULL) {
-    //     printf("senceopt json_data_tmp is null\n");
-    //     cJSON_Delete(json);
-    //     sprintf(ackBuff, "ack,%s,scene,failed;\n", idStr);
-    //     strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //     return 0;
-    // }
-    // cfgOpt->senceopt = json_data_tmp->valueint;
+    json_data_tmp = cJSON_GetObjectItem(json, "scene");
+    if (json_data_tmp == NULL) {
+        printf("senceopt json_data_tmp is null\n");
+        cJSON_Delete(json);
+        sprintf(ackBuff, "ack,%s,scene,failed;\n", idStr);
+        strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+        return 0;
+    }
+    cfgOpt->senceopt = json_data_tmp->valueint;
 
-    // json_data_tmp = cJSON_GetObjectItem(json, "smoothWindowTime");
-    // if (json_data_tmp == NULL) {
-    //     printf("smoothWindowsTime json_data_tmp is null\n");
-    //     cJSON_Delete(json);
-    //     sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
-    //     strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //     return 0;
-    // }
-    // cfgOpt->smoothWindowsTime = json_data_tmp->valueint;
+    json_data_tmp = cJSON_GetObjectItem(json, "smoothWindowTime");
+    if (json_data_tmp == NULL) {
+        printf("smoothWindowsTime json_data_tmp is null\n");
+        cJSON_Delete(json);
+        sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
+        strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+        return 0;
+    }
+    cfgOpt->smoothWindowsTime = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "initTime");
     if (json_data_tmp == NULL)
@@ -2268,6 +2289,9 @@ static void* rtksvrthread(void* arg)
                     {
                         iniEnuFlag = 1;
                     }
+                    if(svr->rtk.opt.senceopt==1){ 
+                        iniEnuFlag = 1;
+                    }
                     //}
                     /* OUTPUT Pos Infomation */
                     memset(buff, 0, DEBUG_BUFF_LEN);
@@ -2643,6 +2667,14 @@ int main(int argc, char** argv)
     char logfile[1024];
     // sprintf(logfile, "%s/rtk.log", svr.rtk.path);
     sprintf(logfile, "./rtkLog/rtk-%s-%s.log", buffport1[2], buffport2[2]);
+
+    sprintf(svr.rtk.roveid,"%s", buffport1[2]);
+    sprintf(svr.rtk.baseid,"%s", buffport2[2]);
+
+    if(user[0]=='n') svr.rtk.linetype='A';
+    else if(user[0]=='v') svr.rtk.linetype='B';
+    else svr.rtk.linetype='C';
+
 
     char tracefile[1024] = "";
     sprintf(tracefile, "%s", logfile);

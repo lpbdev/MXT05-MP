@@ -65,7 +65,7 @@
 #define BDS3_NL_PSR_K1 0
 #define BDS3_NL_PSR_K2 1
 
-#define SVN_VERSION 260310
+#define SVN_VERSION 261103
 
 #define MAXEPH 10240
 #define MAXGEPH 5120
@@ -1102,6 +1102,9 @@ typedef struct
     int     mvflag;  // move detect module.
     satts_t rsat[MAXSAT];
     satts_t bsat[MAXSAT];
+    char baseid[124];  // 0: base; 1: rover;
+    char roveid[124];  // 0: base; 1: rover;
+    char linetype;
 } rtk_t;
 
 typedef struct

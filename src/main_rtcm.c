@@ -587,15 +587,15 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff)
     }
     cfgOpt->senceopt = json_data_tmp->valueint;
 
-    // json_data_tmp = cJSON_GetObjectItem(json, "smoothWindowTime");
-    // if (json_data_tmp == NULL) {
-    //     printf("smoothWindowsTime json_data_tmp is null\n");
-    //     cJSON_Delete(json);
-    //     sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
-    //     strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //     return 0;
-    // }
-    // cfgOpt->smoothWindowsTime = json_data_tmp->valueint;
+    json_data_tmp = cJSON_GetObjectItem(json, "smoothWindowTime");
+    if (json_data_tmp == NULL) {
+        printf("smoothWindowsTime json_data_tmp is null\n");
+        cJSON_Delete(json);
+        sprintf(ackBuff, "ack,%s,smoothWindowTime,failed;\n", idStr);
+        strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+        return 0;
+    }
+    cfgOpt->smoothWindowsTime = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "initTime");
     if (json_data_tmp == NULL)
