@@ -4702,8 +4702,21 @@ extern int rtkpos(rtk_t* rtk, obsd_t* obs, int n)
     trace(2, "kalman rtk->x, 03, ");
     tracemat(2, rtk->x, 1, 6, 14, 4);
 
-    if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt !=
-    IONOOPT_EST) {
+    if (rtk->sol.fixxyz[0] != 0)
+    {
+        if ((fabs(rtk->sol.fixxyz[0] - rtk->sol.rr[0]) > 0.2 ||
+                    fabs(rtk->sol.fixxyz[1] - rtk->sol.rr[1]) > 0.2 ||
+                    fabs(rtk->sol.fixxyz[2] - rtk->sol.rr[2]) > 0.2))
+        {
+            resetRtk(rtk, SOLQ_NONE);
+            //rtk->sol.rr[0] = rtk->sol.rr[1] = rtk->sol.rr[2] = 0.0;
+            rtk->sol.fixxyz[0] = rtk->sol.fixxyz[1] = rtk->sol.fixxyz[2] = 0.0;
+            rtk->sol.rr_smooth_cnt = 0;
+            return 0;
+        }
+    }
+
+    if (rtk->opt.mode == 2 && rtk->sol.stat == SOLQ_FIX && rtk->opt.ionoopt != IONOOPT_EST) {
         rtk->sol.rr_lsq[0] = rtk->sol.rr_lsq[1] = rtk->sol.rr_lsq[2] = 0.0;
         rtk->sol.nsLsq = 0;
         int delSat = 0;

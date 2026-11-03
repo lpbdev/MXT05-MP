@@ -1305,8 +1305,7 @@ static int outenu_dynamic(
         sol->age, sep, sol->ratio
     );
 
-    p += sprintf(
-        p,
+    p += sprintf(p,
         "%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%"
         "s%8.4f%s%6.2f%s%6.1f%s%.4f%s%.4f%s%.4f%s%.0f%s%.0f%s%.0f\n",
         s, sep, enu2[0], sep, enu2[1], sep, enu2[2], sep, sol->stat, sep, ns, sep, SQRT(Q[0]), sep,

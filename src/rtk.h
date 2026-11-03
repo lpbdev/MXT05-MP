@@ -1098,6 +1098,9 @@ typedef struct
     int     mpflag;
     gtime_t te;
     int     mvflag;  // move detect module.
+    char baseid[124];  // 0: base; 1: rover;
+    char roveid[124];  // 0: base; 1: rover;
+    char linetype;
     satts_t rsat[MAXSAT];
     satts_t bsat[MAXSAT];
 } rtk_t;
