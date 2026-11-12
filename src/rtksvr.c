@@ -720,15 +720,15 @@ static int decodeConfig(rtksvr_t* svr, cfgopt_t* cfgOpt, char* buff)
         strcpy(idStr, json_data_tmp->valuestring);
     }
 
-    // json_data_tmp = cJSON_GetObjectItem(json, "timeInterval");
-    // if (json_data_tmp == NULL) {
-    //     printf("timeInterval json_data_tmp is null\n");
-    //     cJSON_Delete(json);
-    //     sprintf(ackBuff, "ack,%s,timeInterval,failed;\n", idStr);
-    //     strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
-    //     return 0;
-    // }
-    // cfgOpt->timeInterval = json_data_tmp->valueint;
+    json_data_tmp = cJSON_GetObjectItem(json, "timeInterval");
+    if (json_data_tmp == NULL) {
+        printf("timeInterval json_data_tmp is null\n");
+        cJSON_Delete(json);
+        sprintf(ackBuff, "ack,%s,timeInterval,failed;\n", idStr);
+        strwrite(&svr->stream[2], (uint8_t*)ackBuff, strlen(ackBuff));
+        return 0;
+    }
+    cfgOpt->timeInterval = json_data_tmp->valueint;
 
     json_data_tmp = cJSON_GetObjectItem(json, "freq");
     if (json_data_tmp == NULL)
@@ -1881,7 +1881,8 @@ static void* rtksvrthread(void* arg)
                 svr->rtk.initmax =(int) (svr->rtk.opt.initEnuTime * 3600.0 /svr->rtk.opt.timeInterval);
                 if(( svr->rtk.iniCnt > svr->rtk.initmax+1 && svr->rtk.initmax!=0 )||rebootFlag==1) 
                     svr->rtk.iniCnt = svr->rtk.initmax+1; 
-                //printf("iniCnt, %d, %d,%d\n",svr->rtk.iniCnt, rebootFlag,svr->rtk.initmax);
+                trace(2,"iniCnt, %d, %d,%d,%.2f\n",svr->rtk.iniCnt, rebootFlag,svr->rtk.initmax,
+                        svr->rtk.opt.timeInterval);
 
                 memset(buff, 0, DEBUG_BUFF_LEN);
                 free(buff2);
